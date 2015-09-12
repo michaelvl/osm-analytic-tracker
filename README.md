@@ -28,9 +28,11 @@ The service is available as a web-service and provide three different informatio
 
 ### Summary
 
-![Image](doc/summ2.png?raw=true)
+The main page contain this overview in the top with OSM-user specific
+colour-coded bounding boxes for each changeset and text-based summary for the
+tracked time peried.
 
-Overview with bounding boxes and text-based summary.
+![Image](doc/summ2.png?raw=true)
 
 ### List of Changesets with changes
 
@@ -49,7 +51,8 @@ Geographical changes in the changeset, green are added objects, blue changed and
 
 TL;DR:
 
-```tracker.py -lDEBUG
+```
+tracker.py -lDEBUG
 ```
 
 The tracker python script tracks OpenStreetMap minutely diffs and optionally
