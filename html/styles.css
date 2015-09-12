@@ -1,0 +1,212 @@
+body {
+font-family: Ubuntu,"Bitstream Vera Sans","DejaVu Sans",Tahoma,sans-serif;font-size:12px;
+}
+
+#map {
+display:inline-block;
+vertical-align:top;
+width: 480px;
+height: 320px;
+}
+
+#summary {
+display:inline-block;
+vertical-align:top;
+border: 1px solid rgb(92,152,205);
+border-radius: 3px;
+background-color: rgb(240,247,252);
+}
+
+#generation {
+display: none;
+}
+#summary_created {
+display: none;
+}
+#sequence_numbers {
+display: none;
+}
+
+.summary {
+margin: 4px;
+}
+
+ul
+{
+list-style-type:none;
+padding:0;
+overflow:hidden;
+}
+
+li.cset
+{
+display: inline-block;
+margin-top: 10px;
+margin-bottom: 14px;
+border: 1px solid rgb(220,220,220);
+}
+
+li.cset div.legend
+{
+width: 6px;
+padding-left: 0;
+padding-right: 0;
+padding-top: 6px;
+padding-bottom: 6px;
+}
+
+ul.csethead div {
+margin-right: 10px;
+padding-top: 6px;
+padding-bottom: 6px;
+}
+
+li.cset div
+{
+display: inline-block;
+}
+
+li.cset ul.csethead
+{
+display: block;
+background-color: rgb(235,235,235);
+border-bottom: 1px solid rgb(220,220,220);
+}
+
+li.new {
+display:none;
+#line-height: 2em;
+}
+
+ul li
+{
+float:left;
+margin-right: 4px;
+}
+
+ul.details
+{
+padding-left: 12px;
+padding-right: 12px;
+padding-top: 6px;
+padding-bottom: 6px;
+}
+
+ul.details li
+{
+margin: 3px;
+}
+
+ul.details li div
+{
+display: inline;
+border: 1px solid rgb(100,100,100);
+padding: 1px;
+}
+
+ul.details li div:first-child
+{
+background-color: rgb(255,255,200);
+padding: 1px;
+border-top-left-radius: 3px;
+border-bottom-left-radius: 3px;
+#border-right: 0px;
+padding-right: 3px;
+}
+
+ul.details li div+div
+{
+#background-color: rgb(240,220,220);
+padding: 1px;
+padding-left: 3px;
+border-top-right-radius: 3px;
+border-bottom-right-radius: 3px;
+border-left: 0px;
+}
+
+ul.details li.action_create div:first-child
+{
+background-color: rgb(220,255,220);
+#background-color: rgb(240,220,220);
+}
+ul.details li.action_delete div:first-child
+{
+background-color: rgb(255,230,230);
+}
+ul.details li.action_modify div:first-child
+{
+background-color: rgb(250,250,200);
+}
+
+ul.details li div.trailer {
+border: 0px;
+background-color: transparent;
+}
+ul.csethead li div.warning a, ul.csethead li div.warning {
+background-color: transparent;
+color: rgb(255,100,100);
+font-style: oblique;
+#border: 2px solid rgb(255,100,100);
+}
+
+li div.changeset-source {
+display: none;
+}
+
+ul.summary li
+{
+float:none;
+list-style-type:none;
+margin: 2px;
+}
+
+ul.sum-list
+{
+margin-left: 10px;
+}
+
+.mapinfo {
+    padding: 6px 8px;
+    background: white;
+    background: rgba(255,255,255,0.8);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+}
+.mapinfo h4 {
+    margin: 0 0 5px;
+    color: #777;
+}
+
+h1 {
+  font-family: Ubuntu,"Bitstream Vera Sans","DejaVu Sans",Tahoma,sans-serif;font-size:16px;
+}
+
+.node_modify {
+    display: inline;
+    position: relative;
+}
+
+.node_modify:hover:before {
+    border: solid;
+    border-color: #333 transparent;
+    border-width: 6px 6px 0 6px;
+    bottom: 20px;
+    content: "";
+    left: 50%;
+    position: absolute;
+    z-index: 99;
+}
+
+.node_modify:hover:after {
+    background: #333;
+    background: rgba(0,0,0,.8);
+    border-radius: 5px;
+    bottom: 26px;
+    color: #fff;
+    content: "Foo bar";
+    left: 20%;
+    padding: 5px 15px;
+    position: absolute;
+    z-index: 98;
+    width: 220px;
+}

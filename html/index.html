@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+   <title>OpenStreetMap Analytic Difference Engine</title>
+   <link rel="icon" href="/osm/favicon.png" type="image/png">
+   <link href="/osm/styles.css" type="text/css" rel="stylesheet"/>
+   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+   <script src="/jquery-2.1.3/jquery.min.js"></script>
+   <link rel="stylesheet" href="/leaflet-0.7.3/leaflet.css" />
+   <script src="/leaflet-0.7.3/leaflet.js"></script>
+</head>
+
+<body>
+<div id="gen" style="display:none">-</div>
+<div id="gen_loaded" style="display:none">-</div>
+<div style="display:inline-block">
+ <div id="map"></div>
+ <div id="summary">Loading...</div>
+</div>
+<h1>Recent Changesets</h1>
+<div id="logger">Loading...</div><br>
+
+<script type="text/javascript">
+var refresh = 60000;
+var age = 0;
+
+(function($)
+{
+  $(document).ready(function()
+  {
+    $.ajaxSetup( { cache: false });
+    refresh = location.search.split('refresh=')[1];
+    if (refresh===undefined || refresh<30000) { refresh = 60000; }
+    small_load();
+  });
+})(jQuery);
+
+var refresher;
+function set_refresher(refresh) {
+  clearInterval(refresher);
+  if (refresh > 0) {
+    console.log('Refresh interval='+refresh);
+    refresher = setInterval(small_load, refresh);
+  }
+}
+
+function small_load() {
+  console.log('small_load()');
+  $("#summary").load("/osmt/today-summ.html", small_load_done);
+}
+
+function small_load_done(respTxt, txtStatus, req) {
+  console.log('small_load_done():'+txtStatus);
+  large_load_test();  
+}
+
+function large_load_test() {
+  console.log('large_load_test()');
+  $("#gen").text($("#generation").text());
+  compute_lag();
+  if ($("#gen").text() != $("#gen_loaded").text()) {
+    console.log('Not in sync, have '+$("#gen").text()+' and '+$("#gen_loaded").text());
+    age = 0;
+    $("#gen_loaded").text($("#gen").text());
+    $("#logger").load("/osmt/today.html", large_load_done);
+    load_json();
+    set_refresher(refresh);
+  } else {
+    age += Math.round(refresh/1000);
+    tstype();
+    console.log('In sync, have '+$("#gen").text()+' and '+$("#gen_loaded").text()+' age '+age);
+    if (age > 5*60) {
+      set_refresher(5*refresh); // Backoff
+    }
+  }
+}
+
+function large_load_done() {
+  console.log('large_load_done()');
+    $(".legend").after("<div class=\"hts\">XxX</div>");
+    $(".new").slideDown(1000);
+    tstype();
+}
+
+function compute_lag() {
+  var ts = $("#summary_created").text();
+  var hts = htimestamp(ts, undefined, undefined);
+  $("#lag").text("Lag: "+hts);
+}
+
+function htimestamp(ts, now_txt, ago_txt) {
+  var then = new Date(ts);
+  var now = new Date();
+  var secs = (now.getTime()-then.getTime())/1000;
+  var mins = Math.floor(secs/60);
+  var hrs = Math.floor(secs/60/60);
+  var days = Math.floor(secs/60/60/24);
+  if (mins<60) {
+    if (mins==0) {
+      if (now_txt)
+        return now_txt;
+      else
+        return Math.trunc(secs)+"s"
+    }
+    if (mins==1) {
+      txt = "1 minute";
+      if (ago_txt)
+        txt += " "+ago_txt;
+      return txt;
+    } else {
+      txt = mins+" minutes";
+      if (ago_txt)
+        txt += " "+ago_txt;
+      return txt;
+    }
+  } else if (hrs<12) {
+    var hrstxt, mintxt;
+    if (hrs==1) {
+      hrstxt = "hour";
+    } else {
+      hrstxt = "hours";
+    }
+    var remmins = mins-hrs*60;
+    if (remmins==1) {
+      mintxt = "minute";
+    } else {
+      mintxt = "minutes";
+    }
+    if ((mins-hrs*60)==0) {
+      txt = hrs+" "+hrstxt;
+      if (ago_txt)
+        txt += " "+ago_txt;
+      return txt;
+    } else {
+      txt = hrs+" "+hrstxt+", "+remmins+" "+mintxt;
+      if (ago_txt)
+        txt += " "+ago_txt;
+      return txt;
+    }
+  } else if (then.getDay()==now.getDay()-1 ||
+		     (now.getDay()==1 && (then.getDay()!=now.getDay()))) {
+    return "Yesterday "+then.toLocaleTimeString();
+  }
+  return then.toLocaleString();
+}
+
+function tstype() {
+  $("li.cset").each(function(index) {
+    var ts = $(this).data("timestamp");
+    var hts = htimestamp(ts, "Now", "ago");
+    //console.log(index+" timetamp "+ts+" htimetamp "+hts);
+    $(this).find(".hts").text(hts);
+  });
+}
+
+var tileUrl = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+var tileUrlBw = 'http://{s}.tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png'
+var osmAttrib='&copy <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
+
+var map = new L.Map('map', {'dragging' : true, 'zoomControl': false, 'doubleClickZoom': false,}).setView(new L.LatLng(56.0, 11.4),6);
+//var osm = new L.TileLayer(tileUrlBw,
+//  {minZoom: 6, maxZoom: 18, subdomains: ['a','b','c'], attribution: osmAttrib});
+var osm = new L.TileLayer(tileUrl,
+  {minZoom: 6, maxZoom: 18, subdomains: ['a','b','c'], attribution: osmAttrib, opacity:0.4});
+map.addLayer(osm);
+map.attributionControl.setPrefix(''); // Dont show 'powered by..'
+
+var info = L.control();
+
+info.onAdd = function (map) {
+  this._div = L.DomUtil.create('div', 'mapinfo');
+  this.update();
+  return this._div;
+};
+info.update = function (props) {
+  this._div.innerHTML = '<h4>Changeset Information</h4>' +  (props ?
+        'Changeset ' + props.id + '<br />' + 'by ' + props.user
+        : 'Hover over BBox');
+};
+info.addTo(map);
+
+var markers = new L.geoJson().addTo(map);
+//load_json();
+
+function styleFunc(feature) {
+  return {
+    weight: 4,
+    opacity: 1,
+    color: feature.properties.color,
+    fillOpacity: 0.2
+  };
+}
+
+function highlightFeature(e) {
+  var layer = e.target;
+  layer.setStyle({
+    weight: 4,
+    color: '#404040',
+    dashArray: '',
+    fillOpacity: 0.7
+  });
+  if (!L.Browser.ie && !L.Browser.opera) {
+    layer.bringToFront();
+  }
+  info.update(layer.feature.properties);
+}
+
+function resetHighlight(e) {
+  markers.resetStyle(e.target);
+  info.update();
+}
+
+function zoomToFeature(e) {
+  map.fitBounds(e.target.getBounds());
+}
+
+function onEachFeature(feature, layer) {
+  layer.on({
+    mouseover: highlightFeature,
+    mouseout: resetHighlight,
+    click: zoomToFeature
+  });
+}
+
+function load_json(){
+  $.ajax({
+    datatype: "json",
+    url: "/osmt/today.json",
+    success: function(data, text) {
+      map.removeLayer(markers);
+      markers = new L.geoJson(data, { style: styleFunc, onEachFeature: onEachFeature }).addTo(map);
+    }
+  }).error(function(jqXHR, textStatus, errorThrown) { console.log("json_load() error:"+textStatus); });
+}
+</script>
+</body>

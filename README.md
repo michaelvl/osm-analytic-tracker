@@ -14,7 +14,7 @@ A running demo can be seen on http://osm.expandable.dk
 
 The purpose of this tool is:
 
-0. Proff-of-concept for an improved changeset-info service (improved compared to looking up changeset details on http://openstreetmap.org)
+0. Prof-of-concept for an improved changeset-info service (improved compared to looking up changeset details on http://openstreetmap.org)
 0. Provide insight into changes in your area of interest
 0. Improve team spirit of a regional OSM team/task-force.
 0. Quality ensurance through peer review
@@ -51,9 +51,17 @@ Geographical changes in the changeset, green are added objects, blue changed and
 
 TL;DR:
 
+0. Download a region polygon from http://download.geofabrik.de/
+0. Change polygon filename in config.json to your chosen region
+0. Run the backend as below
+0. Inspect the files in the local html directory (can be customised also through the config.json file)
+0. Optional - serve the html directory through a web-server.
+
 ```
 tracker.py -lDEBUG
 ```
+
+
 
 The tracker python script tracks OpenStreetMap minutely diffs and optionally
 filters them through a bounding-box polygon (country-based polygons can be found
