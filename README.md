@@ -90,6 +90,6 @@ for the backends should be configured.
 
 ### Links
 
-* [Danish edits as seen through OSM Analytic Difference Engine] http://osm.expandable.dk
+* [Danish edits as seen through OSM Analytic Difference Engine](http://osm.expandable.dk)
 
 * [Show Me The Way - a more visial live service](http://osmlab.github.io/show-me-the-way/)
