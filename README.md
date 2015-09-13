@@ -51,17 +51,15 @@ Geographical changes in the changeset, green are added objects, blue changed and
 
 TL;DR:
 
-0. Download a region polygon from http://download.geofabrik.de/
+0. Download a region polygon from e.g. http://download.geofabrik.de/
 0. Change polygon filename in config.json to your chosen region
-0. Run the backend as below
+0. Run the main tracker as below
 0. Inspect the files in the local html directory (can be customised also through the config.json file)
 0. Optional - serve the html directory through a web-server.
 
 ```
 tracker.py -lDEBUG
 ```
-
-
 
 The tracker python script tracks OpenStreetMap minutely diffs and optionally
 filters them through a bounding-box polygon (country-based polygons can be found
@@ -78,8 +76,20 @@ the OpenStreetMap API servers!
 Configuration is provided through the config.json file -- especially the paths
 for the backends should be configured.
 
+### Components
+
+- tracker.py  The main script, tracks OpenStreetMap minutely diffs
+- filter.py   Diff filter, filters a minutely diff through a region polygon and the analyse remaining changesets. Keeping this in a separate process improces control of memory consumption.
+- OsmChangeset.py  The class, which contain the main analysis code.  Can be used from a command line through csetinfo.py
+
+### Dependencies
+
+- Python shapely and tilezone libraries:  python-shapepy python-tz
+- Python OSM API: pip install osmapi
+
+
 ### Links
 
 * [Danish edits as seen through OSM Analytic Difference Engine] http://osm.expandable.dk
 
-* [Show Me The Way](http://osmlab.github.io/show-me-the-way/) [source](https://github.com/osmlab/show-me-the-way)
+* [Show Me The Way - a more visial live service](http://osmlab.github.io/show-me-the-way/)
