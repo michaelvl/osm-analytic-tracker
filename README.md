@@ -71,7 +71,15 @@ changeset list whenever it changes (special care has been taken to minimize
 network load).
 
 Do not track changes in a too large area or you might cause unreasonable load on
-the OpenStreetMap API servers!
+the OpenStreetMap API servers!  The definition of 'too-large' depends not on
+geographical size, but the amount of changesets and the number of changes in
+each changeset.  For each change (node, way, relation) in changesets within the
+region, the old version is looked-up through the OSM API to figure out actual
+differences, i.e. each change triggers an API lookup, and you basically want the
+changeset analysis process to take less than a minute (because by default OSM
+minutely diffs are tracked). The tracked supports multiple filter processes, but
+using this will increase memory consumption. Experience has shown that a region
+like Denmark is easily tracked using a low-end server.
 
 Configuration is provided through the config.json file -- especially the paths
 for the backends should be configured.
@@ -92,4 +100,4 @@ for the backends should be configured.
 
 * [Danish edits as seen through OSM Analytic Difference Engine](http://osm.expandable.dk)
 
-* [Show Me The Way - a more visial live service](http://osmlab.github.io/show-me-the-way/)
+* [Show Me The Way - a more visual live service](http://osmlab.github.io/show-me-the-way/)
