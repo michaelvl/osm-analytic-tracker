@@ -90,6 +90,12 @@ for the backends should be configured.
 - filter.py   Diff filter, filters a minutely diff through a region polygon and the analyse remaining changesets. Keeping this in a separate process improces control of memory consumption.
 - OsmChangeset.py  The class, which contain the main analysis code.  Can be used from a command line through csetinfo.py
 
+E.g. to view summary of a changeset (in json-format):
+
+```
+csetinfo.py -s -i <changeset-ID>
+```
+
 ### Dependencies
 
 - Python shapely and tilezone libraries:  python-shapepy python-tz
@@ -101,3 +107,5 @@ for the backends should be configured.
 * [Danish edits as seen through OSM Analytic Difference Engine](http://osm.expandable.dk)
 
 * [Show Me The Way - a more visual live service](http://osmlab.github.io/show-me-the-way/)
+
+* [Achavi diff viewer using overpass API](http://wiki.openstreetmap.org/wiki/Achavi)
