@@ -64,8 +64,8 @@ tracker.py -lDEBUG
 The tracker python script tracks OpenStreetMap minutely diffs and optionally
 filters them through a bounding-box polygon (country-based polygons can be found
 on http://download.geofabrik.de/).  Changesets found to be within the area of
-interest are anaylsed further and a number of backends generate output.  The
-HTML backeds provide HTML data which can be served through a web-server.  The
+interest are analysed further and a number of backends generate output.  The
+HTML backends provide HTML data which can be served through a web-server.  The
 client-side parts include a javascript-based poll feature that will update the
 changeset list whenever it changes (special care has been taken to minimize
 network load).
