@@ -106,6 +106,8 @@ csetinfo.py -s -i <changeset-ID>
 
 * [Danish edits as seen through OSM Analytic Difference Engine](http://osm.expandable.dk)
 
-* [Show Me The Way - a more visual live service](http://osmlab.github.io/show-me-the-way/)
-
 * [Achavi diff viewer using overpass API](http://wiki.openstreetmap.org/wiki/Achavi)
+
+* [Show Me The Way - a visual live service](http://osmlab.github.io/show-me-the-way/)
+
+* [French OSM live service](http://live.openstreetmap.fr)
