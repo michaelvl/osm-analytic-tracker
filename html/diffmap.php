@@ -67,7 +67,9 @@ map.fitBounds(<?php echo "[[$bbox[0],$bbox[1]],[$bbox[2],$bbox[3]]]" ?>);
 L.easyButton('josmicon', openInJOSM ,"Open in JOSM", map);
 
 function openInJOSM() {
-  var url = "<?php echo "http://127.0.0.1:8111/load_and_zoom?left=$bbox[1]&right=$bbox[3]&top=$bbox[2]&bottom=$bbox[0]"; ?>";
+  var mb = map.getBounds();
+  var vbox = [mb.getSouth(), mb.getWest(), mb.getNorth(), mb.getEast()];
+  var url = "http://127.0.0.1:8111/load_and_zoom?left="+vbox[1]+"&right="+vbox[3]+"&top="+vbox[2]+"&bottom="+vbox[0];
   var request = new XMLHttpRequest();
   request.open('GET', url, true);
   request.send();
