@@ -1,5 +1,5 @@
 <?php
-$cid=$_GET['cid'];
+$cid=filter_input(INPUT_GET, 'cid', FILTER_SANITIZE_NUMBER_INT);
 $bounds=file_get_contents("cset-$cid.bounds", FILE_USE_INCLUDE_PATH);
 $bbox=explode(",",$bounds);
 ?>
