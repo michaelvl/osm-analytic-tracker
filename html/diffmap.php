@@ -33,7 +33,13 @@ html, body, #map {
   background-repeat: no-repeat;
   display: block;
   padding: 1px;
-};
+}
+.leaflet-control-layers-toggle {
+  background-image: url(layers.png);
+  width: 26px;
+  height: 26px;
+  color:#000;
+}
 </style>
 </head>
 
@@ -57,10 +63,22 @@ var tileUrl = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 var tileUrlBw = 'http://{s}.tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png'
 var osmAttrib='&copy <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
 
-var map = new L.Map('map', {'dragging' : true, 'zoomControl': false, 'doubleClickZoom': false,})
-var osm = new L.TileLayer(tileUrl,
-  {minZoom: 6, maxZoom: 18, subdomains: ['a','b','c'], attribution: osmAttrib, opacity:0.4});
-map.addLayer(osm);
+var  geodkUrl = 'http://osmtools.septima.dk/mapproxy/tiles/1.0.0/kortforsyningen_ortoforaar/EPSG3857/{z}/{x}/{y}.jpeg';
+var geodkAttrib='&copy <a href="http://kortforsyningen.dk">Geodatastyrelsen Denmark</a>';
+
+var osm =   new L.TileLayer(tileUrl, {minZoom: 6, maxZoom: 18, subdomains: ['a','b','c'], attribution: osmAttrib, opacity:0.4});
+var osmbw = new L.TileLayer(tileUrlBw, {minZoom: 6, maxZoom: 18, subdomains: ['a','b','c'], attribution: osmAttrib, opacity:0.4});
+var geodk = new L.TileLayer(geodkUrl, {minZoom: 6, maxZoom: 20, attribution: geodkAttrib, opacity:0.4});
+var baseMaps = {
+    "Mapnik": osm,
+    "Mapnik BW": osmbw,
+    "Geodatastyrelsen DK": geodk
+};
+var map = new L.Map('map', {'dragging' : true, 'zoomControl': false, 'doubleClickZoom': false, layers:[osmbw, osm]})
+
+L.control.layers(baseMaps).addTo(map);
+//L.control.layers(baseMaps, overlayMaps).addTo(map);
+
 map.attributionControl.setPrefix(''); // Dont show 'powered by..'
 map.fitBounds(<?php echo "[[$bbox[0],$bbox[1]],[$bbox[2],$bbox[3]]]" ?>);
 
