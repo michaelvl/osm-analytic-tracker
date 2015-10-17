@@ -74,7 +74,7 @@ var baseMaps = {
     "Mapnik BW": osmbw,
     "Geodatastyrelsen DK": geodk
 };
-var map = new L.Map('map', {'dragging' : true, 'zoomControl': false, 'doubleClickZoom': false, layers:[osmbw, osm]})
+var map = new L.Map('map', {'dragging' : true, 'zoomControl': false, 'doubleClickZoom': false, layers:[osm]})
 
 L.control.layers(baseMaps).addTo(map);
 //L.control.layers(baseMaps, overlayMaps).addTo(map);
