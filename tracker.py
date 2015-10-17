@@ -34,7 +34,7 @@ class TrackedState:
         self.chgsets = []
         self.area_chgsets = []
         self.area_chgsets_info = {}
-        self.chgsets_updated = []
+        self.chgsets_new = []
         self.new_generation()
 
     def sort_csets(self):
@@ -114,8 +114,7 @@ class TrackedState:
     def run_backends(self):
         for b in self.backends:
             b.print_state(self)
-        for cset in self.area_chgsets:
-            self.chgsets_updated = []
+        self.chgsets_new = []
 
     def reload_backends(self, config):
         self.backends = []
@@ -188,6 +187,7 @@ def process_diff_result(state, out, track_nonfiltered):
     for c in area_chgsets:
         if not c in state.area_chgsets:
             state.area_chgsets.append(c)
+            state.chgsets_new.append(c)
         # Newer is better, ie. allow overwrite of previous data (cset might have been
         # partial in previous update)
         #buildGeoJsonDiff(c)

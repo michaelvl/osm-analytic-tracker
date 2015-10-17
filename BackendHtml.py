@@ -145,7 +145,7 @@ class Backend(Backend.Backend):
             meta = chginfo[chgid]['meta']
             summ = chginfo[chgid]['summary']
             ctype = 'cset'
-            is_new = chgid in state.chgsets_updated
+            is_new = chgid in state.chgsets_new
             if is_new:
                 ctype += ' new'
             #print 'cset=', pprint.pprint(data)
