@@ -137,8 +137,9 @@ def print_stats(bytes_in, bytes_out):
     logger.debug('Memory usage: %s (kb)' % resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
     logger.debug('Network usage: In={0}k, Out={1}k'.format(bytes_in/1024, bytes_out/1024))
 
-def fetch_diff(seqno, ctype, areafile, geojson=None, bounds=None):
-    args = ["./filter.py", "-p", "-s", str(seqno), "-t", ctype]
+def fetch_diff(state, seqno, ctype, geojson=None, bounds=None):
+    areafile = state.areafile
+    args = ["./filter.py", "-p", "-s", str(seqno), "-t", ctype, "-l", state.log_level]
     if areafile:
         args += ["-A", areafile]
     if geojson:
@@ -153,7 +154,7 @@ def fetch_diff(seqno, ctype, areafile, geojson=None, bounds=None):
             logger.debug("Call '{}' returned".format(args, out))
             break
         except subprocess.CalledProcessError as e:
-            logger.warning('*** Error calling filter2.py: {}'.format(e))
+            logger.warning('*** Error calling filter.py: {}'.format(e))
             time.sleep(60)
 
     #out = json.loads(out)
@@ -204,10 +205,10 @@ def process_diff_result(state, out, track_nonfiltered):
     # True if any updates found
     return (track_nonfiltered and len(chgsets) > 0) or len(area_chgsets) > 0
 
-def fetch_and_process_diff(state, seqno, ctype, areafile, track_nonfiltered):
+def fetch_and_process_diff(state, seqno, ctype, track_nonfiltered):
     logger.debug('Fetching diff seqno {}'.format(seqno))
     start = time.time()
-    out = fetch_diff(seqno, ctype, areafile, state.geojson, state.bounds)
+    out = fetch_diff(state, seqno, ctype, state.geojson, state.bounds)
     result = process_diff_result(state, out, track_nonfiltered)
 
     end = time.time()
@@ -271,6 +272,7 @@ def parse_opts(argv, state):
             print "Error parsing config file: '{}': {}".format(args.config_file, e)
             sys.exit(-1)
 
+    state.log_level = args.log_level
     state.areafile = args.bounds_file if args.bounds_file else state.config.get('bounds_filename', 'tracker')
     state.history = HumanTime.human2date(args.history) if args.history else HumanTime.human2date(state.config.get('history', 'tracker'))
     state.seqno = args.seqno if args.seqno else state.config.get('initial_sequenceno', 'tracker')
@@ -341,7 +343,7 @@ def parse_opts(argv, state):
 #                 r = range(state.ptr[tt].sequenceno(), state.head[tt].sequenceno()+1)
 
 #             if processes>1:
-#                 results = [pool.apply_async(fetch_diff, args=(seqno,tt,state.areafile,state.geojson,state.bounds)) for seqno in r]
+#                 results = [pool.apply_async(fetch_diff, args=(state,seqno,tt,state.geojson,state.bounds)) for seqno in r]
 #                 for r in results:
 #                     out = r.get()
 #                     logger.debug('Got result, seqno={}'.format(out['diff']['seqno']))
@@ -353,7 +355,7 @@ def parse_opts(argv, state):
 #             else:
 #                 for seqno in r:
 #                     sys.stdout.flush()
-#                     if fetch_and_process_diff(state, seqno, tt, state.areafile, state.track_nonfiltered):
+#                     if fetch_and_process_diff(state, seqno, tt, state.track_nonfiltered):
 #                         state.new_generation()
 #                     # Update backends after every diff
 #                     state.run_backends()
@@ -362,7 +364,7 @@ def parse_opts(argv, state):
 #         pool.close()
 
 
-def update_diffs(state, direction=-1, max_threads=None):
+def update_diffs(state, direction, max_threads=None):
     '''Fetch csets between state 'pointer' (excluding) and 'head' (including) in the specified direction.'''
     
     if max_threads:
@@ -370,6 +372,7 @@ def update_diffs(state, direction=-1, max_threads=None):
     else:
         processes=mp.cpu_count()
     processes = min(processes, abs(state.head.sequenceno()-state.pointer.sequenceno()))
+    logger.debug('Processes: {}'.format(processes))
     if processes>1:
         #pool = mp.Pool(processes=processes, maxtasksperchild=1)
         pool = mp.Pool(processes=processes)
@@ -386,10 +389,10 @@ def update_diffs(state, direction=-1, max_threads=None):
 
         logger.debug('Segnos ({}) to fetch: {}'.format(len(r), r))
         if processes>1:
-            #results = [pool.apply_async(fetch_diff, args=(seqno,state.dtype,state.areafile,state.geojson,state.bounds)) for seqno in r]
+            #results = [pool.apply_async(fetch_diff, args=(state,seqno,state.dtype,state.geojson,state.bounds)) for seqno in r]
             results = []
             for seqno in r:
-                res = pool.apply_async(fetch_diff, args=(seqno,state.dtype,state.areafile,state.geojson,state.bounds))
+                res = pool.apply_async(fetch_diff, args=(state,seqno,state.dtype,state.geojson,state.bounds))
                 results.append(res)
                 logger.debug('Queued seqno {} in result {}'.format(seqno, res))
 
@@ -407,7 +410,7 @@ def update_diffs(state, direction=-1, max_threads=None):
         else:
             for seqno in r:
                 sys.stdout.flush()
-                if fetch_and_process_diff(state, seqno, state.dtype, state.areafile, state.track_nonfiltered):
+                if fetch_and_process_diff(state, seqno, state.dtype, state.track_nonfiltered):
                     state.sort_csets()
                     state.new_generation()
                 # Update backends after every diff
@@ -417,10 +420,15 @@ def update_diffs(state, direction=-1, max_threads=None):
         pool.close()
 
 
-def continuous_update(state):
+def continuous_update(state, direction=1):
     state.head = state.dapi.get_state(state.dtype, seqno=None)
-    update_diffs(state, max_threads=state.max_threads)
-    time.sleep(60) #FIXME
+    start = time.time()
+    update_diffs(state, max_threads=state.max_threads, direction=direction)
+    end = time.time()
+    elapsed = end-start
+    delay = min(60, max(0, 60-elapsed))
+    logger.debug('Processing to ptr {} took {}s. Sleeping {}s'.format(state.pointer, elapsed, delay))
+    time.sleep(delay)
     state.pointer = state.head
 
 
@@ -433,7 +441,7 @@ def continuous_update_old(state):
     logger.debug('Head is:'.format(state.head))
 
     # FIXME: Head is fetched also in history
-    if fetch_and_process_diff(state, seqno, state.dtype, state.areafile, state.track_nonfiltered):
+    if fetch_and_process_diff(state, seqno, state.dtype, state.track_nonfiltered):
         state.new_generation()
 
     if state.pointer.sequenceno() == state.head.sequenceno():
@@ -521,9 +529,11 @@ def main(argv):
     state.aggr_poll_stat = [0,0]
     state.processing_timing = []
     
+    direction = -1 # Backward initially
     while True:
         try:
-            continuous_update(state)
+            continuous_update(state, direction)
+            direction = 1 # Forward after first fetch
             state.close_open_cset()
             state.cut_horizon()
             state.try_refresh_meta()
