@@ -87,7 +87,8 @@ function large_load_done() {
 }
 
 function compute_lag() {
-  var ts = $("#summary_created").text();
+  //var ts = $("#summary_created").text();
+  var ts = $("#pointer_timestamp").text();
   var hts = htimestamp(ts, undefined, undefined);
   $("#lag").text("Lag: "+hts);
 }

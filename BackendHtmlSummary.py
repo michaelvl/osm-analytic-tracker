@@ -109,4 +109,5 @@ class Backend(BackendHtml.Backend):
                 self.pprint('<div id="sequence_numbers">Diff sequence numbers: {} - {}</div>'.format(state.first_seqno, state.latest_seqno))
                 self.pprint('<div id="generation">Generation '+str(state.generation)+'</div>')
                 self.pprint('<div id="summary_created">'+now.strftime(self.js_timestamp_fmt)+'</div>')
+                self.pprint('<div id="pointer_timestamp">'+state.pointer.timestamp().strftime(self.js_timestamp_fmt)+'</div>')
             self.end_page()

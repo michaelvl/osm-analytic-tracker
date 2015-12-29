@@ -23,6 +23,9 @@ display: none;
 #summary_created {
 display: none;
 }
+#pointer_timestamp {
+display: none;
+}
 #sequence_numbers {
 display: none;
 }
