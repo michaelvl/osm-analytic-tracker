@@ -302,8 +302,6 @@ def parse_opts(argv, state):
     return state
 
 
-# def fetch_history_old(state, direction=-1, max_threads=None):
-
 #     if (state.history):
 #         state.ptr = {}
 #         if state.history_minute_based:
@@ -319,49 +317,6 @@ def parse_opts(argv, state):
 #                                 max(state.history, state.head['day'].timestamp()), state.head['hour'])
 #             state.ptr['day'] = state.dapi.get_seqno_le_timestamp('day', state.history, state.head['day'])
 #             logger.debug('Pointers: {0}, {1}, {2}'.format(state.ptr['day'], state.ptr['hour'], state.ptr['minute']))
-#     elif state.seqno:
-#         state.ptr = {}
-#         state.ptr['minute'] = state.dapi.get_state('minute', state.seqno)
-#         logger.debug('Minute pointer: {0}'.format(state.ptr['minute']))
-
-#     if max_threads:
-#         processes=int(max_threads)
-#     else:
-#         processes=mp.cpu_count()
-
-#     if processes>1:
-#         pool = mp.Pool(processes=processes, maxtasksperchild=1)
-
-#     for tt in ('day', 'hour', 'minute'):
-#         if tt in state.ptr.keys() and state.ptr[tt].sequenceno() != state.head[tt].sequenceno():
-#             logger.debug('{}: {}..{}'.format(tt, state.ptr[tt].sequenceno(), state.head[tt].sequenceno()))
-#             logger.debug('[{}]'.format(tt))
-
-#             if direction<0:
-#                 r = range(state.head[tt].sequenceno(), state.ptr[tt].sequenceno()-1, -1)
-#             else:
-#                 r = range(state.ptr[tt].sequenceno(), state.head[tt].sequenceno()+1)
-
-#             if processes>1:
-#                 results = [pool.apply_async(fetch_diff, args=(state,seqno,tt,state.geojson,state.bounds)) for seqno in r]
-#                 for r in results:
-#                     out = r.get()
-#                     logger.debug('Got result, seqno={}'.format(out['diff']['seqno']))
-#                     if process_diff_result(state, out, state.track_nonfiltered):
-#                         state.new_generation()
-#                     # Update backends after every diff
-#                     state.run_backends()
-
-#             else:
-#                 for seqno in r:
-#                     sys.stdout.flush()
-#                     if fetch_and_process_diff(state, seqno, tt, state.track_nonfiltered):
-#                         state.new_generation()
-#                     # Update backends after every diff
-#                     state.run_backends()
-
-#     if processes>1:
-#         pool.close()
 
 
 def update_diffs(state, direction, max_threads=None):
@@ -432,73 +387,73 @@ def continuous_update(state, direction=1):
     state.pointer = state.head
 
 
-def continuous_update_old(state):
-    seqno = state.pointer.sequenceno()
-    now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
-    start = time.time()
-    logger.debug('Now is {0} (UTC)'.format(now))
-    logger.debug('Pointer is: {}'.format(state.pointer))
-    logger.debug('Head is:'.format(state.head))
+# def continuous_update_old(state):
+#     seqno = state.pointer.sequenceno()
+#     now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+#     start = time.time()
+#     logger.debug('Now is {0} (UTC)'.format(now))
+#     logger.debug('Pointer is: {}'.format(state.pointer))
+#     logger.debug('Head is:'.format(state.head))
 
-    # FIXME: Head is fetched also in history
-    if fetch_and_process_diff(state, seqno, state.dtype, state.track_nonfiltered):
-        state.new_generation()
+#     # FIXME: Head is fetched also in history
+#     if fetch_and_process_diff(state, seqno, state.dtype, state.track_nonfiltered):
+#         state.new_generation()
 
-    if state.pointer.sequenceno() == state.head.sequenceno():
-        logger.debug('Area changesets:')
-        state.run_backends()
-        logger.debug('Size of: List of changesets {}, area changeset info {}'.format(sys.getsizeof(state.chgsets),
-                                                                                      sys.getsizeof(state.area_chgsets_info)))
-    else:
-        logger.info('[{0}]'.format(state.pointer.sequenceno()))
+#     if state.pointer.sequenceno() == state.head.sequenceno():
+#         logger.debug('Area changesets:')
+#         state.run_backends()
+#         logger.debug('Size of: List of changesets {}, area changeset info {}'.format(sys.getsizeof(state.chgsets),
+#                                                                                       sys.getsizeof(state.area_chgsets_info)))
+#     else:
+#         logger.info('[{0}]'.format(state.pointer.sequenceno()))
 
-    end = time.time()
-    elapsed = end-start
-    lag = now-state.pointer.timestamp()
-    state.lag_stats[min(lag.seconds, len(state.lag_stats)-1)] += 1
-    #logger.debug('Lag correction %.1fs' % (lag_corr))
-    logger.debug('Lag:  Curr {}s stats {}'.format(lag.seconds, state.lag_stats))
-    print_stats(state.metrics['bytes_in'], 0)
+#     end = time.time()
+#     elapsed = end-start
+#     lag = now-state.pointer.timestamp()
+#     state.lag_stats[min(lag.seconds, len(state.lag_stats)-1)] += 1
+#     #logger.debug('Lag correction %.1fs' % (lag_corr))
+#     logger.debug('Lag:  Curr {}s stats {}'.format(lag.seconds, state.lag_stats))
+#     print_stats(state.metrics['bytes_in'], 0)
 
-    seqno = state.pointer.sequenceno()
-    if seqno == state.head.sequenceno():
-        delay = min(60, max(0, 60-elapsed))
-        if state.fast_track:
-            next_ts = state.head.timestamp() + datetime.timedelta(seconds=60)
-            now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
-            next_s = (next_ts - now).seconds
-            if next_s > 0:
-                delay = min(next_s+next_lag, delay)
-            logger.debug('last ts {}, next ts {}, next s {}, now {}'.format(state.head.timestamp(), next_ts, next_s, now))
-        polls = 0
-        while seqno == state.head.sequenceno():
-            if delay <= 5:
-                state.aggr_poll_stat[0] += 1
-            else:
-                state.aggr_poll_stat[1] += 1
-            logger.debug('Relaxing for %.1fs, poll #%d' % (delay, polls))
-            time.sleep(delay)
-            # If there was no new minutely state after waiting, we
-            # poll more aggressively a few times
-            if polls < 2:
-                delay = 5
-            else:
-                delay = 60
-            state.head = state.dapi.get_state(state.dtype, seqno=None)
-            polls += 1
-        state.poll_stats[min(polls, len(state.poll_stats)-1)] += 1
-        if state.fast_track:
-            if polls==1:
-                next_lag -= 1
-            if polls>1:
-                next_lag += min(10, polls)
-            logger.debug('Next lag {}s'.format(next_lag))
-            logger.debug('Poll: Fast {} slow {} stats {}'.format(state.aggr_poll_stat[0],
-                                                                  state.aggr_poll_stat[1], state.poll_stats))
-    seqno = seqno+1
-    state.pointer = state.dapi.get_state(state.dtype, seqno)
-    logger.debug('Trying to catch-up, {0}..{1}, {2} to go'.format(seqno, state.head.sequenceno(),
-                                                                   state.head.sequenceno()-seqno))
+#     seqno = state.pointer.sequenceno()
+#     if seqno == state.head.sequenceno():
+#         delay = min(60, max(0, 60-elapsed))
+#         if state.fast_track:
+#             next_ts = state.head.timestamp() + datetime.timedelta(seconds=60)
+#             now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+#             next_s = (next_ts - now).seconds
+#             if next_s > 0:
+#                 delay = min(next_s+next_lag, delay)
+#             logger.debug('last ts {}, next ts {}, next s {}, now {}'.format(state.head.timestamp(), next_ts, next_s, now))
+#         polls = 0
+#         while seqno == state.head.sequenceno():
+#             if delay <= 5:
+#                 state.aggr_poll_stat[0] += 1
+#             else:
+#                 state.aggr_poll_stat[1] += 1
+#             logger.debug('Relaxing for %.1fs, poll #%d' % (delay, polls))
+#             time.sleep(delay)
+#             # If there was no new minutely state after waiting, we
+#             # poll more aggressively a few times
+#             if polls < 2:
+#                 delay = 5
+#             else:
+#                 delay = 60
+#             state.head = state.dapi.get_state(state.dtype, seqno=None)
+#             polls += 1
+#         state.poll_stats[min(polls, len(state.poll_stats)-1)] += 1
+#         if state.fast_track:
+#             if polls==1:
+#                 next_lag -= 1
+#             if polls>1:
+#                 next_lag += min(10, polls)
+#             logger.debug('Next lag {}s'.format(next_lag))
+#             logger.debug('Poll: Fast {} slow {} stats {}'.format(state.aggr_poll_stat[0],
+#                                                                   state.aggr_poll_stat[1], state.poll_stats))
+#     seqno = seqno+1
+#     state.pointer = state.dapi.get_state(state.dtype, seqno)
+#     logger.debug('Trying to catch-up, {0}..{1}, {2} to go'.format(seqno, state.head.sequenceno(),
+#                                                                    state.head.sequenceno()-seqno))
 
 
 def main(argv):
