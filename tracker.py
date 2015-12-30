@@ -227,6 +227,7 @@ def fetch_and_process_diff(state, seqno, ctype, track_nonfiltered):
 def parse_opts(argv, state):
     state.max_threads = None
     state.history = None
+    state.history_end = None
     state.dtype = 'minute'
     state.seqno = None
     state.areafile = None
@@ -245,7 +246,7 @@ def parse_opts(argv, state):
     parser.add_argument('-b', dest='backends', action='append', help='Define backend to use')
     parser.add_argument('-B', dest='bounds_file', help='Set changeset boundary file name')
     parser.add_argument('-A', dest='areafile', help='Set area filter polygon')
-    parser.add_argument('-H', dest='history', help='Define how much history to fetch')
+    parser.add_argument('-H', dest='history', action='append', help='Define how much history to fetch')
     parser.add_argument('-s', dest='seqno', help='Set initial sequence number')
     parser.add_argument('-T', dest='max_threads', help='Define maximum number of additional worker threads to use (zero means single threaded operation)')
     parser.add_argument('-l', dest='log_level', default='INFO',
@@ -274,7 +275,8 @@ def parse_opts(argv, state):
 
     state.log_level = args.log_level
     state.areafile = args.bounds_file if args.bounds_file else state.config.get('bounds_filename', 'tracker')
-    state.history = HumanTime.human2date(args.history) if args.history else HumanTime.human2date(state.config.get('history', 'tracker'))
+    state.history = HumanTime.human2date(args.history[0]) if len(args.history)>0 else HumanTime.human2date(state.config.get('history', 'tracker'))
+    state.history_end = HumanTime.human2date(args.history[1]) if len(args.history)>1 else None
     state.seqno = args.seqno if args.seqno else state.config.get('initial_sequenceno', 'tracker')
     state.max_threads = args.max_threads if args.max_threads else state.config.get('max_threads', 'tracker')
     state.geojson = state.config.get('path', 'tracker')+state.config.get('geojsondiff-filename', 'tracker')
@@ -297,7 +299,10 @@ def parse_opts(argv, state):
     if state.seqno:
         logger.debug('Initial sequence number: {}'.format(state.seqno))
     if state.history:
-        logger.debug('History back to: {}'.format(state.history))
+        if state.history_end:
+            logger.debug('History period: {} - {}'.format(state.history, state.history_end))
+        else:
+            logger.debug('History back to: {}'.format(state.history))
 
     return state
 
@@ -473,9 +478,15 @@ def main(argv):
     state.head = state.dapi.get_state(state.dtype)
     if state.history:
         state.pointer = state.dapi.get_seqno_le_timestamp('minute', state.history, state.head)
+        if state.history_end:
+            state.pointer_end = state.dapi.get_seqno_le_timestamp('minute', state.history_end, state.head)
     elif not state.reloaded:
         state.pointer = state.head
-    logger.debug('Head={} pointer={}'.format(state.head, state.pointer))
+
+    if state.history_end:
+        logger.debug('Head={} pointer={}, pointer_end={}'.format(state.head, state.pointer, state.pointer_end))
+    else:
+        logger.debug('Head={} pointer={}'.format(state.head, state.pointer))
 
     signal.signal(signal.SIGHUP, sig_handler)
 
@@ -503,6 +514,9 @@ def main(argv):
             state.reload_backends(state.config)
             state.new_generation()
             reload_backends = False
+        if hasattr(state, 'pointer_end') and state.pointer >= state.pointer_end:
+            logger.info('Reached end of period to fetch ({} - {}) - terminating'.format(state.history, state.history_end))
+            sys.exit(0)
 
 if __name__ == "__main__":
     try:

@@ -73,6 +73,9 @@ class OsmDiffApi(object):
         else:
             iter = seqno+1 # Infinite
         while ptr.timestamp() > timestamp and ptr.sequenceno() != iter and seqno > 0:
+            # FIXME: For longer time-spans it would be faster to use the
+            # knowledge that e.g. 'minutely' diffs are updated every minute,
+            # i.e. we can skip many sequence numbers here
             seqno -= 1
             ptr = self.get_state(type, seqno)
         if ptr.timestamp() > timestamp:
