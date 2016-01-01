@@ -215,7 +215,7 @@ class Changeset(object):
 
     def buildSummary(self, mileage=True):
         self.other_users = {}
-        self.mileage = {'_create':0, '_delete':0, 'by_type': {}}
+        self.mileage = {'_navigable_create':0, '_navigable_delete':0, '_all_create':0, '_all_delete':0, 'by_type': {}}
 
         for modif in self.changes:
             etype = modif['type']
@@ -262,9 +262,10 @@ class Changeset(object):
                     flon, flat = (n['lon'], n['lat'])
                 if action == 'delete':
                     d = -d
-                self.mileage['_'+action] += d
+                self.mileage['_all_'+action] += d
                 navigable = self.wayIsNavigable(data['tag'])
                 if navigable:
+                    self.mileage['_navigable_'+action] += d
                     nav_cat = navigable.pop()
                     nav_type = data['tag'][nav_cat]
                     if not nav_cat in self.mileage['by_type'].keys():

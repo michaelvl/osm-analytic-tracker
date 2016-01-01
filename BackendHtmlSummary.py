@@ -69,7 +69,7 @@ class Backend(BackendHtml.Backend):
                         if summary['_'+action] > 0:
                             for type in ['node', 'way', 'relation']:
                                 edits[type][action] += summary[action][type]
-                    self.merge_int_dict(mileage, info[chgid]['mileage'])
+                    self.merge_int_dict(mileage, info[chgid]['mileage_m'])
 
                 self.item('<img src=node.png> Nodes created: {} modified: {} deleted: {}'.format(edits['node']['create'],edits['node']['modify'],edits['node']['delete']))
                 self.item('<img src=way.png> Ways created: {} modified: {} deleted: {}'.format(edits['way']['create'],edits['way']['modify'],edits['way']['delete']))

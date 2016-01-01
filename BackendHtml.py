@@ -208,6 +208,11 @@ class Backend(Backend.Backend):
             if pn['create'] or pn['modify'] or pn['delete']:
                 self.items('Simple nodes:', [pn['create'], pn['modify'],  pn['delete']])
 
+            
+            mileage = chginfo[chgid]['mileage_m']
+            if mileage['_navigable_create'] or mileage['_navigable_delete']:
+                self.items('Navigable meters:', [int(mileage['_navigable_create']), int(mileage['_navigable_delete'])])
+
             tagdiff = chginfo[chgid]['tagdiff']
             count = 0
             max_len = 20

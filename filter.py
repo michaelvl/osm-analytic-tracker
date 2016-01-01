@@ -62,7 +62,7 @@ def process_csets(csets, dtype, seqno, geojson=None, bbox=None):
         stat[c.id] = {'source': {'type': dtype, 'sequenceno': seqno},
                       'meta': c.meta, 'summary': c.summary, 'tagdiff': c.tagdiff,
                       'simple_nodes': c.simple_nodes, 'diffs': c.buildDiffList(),
-                      'other_users': c.other_users, 'mileage': c.mileage}
+                      'other_users': c.other_users, 'mileage_m': c.mileage}
 
         if geojson:
             fn = geojson.format(id=c.id)

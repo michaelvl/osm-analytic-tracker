@@ -226,6 +226,7 @@ def fetch_and_process_diff(state, seqno, ctype, track_nonfiltered):
 
 def parse_opts(argv, state):
     state.max_threads = None
+    state.reloaded = False
     state.history = None
     state.history_end = None
     state.dtype = 'minute'
@@ -275,8 +276,9 @@ def parse_opts(argv, state):
 
     state.log_level = args.log_level
     state.areafile = args.bounds_file if args.bounds_file else state.config.get('bounds_filename', 'tracker')
-    state.history = HumanTime.human2date(args.history[0]) if len(args.history)>0 else HumanTime.human2date(state.config.get('history', 'tracker'))
-    state.history_end = HumanTime.human2date(args.history[1]) if len(args.history)>1 else None
+    if args.history:
+        state.history = HumanTime.human2date(args.history[0]) if len(args.history)>0 else HumanTime.human2date(state.config.get('history', 'tracker'))
+        state.history_end = HumanTime.human2date(args.history[1]) if len(args.history)>1 else None
     state.seqno = args.seqno if args.seqno else state.config.get('initial_sequenceno', 'tracker')
     state.max_threads = args.max_threads if args.max_threads else state.config.get('max_threads', 'tracker')
     state.geojson = state.config.get('path', 'tracker')+state.config.get('geojsondiff-filename', 'tracker')
