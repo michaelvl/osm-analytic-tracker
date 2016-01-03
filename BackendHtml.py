@@ -206,7 +206,8 @@ class Backend(Backend.Backend):
 
             pn = chginfo[chgid]['simple_nodes']
             if pn['create'] or pn['modify'] or pn['delete']:
-                self.items('Simple nodes:', [pn['create'], pn['modify'],  pn['delete']])
+                self.items('Simple nodes:', [pn['create'], pn['modify'],  pn['delete']],
+                           dclasses=['simplenodes_create','simplenodes_modify','simplenodes_delete'])
 
             
             mileage = chginfo[chgid]['mileage_m']

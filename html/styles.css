@@ -188,12 +188,20 @@ h1 {
   font-family: Ubuntu,"Bitstream Vera Sans","DejaVu Sans",Tahoma,sans-serif;font-size:16px;
 }
 
-.navigable_create {
+.node_create, .node_delete, .node_modify,
+.way_create, .way_delete, .way_modify,
+.relation_create, .relation_delete, .relation_modify,
+.simplenodes_create, .simplenodes_delete, .simplenodes_modify,
+.navigable_create, .navigable_delete {
     display: inline;
     position: relative;
 }
 
-.navigable_create:hover:after {
+.node_create:hover:after, .node_delete:hover:after, .node_modify:hover:after,
+.way_create:hover:after, .way_delete:hover:after, .way_modify:hover:after,
+.relation_create:hover:after, .relation_delete:hover:after, .relation_modify:hover:after,
+.simplenodes_create:hover:after, .simplenodes_delete:hover:after, .simplenodes_modify:hover:after,
+.navigable_create:hover:after, .navigable_delete:hover:after {
     border: solid;
     border-color: #000 transparent;
     border-width: 6px 6px 0 6px;
@@ -204,44 +212,61 @@ h1 {
     z-index: 99;
 }
 
+.node_create:hover:before, .node_delete:hover:before, .node_modify:hover:before,
+.way_create:hover:before, .way_delete:hover:before, .way_modify:hover:before,
+.relation_create:hover:before, .relation_delete:hover:before, .relation_modify:hover:before,
+.simplenodes_create:hover:before, .simplenodes_delete:hover:before, .simplenodes_modify:hover:before,
+.navigable_create:hover:before, .navigable_delete:hover:before {
+    background: #000;
+    border-radius: 5px;
+    bottom: 26px;
+    color: #fff;
+    left: 20%;
+    padding: 5px 15px;
+    position: absolute;
+    z-index: 98;
+    width: 220px;
+}
+
+.node_create:hover:before {
+    content: "Nodes created";
+}
+.node_delete:hover:before {
+    content: "Nodes deleted";
+}
+.node_modify:hover:before {
+    content: "Nodes modified";
+}
+.way_create:hover:before {
+    content: "Ways created";
+}
+.way_delete:hover:before {
+    content: "Ways deleted";
+}
+.way_modify:hover:before {
+    content: "Ways modified";
+}
+.relation_create:hover:before {
+    content: "Relations created";
+}
+.relation_delete:hover:before {
+    content: "Relations deleted";
+}
+.relation_modify:hover:before {
+    content: "Relations modified";
+}
+.simplenodes_create:hover:before {
+    content: "Simple nodes created (nodes with no tags)";
+}
+.simplenodes_delete:hover:before {
+    content: "Simple nodes deleted (nodes with no tags)";
+}
+.simplenodes_modify:hover:before {
+    content: "Simple nodes modified (nodes with no tags)";
+}
 .navigable_create:hover:before {
-    background: #000;
-    border-radius: 5px;
-    bottom: 26px;
-    color: #fff;
     content: "Navigable meters created (excluding waterways)";
-    left: 20%;
-    padding: 5px 15px;
-    position: absolute;
-    z-index: 98;
-    width: 220px;
 }
-
-.navigable_delete {
-    display: inline;
-    position: relative;
-}
-
-.navigable_delete:hover:after {
-    border: solid;
-    border-color: #000 transparent;
-    border-width: 6px 6px 0 6px;
-    bottom: 20px;
-    content: "";
-    left: 50%;
-    position: absolute;
-    z-index: 99;
-}
-
 .navigable_delete:hover:before {
-    background: #000;
-    border-radius: 5px;
-    bottom: 26px;
-    color: #fff;
     content: "Navigable meters deleted (excluding waterways)";
-    left: 20%;
-    padding: 5px 15px;
-    position: absolute;
-    z-index: 98;
-    width: 220px;
 }
