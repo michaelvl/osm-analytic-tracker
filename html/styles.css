@@ -41,6 +41,10 @@ padding:0;
 overflow:hidden;
 }
 
+ul.details {
+overflow: visible;
+}
+
 li.cset
 {
 display: inline-block;
@@ -184,14 +188,14 @@ h1 {
   font-family: Ubuntu,"Bitstream Vera Sans","DejaVu Sans",Tahoma,sans-serif;font-size:16px;
 }
 
-.node_modify {
+.navigable_create {
     display: inline;
     position: relative;
 }
 
-.node_modify:hover:before {
+.navigable_create:hover:after {
     border: solid;
-    border-color: #333 transparent;
+    border-color: #000 transparent;
     border-width: 6px 6px 0 6px;
     bottom: 20px;
     content: "";
@@ -200,13 +204,41 @@ h1 {
     z-index: 99;
 }
 
-.node_modify:hover:after {
-    background: #333;
-    background: rgba(0,0,0,.8);
+.navigable_create:hover:before {
+    background: #000;
     border-radius: 5px;
     bottom: 26px;
     color: #fff;
-    content: "Foo bar";
+    content: "Navigable meters created (excluding waterways)";
+    left: 20%;
+    padding: 5px 15px;
+    position: absolute;
+    z-index: 98;
+    width: 220px;
+}
+
+.navigable_delete {
+    display: inline;
+    position: relative;
+}
+
+.navigable_delete:hover:after {
+    border: solid;
+    border-color: #000 transparent;
+    border-width: 6px 6px 0 6px;
+    bottom: 20px;
+    content: "";
+    left: 50%;
+    position: absolute;
+    z-index: 99;
+}
+
+.navigable_delete:hover:before {
+    background: #000;
+    border-radius: 5px;
+    bottom: 26px;
+    color: #fff;
+    content: "Navigable meters deleted (excluding waterways)";
     left: 20%;
     padding: 5px 15px;
     position: absolute;

@@ -211,7 +211,8 @@ class Backend(Backend.Backend):
             
             mileage = chginfo[chgid]['mileage_m']
             if mileage['_navigable_create'] or mileage['_navigable_delete']:
-                self.items('Navigable meters:', [int(mileage['_navigable_create']), int(mileage['_navigable_delete'])])
+                self.items('Navigable meters:', [int(mileage['_navigable_create']), int(mileage['_navigable_delete'])],
+                           dclasses=['navigable_create', 'navigable_delete'])
 
             tagdiff = chginfo[chgid]['tagdiff']
             count = 0
