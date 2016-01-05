@@ -4,9 +4,9 @@ import ColourScheme as col
 import json
 
 class Backend(Backend.Backend):
-    def __init__(self, config):
-        super(Backend, self).__init__(config)
-        self.list_fname = config.getpath('path', 'BackendGeoJson')+config.get('filename', 'BackendGeoJson')
+    def __init__(self, config, subcfg):
+        super(Backend, self).__init__(config, subcfg)
+        self.list_fname = config.getpath('path', 'BackendGeoJson')+subcfg['filename']
         self.colours = col.ColourScheme()
 
         self.generation = None

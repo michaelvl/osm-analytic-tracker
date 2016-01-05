@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from osmapi import OsmApi
 import OsmDiff
 import pprint
@@ -21,11 +23,15 @@ class Changeset(object):
         self.history_one_version_back = True
         self.hist = {'node': {}, 'way':{}, 'relation':{}}
 
+        # Summary of elemets, created, modified, deleted. '_' versions are summarized across all object types
         self.summary = {'create' : { 'node': 0, 'way':0, 'relation':0, 'relation_tags':{}},
                         'modify' : { 'node': 0, 'way':0, 'relation':0, 'relation_tags':{}},
                         'delete' : { 'node': 0, 'way':0, 'relation':0, 'relation_tags':{}},
                         '_create':0, '_modify':0, '_delete':0}
+        # Tag changes
         self.tagdiff = self.getEmptyDiffDict()
+        # Tags unchanged, i.e. mostly ID if object geometrically changed
+        self.tags = {}
         # Simple (no tags) nodes
         self.simple_nodes = {'create':0, 'modify':0, 'delete':0}
 
@@ -230,6 +236,9 @@ class Changeset(object):
             diff = self.getTagDiff(etype, id, version)
             if diff:
                 self.addDiffDicts(self.tagdiff, diff)
+
+            self.tags = self.getTags(etype, id, version, self.tags)
+            pprint.pprint(self.tags)
             if etype=='node' and not diff and ('tag' not in data.keys() or not data['tag']):
                 self.simple_nodes[action] += 1
 
@@ -290,6 +299,7 @@ class Changeset(object):
                 into[ac][k] = into[ac].get(k, 0)+v
 
     def getTagDiff(self, etype, id, version):
+        ''' Compute tag diffence between 'version' and previous version '''
         diff = self.getEmptyDiffDict()
         curr = self.old(etype,id,version)
         ntags = curr['tag']
@@ -316,6 +326,30 @@ class Changeset(object):
         if not diff['create'] and not diff['delete'] and not diff['modify']:
             return None
         return diff
+
+    def getTags(self, etype, id, version, curr_tags=None):
+        '''Compute unmodified tags, i.e. tags on objects changed geometrically, but
+           where tags are identical between 'version' and previous version'''
+        if not curr_tags:
+            tags = {}
+        else:
+            tags = curr_tags
+        curr = self.old(etype,id,version)
+        ntags = curr['tag']
+        if version > 1:
+            old = self.old(etype,id,version-1)
+            otags = old['tag']
+        else:
+            old = None
+            otags = {}
+        #logger.debug('Tags curr:{}'.format(ntags))
+        #logger.debug('Tags old:{}'.format(otags))
+        for t in ntags.keys():
+            if t in otags:
+                if ntags[t]==otags[t]:
+                    k = u'{}={}'.format(t, ntags[t])
+                    tags[k] = tags.get(k, 0)+1
+        return tags
 
     def getLabel(self, etype, id, version):
         e = self.old(etype,id,version)

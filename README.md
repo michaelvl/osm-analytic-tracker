@@ -100,6 +100,7 @@ csetinfo.py -s -i <changeset-ID>
 
 - Python shapely and tilezone libraries:  python-shapepy python-tz
 - Python OSM API: pip install osmapi
+- Templates: pip install jinja2
 
 
 ### Links

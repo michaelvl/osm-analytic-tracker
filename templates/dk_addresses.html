@@ -1,0 +1,29 @@
+<h1>Recent Changesets which Changes Address Nodes</h1>
+{% import 'macros.html' as macros %}
+
+{% if csets|length==0 -%}
+No changesets.
+
+{% else -%}
+
+<ul>
+{% for cid in csets if csetinfo[cid].misc.dk_address_node_changes>0 -%}
+{% set info = csetinfo[cid] -%}
+
+{% if info.misc.state=='new' -%}
+<li class="cset new" data-timestamp="{{info.misc.timestamp|js_datetime}} UTC" data-timestamp_type="{{info.misc.timestamp_type_txt}}">
+{% else -%}
+<li class="cset" data-timestamp="{{info.misc.timestamp|js_datetime}} UTC" data-timestamp_type="{{info.misc.timestamp_type_txt}}">
+{% endif -%}
+  {{ macros.cset_head_ul(info) }}
+  <ul class="details">
+  {{ macros.cset_change_summary(info) }}
+  {{ macros.cset_tags(info) }}
+  {{ macros.cset_tagdiff(info) }}
+  {{ macros.cset_notes_li(info) }}
+  </ul>
+</li>
+
+{% endfor -%}
+</ul>
+{%- endif %}

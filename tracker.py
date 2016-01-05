@@ -1,8 +1,9 @@
 #!/usr/bin/python
 
-from osmapi import OsmApi
+import osmapi
 import OsmDiff as osmdiff
 import OsmChangeset as oc
+import ColourScheme as col
 import HumanTime
 import pprint
 import os, time, re, sys, signal
@@ -18,6 +19,8 @@ import urllib2
 import traceback
 import argparse
 import config
+import jinja2
+import operator
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +32,7 @@ class TrackedState:
         self.backend_list = []
         self.metrics = {'bytes_in': 0}
         self.last_cset_meta_refresh = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+        self.colours = col.ColourScheme()
 
     def clear_csets(self):
         self.chgsets = []
@@ -49,6 +53,7 @@ class TrackedState:
                 self.refresh_cset_meta(cset_id)
 
     def try_refresh_meta(self):
+        '''Refresh meta information - mostly to obtain new notes on changesets'''
         cfg = self.config
         timeout = cfg.get('refresh_meta_minutes', 'tracker')
         if timeout>0:
@@ -65,6 +70,53 @@ class TrackedState:
     def refresh_cset_meta(self, cset_id):
         chgset = self.api.ChangesetGet(cset_id, include_discussion=True)
         self.area_chgsets_info[cset_id]['meta'] = chgset
+
+    def preprocess_all_csets(self):
+        for cset_id in self.area_chgsets:
+            self.cset_preprocess(cset_id)
+            
+    def cset_preprocess(self, cid):
+        '''Preprocess cset, i.e. compute various information based on meta, tag info or
+           other data'''
+        csets = self.area_chgsets
+        chginfo = self.area_chgsets_info
+        meta = chginfo[cid]['meta']
+        summary = chginfo[cid]['summary']
+        if not hasattr(chginfo[cid], 'misc'):
+            misc = {}
+            chginfo[cid]['misc'] = misc
+            user = meta['user']
+            misc['user_colour'] = self.colours.get_colour(user)
+        else:
+            misc = chginfo[cid]['misc']
+            
+        if self.area_chgsets_info[cid]['meta']['open'] == 'true' or not hasattr(misc, 'timestamp_type'):
+            self.refresh_cset_meta(cid)
+            (tstype, timestamp) = oc.Changeset.get_timestamp(meta)
+            ts_type2txt = { 'created_at': 'Started', 'closed_at': 'Closed' }
+            misc['timestamp_type'] = tstype
+            misc['timestamp_type_txt'] = ts_type2txt[tstype]
+            misc['timestamp'] = timestamp
+        if cid in self.chgsets_new:
+            misc['state'] = 'new'
+        else:
+            misc['state'] = 'old'
+
+        tagdiff = chginfo[cid]['tagdiff']
+        max_len = 20
+        for action in ['create', 'modify', 'delete']:
+            tdiff = []
+            sorted_tags = sorted(tagdiff[action].items(), key=operator.itemgetter(1), reverse=True)
+            for k,v in sorted_tags:
+                tdiff.append((k, v, action))
+                if len(tdiff) == max_len<len(sorted_tags): # Max tags allowed
+                    num = len(sorted_tags)-max_len
+                    misc['processed_tagdiff_'+action+'_trailer'] = '{} other {} item{}'.format(num, action, '' if num==1 else 's')
+                    break
+            misc['processed_tagdiff_'+action] = tdiff
+
+        tags = chginfo[cid]['tags']
+        misc['dk_address_node_changes'] = len([d for d in tags if d.startswith('osak:identifier')])
 
     def cset_evict(self, cid):
         if cid in self.chgsets:
@@ -104,14 +156,15 @@ class TrackedState:
             self.generation += 1
         self.generation_timestamp = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
 
-    def load_backend(self, backend_type, config):
-        logger.debug("Load backend '{}'".format(backend_type))
-        back = importlib.import_module(backend_type)
+    def load_backend(self, backend, config):
+        logger.debug("Load backend {}".format(backend))
+        back = importlib.import_module(backend['type'])
         back = reload(back) # In case it changed
-        backend = back.Backend(config)
-        self.backends.append(backend)
+        b = back.Backend(config, backend)
+        self.backends.append(b)
 
     def run_backends(self):
+        self.preprocess_all_csets()
         for b in self.backends:
             b.print_state(self)
         self.chgsets_new = []
@@ -121,7 +174,7 @@ class TrackedState:
         #for b in self.backend_modules:
         #    reload(b)
         for back in self.backend_list:
-            self.load_backend(back, config)
+            self.load_backend(back, config, back)
 
 def save_state(state, fname='state.pickle'):
     logger.debug("Saving state to '{}'".format(fname))
@@ -151,7 +204,7 @@ def fetch_diff(state, seqno, ctype, geojson=None, bounds=None):
         try:
             logger.debug("Calling '{}'".format(args))
             out = subprocess.check_output(args)
-            logger.debug("Call '{}' returned".format(args, out))
+            logger.debug("Call returned: '{}'".format(args, out))
             break
         except subprocess.CalledProcessError as e:
             logger.warning('*** Error calling filter.py: {}'.format(e))
@@ -206,7 +259,7 @@ def process_diff_result(state, out, track_nonfiltered):
     return (track_nonfiltered and len(chgsets) > 0) or len(area_chgsets) > 0
 
 def fetch_and_process_diff(state, seqno, ctype, track_nonfiltered):
-    logger.debug('Fetching diff seqno {}'.format(seqno))
+    logger.debug('Fetching and process diff seqno {}'.format(seqno))
     start = time.time()
     out = fetch_diff(state, seqno, ctype, state.geojson, state.bounds)
     result = process_diff_result(state, out, track_nonfiltered)
@@ -216,13 +269,22 @@ def fetch_and_process_diff(state, seqno, ctype, track_nonfiltered):
     state.processing_timing.append((elapsed, ctype, seqno, start, end))
     state.processing_timing.sort(key=lambda tup: tup[0])
     state.processing_timing = state.processing_timing[:5]
-    logger.debug('Handling diff {} took {}s'.format(seqno, elapsed))
+    logger.debug('Handling diff {} took {:.2}s'.format(seqno, elapsed))
     logger.debug('Processing history:')
     for hh in state.processing_timing:
         if hh[0]>45:
             logger.warn('  type={} seqno={} elapsed={} (start={} end={})'.format(hh[1], hh[2], int(hh[0]), hh[3], hh[4]))
 
     return result
+
+def js_datetime_filter(value):
+    '''Jinja2 filter formatting timestamps in format understood by javascript'''
+    JS_TIMESTAMP_FMT = '%a, %d %b %Y %H:%M:%S %Z'
+    return value.strftime(JS_TIMESTAMP_FMT)
+
+def utc_datetime_filter(value):
+    TIMESTAMP_FMT = '%Y:%m:%d %H:%M:%S'
+    return value.strftime(TIMESTAMP_FMT)
 
 def parse_opts(argv, state):
     state.max_threads = None
@@ -244,7 +306,6 @@ def parse_opts(argv, state):
 
     parser = argparse.ArgumentParser(description='OSM Analytic Difference Engine')
     parser.add_argument('-c', dest='config_file', default='config.json', help='Set configuration file name')
-    parser.add_argument('-b', dest='backends', action='append', help='Define backend to use')
     parser.add_argument('-B', dest='bounds_file', help='Set changeset boundary file name')
     parser.add_argument('-A', dest='areafile', help='Set area filter polygon')
     parser.add_argument('-H', dest='history', action='append', help='Define how much history to fetch')
@@ -281,21 +342,23 @@ def parse_opts(argv, state):
         state.history_end = HumanTime.human2date(args.history[1]) if len(args.history)>1 else None
     state.seqno = args.seqno if args.seqno else state.config.get('initial_sequenceno', 'tracker')
     state.max_threads = args.max_threads if args.max_threads else state.config.get('max_threads', 'tracker')
-    state.geojson = state.config.get('path', 'tracker')+state.config.get('geojsondiff-filename', 'tracker')
-    state.bounds = state.config.get('path', 'tracker')+state.config.get('bounds-filename', 'tracker')
+    if state.config.get('geojsondiff-filename', 'tracker'):
+        state.geojson = state.config.get('path', 'tracker')+state.config.get('geojsondiff-filename', 'tracker')
+    if state.config.get('bounds-filename', 'tracker'):
+        state.bounds = state.config.get('path', 'tracker')+state.config.get('bounds-filename', 'tracker')
     state.areafile = args.areafile if args.areafile else state.config.get('area-filter', 'tracker')
 
-    if args.backends:
-        blist = args.backends
-    else:
-        blist = [b for b in state.config.cfg.keys() if b.startswith('Backend')]
-        if not blist:
-            print 'No backends specified'
-            sys.exit(-1)
+    state.env = jinja2.Environment(loader=jinja2.FileSystemLoader(state.config.getpath('template_path', 'tracker')))
+    state.env.filters['js_datetime'] = js_datetime_filter
+    state.env.filters['utc_datetime'] = utc_datetime_filter
+
+    blist = state.config.get('backends', 'tracker')
+    if not blist:
+        print 'No backends specified'
+        sys.exit(-1)
         
-    for backend_type in blist:
-        state.load_backend(backend_type, state.config)
-        state.backend_list.append(backend_type)
+    for backend in blist:
+        state.load_backend(backend, state.config)
     state.backend_list = blist
 
     if state.seqno:
@@ -339,15 +402,20 @@ def update_diffs(state, direction, max_threads=None):
         #pool = mp.Pool(processes=processes, maxtasksperchild=1)
         pool = mp.Pool(processes=processes)
 
+    if hasattr(state, 'pointer_end'):
+        pointer_end = state.pointer_end
+    else:
+        pointer_end = state.head
+
     #for tt in ('day', 'hour', 'minute'):
-    if state.pointer.sequenceno() != state.head.sequenceno():
+    if state.pointer.sequenceno() != pointer_end:
 
         if direction<0:
-            logger.debug('Fetch diffs: head={} pointer={}'.format(state.head.sequenceno(), state.pointer.sequenceno()))
-            r = range(state.head.sequenceno(), state.pointer.sequenceno(), -1)
+            logger.debug('Fetch diffs: pointer_end={} pointer={}'.format(pointer_end.sequenceno(), state.pointer.sequenceno()))
+            r = range(pointer_end.sequenceno(), state.pointer.sequenceno(), -1)
         else:
-            logger.debug('Fetch diffs: pointer={} head={}'.format(state.pointer.sequenceno(), state.head.sequenceno()))
-            r = range(state.pointer.sequenceno()+1, state.head.sequenceno()+1)
+            logger.debug('Fetch diffs: pointer={} pointer_end={}'.format(state.pointer.sequenceno(), pointer_end.sequenceno()))
+            r = range(state.pointer.sequenceno()+1, pointer_end.sequenceno()+1)
 
         logger.debug('Segnos ({}) to fetch: {}'.format(len(r), r))
         if processes>1:
@@ -381,6 +449,7 @@ def update_diffs(state, direction, max_threads=None):
     if processes>1:
         pool.close()
 
+    state.pointer = pointer_end
 
 def continuous_update(state, direction=1):
     state.head = state.dapi.get_state(state.dtype, seqno=None)
@@ -389,9 +458,9 @@ def continuous_update(state, direction=1):
     end = time.time()
     elapsed = end-start
     delay = min(60, max(0, 60-elapsed))
-    logger.debug('Processing to ptr {} took {}s. Sleeping {}s'.format(state.pointer, elapsed, delay))
-    time.sleep(delay)
-    state.pointer = state.head
+    if not hasattr(state, 'pointer_end'):
+        logger.debug('Processing to ptr {} took {:.2}s. Sleeping {}s'.format(state.pointer, elapsed, delay))
+        time.sleep(delay)
 
 
 # def continuous_update_old(state):
@@ -462,7 +531,6 @@ def continuous_update(state, direction=1):
 #     logger.debug('Trying to catch-up, {0}..{1}, {2} to go'.format(seqno, state.head.sequenceno(),
 #                                                                    state.head.sequenceno()-seqno))
 
-
 def main(argv):
     global reload_backends
     def sig_handler(signum, frame):
@@ -473,7 +541,8 @@ def main(argv):
     reload_backends = False
     state = TrackedState()
     state = parse_opts(argv, state)
-    state.api = OsmApi()
+
+    state.api = osmapi.OsmApi()
     state.dapi = osmdiff.OsmDiffApi()
 
     state.dapi.update_head_states()
@@ -496,17 +565,20 @@ def main(argv):
     state.lag_stats = [0 for x in range(120)]
     state.aggr_poll_stat = [0,0]
     state.processing_timing = []
-    
-    direction = -1 # Backward initially
+
+    if hasattr(state, 'pointer_end') and state.pointer >= state.pointer_end:
+        direction = 1
+    else:
+        direction = -1 # Backward initially
+
     while True:
         try:
             continuous_update(state, direction)
             direction = 1 # Forward after first fetch
-            state.close_open_cset()
             state.cut_horizon()
             state.try_refresh_meta()
 
-        except (osmdiff.OsmDiffException, urllib2.HTTPError, urllib2.URLError) as e:
+        except (osmapi.ApiError, osmdiff.OsmDiffException, urllib2.HTTPError, urllib2.URLError) as e:
             logger.error('Error retrieving data: '.format(e))
             logger.error(traceback.format_exc())
             time.sleep(60)

@@ -1,27 +1,45 @@
 {
-	"path": "html/",
-	"tracker": {
-	    "geojsondiff-filename": "cset-{id}.json",
-	    "bounds-filename": "cset-{id}.bounds",
-	    "area-filter": "denmark.poly",
-	    "history": "5 minutes ago",
-	    "max_threads": 1,
-	    "horizon_type": "sliding",
-	    "horizon_hours": 48,
-	    "refresh_meta_minutes": 10
-	},
-	"BackendDetailed": {
+    "path": "html/",
+    "tracker": {
+	"geojsondiff-filename": "cset-{id}.json",
+	"bounds-filename": "cset-{id}.bounds",
+	"area-filter": "denmark.poly",
+	"history": "5 minutes ago",
+	"max_threads": 1,
+	"horizon_type": "sliding",
+	"horizon_hours": 48,
+	"refresh_meta_minutes": 10,
+	"template_path": "templates"
+    },
+    "backends": [
+	{
+	    "type": "BackendDetailed",
 	    "print_meta": false
 	},
-	"BackendHtml": {
-		       "path": "",
-		       "filename" : "today.html",
-		       "filename_old" : "yesterday.html"
+	{
+	    "type": "BackendHtml",
+	    "show_details": true,
+	    "show_comments": true,
+	    "path": "",
+	    "filename" : "today.html",
+	    "filename_old" : "yesterday.html",
+	    "template": "changeset.html"
 	},
-	"BackendHtmlSummary": {
-		       "filename" : "today-summ.html"
+	{
+	    "type": "BackendHtml",
+	    "path": "",
+	    "filename" : "notes.html",
+	    "filename_old" : "notes-yesterday.html",
+	    "template": "notes.html"
 	},
-	"BackendGeoJson": {
-		       "filename" : "today.json"
+	{
+	    "type": "BackendHtmlSummary",
+	    "filename" : "today-summ.html",
+	    "template": "summary.html"
+	},
+	{
+	    "type": "BackendGeoJson",
+	    "filename" : "today.json"
 	}
+    ]
 }

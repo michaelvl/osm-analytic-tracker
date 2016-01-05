@@ -5,10 +5,11 @@ import OsmChangeset as oc
 import pprint
 
 class Backend(object):
-    def __init__(self, config):
+    def __init__(self, config, subcfg):
         self.debug = False
         self.generation = None
         self.config = config
+        self.subcfg = subcfg
 
     def print_state(self, state):
         time = state.generation_timestamp.strftime('%Y:%m:%d %H:%M:%S')

@@ -1,0 +1,25 @@
+<ul class="summary" >
+  <li><div>Tracked period: {{track_starttime|utc_datetime}} - {{track_endtime|utc_datetime}} UTC</div></li>
+  {% if cset_first%}
+  <li><div>Changeset period: {{cset_first|utc_datetime}} - {{track_endtime|utc_datetime}} UTC</div></li>
+  {% endif %}
+  <li><div><img src=node.png> Nodes created: {{edits['node']['create']}} modified: {{edits['node']['modify']}} deleted: {{edits['node']['delete']}}</div></li>
+  <li><div><img src=way.png> Ways created: {{edits['way']['create']}} modified: {{edits['way']['modify']}} deleted: {{edits['way']['delete']}}</div></li>
+  <li><div><img src=relation.png> Relations created: {{edits['relation']['create']}} modified: {{edits['relation']['modify']}} deleted: {{edits['relation']['delete']}}</div></li>
+  <li><div><img src=note.png> Notes: {{notes}}</div></li>
+  {% if mileage_bytype %}
+  <li><div>Mileage:</div></li>
+  <ul class="sum-list" >
+    {% for htm in mileage_bytype %}
+    <li><div>{{htm[0]}}={{htm[1]}}: {{htm[2]}} meters</div></li>
+    {% endfor %}
+    <li><div>Total navigable: {{mileage_meter}} meters ({{mileage_meter_per_hour}}m/hour)</div></li>
+  </ul>
+  {% endif %}
+  <li><div>{{ csets|length }} changesets by {{ users|length }} users</div></li>
+  <li><div id="lag">Lag</div></li>
+</ul>
+<div id="sequence_numbers">Diff sequence numbers: {{state.first_seqno}} - {{state.latest_seqno}}</div>
+<div id="generation">Generation {{state.generation}}</div>
+<div id="summary_created">{{summary_created|js_datetime}}</div>
+<div id="pointer_timestamp">{{pointer_timestamp|js_datetime}}</div>

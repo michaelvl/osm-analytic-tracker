@@ -68,14 +68,19 @@ class OsmDiffApi(object):
            timestamp. Searching back from supplied start object"""
         ptr = start
         seqno = ptr.sequenceno()
+        if type=='minute':
+            now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+            secs = (now-timestamp).total_seconds()
+            if secs > 10:
+                skip = int((now-timestamp).total_seconds()/60)
+                seqno -= skip
+                ptr = self.get_state(type, seqno)
+                logger.debug('Skipping {} sequence numbers, now={}, search timestamp={}, new ptr timestamp={}'.format(skip, now, timestamp, ptr.timestamp()))
         if max_iter:
             iter = seqno-max_iter
         else:
             iter = seqno+1 # Infinite
         while ptr.timestamp() > timestamp and ptr.sequenceno() != iter and seqno > 0:
-            # FIXME: For longer time-spans it would be faster to use the
-            # knowledge that e.g. 'minutely' diffs are updated every minute,
-            # i.e. we can skip many sequence numbers here
             seqno -= 1
             ptr = self.get_state(type, seqno)
         if ptr.timestamp() > timestamp:

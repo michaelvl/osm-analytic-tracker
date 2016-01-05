@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+   <title>OpenStreetMap Analytic Difference Engine</title>
+   <link rel="icon" href="/osm/favicon.png" type="image/png">
+   <link href="/osm/styles.css" type="text/css" rel="stylesheet"/>
+   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+   <script src="/jquery-2.1.3/jquery.min.js"></script>
+   <link rel="stylesheet" href="/leaflet-0.7.3/leaflet.css" />
+   <script src="/leaflet-0.7.3/leaflet.js"></script>
+   <script src="/osm/timestamp.js"></script>
+</head>
+<nav>
+<ul>
+<li><a href="https://github.com/MichaelVL/osm-analytic-tracker/"><img src="/osm/icon_bw.png"></a></li>
+<li><a href="/osm/index.html">Live Changesets</a></li>
+<li><a href="/osm/cset_notes.html">Changeset Notes</a></li>
+<li><a href="/osm/addresses.html">Address Changes<img src=att_l.png> NEW</a></li>
+<li><div id="lag">Lag</div></li>
+</ul>
+</nav>
+<body>
+<div id="csetlist">
+  <div id="logger">Loading...</div><br>
+</div>
+<script type="text/javascript">
+(function($)
+{
+  $(document).ready(function()
+  {
+    $.ajaxSetup( { cache: false });
+    small_load();
+  });
+})(jQuery);
+
+function small_load() {
+  console.log('small_load()');
+  $("#logger").load("/osmt/notes.html", small_load_done);
+}
+
+function small_load_done(respTxt, txtStatus, req) {
+    tstype();
+}
+
+function tstype() {
+  $("li.cset").each(function(index) {
+    var ts = $(this).data("timestamp");
+    var hts = htimestamp(ts, "Now", "ago");
+    //console.log(index+" timetamp "+ts+" htimetamp "+hts);
+    $(this).find(".hts").text(hts);
+  });
+}
+</script>
+</body>

@@ -5,15 +5,16 @@ import OsmDiff as osmdiff
 import OsmChangeset as oc
 
 class Backend(Backend.Backend):
-    def __init__(self, config):
-        super(Backend, self).__init__(config)
+    def __init__(self, config, subcfg):
+        super(Backend, self).__init__(config, subcfg)
+        self.print_meta = getattr(subcfg, 'print_meta', False)
 
     def print_state(self, state):
         strfmt = '%Y:%m:%d %H:%M:%S'
         time1 = state.first_timestamp.strftime(strfmt)
         time2 = state.timestamp.strftime(strfmt)
         print('Tracked period: {} - {} UTC'.format(time1, time2))
-        self.print_chgsets(state, self.config.get('print_meta', 'BackendDetailed'))
+        self.print_chgsets(state, self.print_meta)
 
     def print_chgsets(self, state, print_meta=False):
         csets = state.area_chgsets

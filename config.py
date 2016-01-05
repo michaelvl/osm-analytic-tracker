@@ -14,7 +14,7 @@ class Config(object):
         with open(filename) as f:
             self.cfg = json.load(f)
 
-    def get(self, what, who=None):
+    def get(self, what, who=None, default=None):
         '''Get config setting - first look in subconfig, if attribute is not there, look in global settings'''
         if who:
             subcfg = self.cfg.get(who, None)
@@ -24,7 +24,9 @@ class Config(object):
                     return x
         c = self.cfg.get(what, None)
         logger.debug("get({}, {}) -> '{}'".format(what, who, c))
-        return c
+        if c:
+            return c
+        return default
 
     def getpath(self, what, who=None):
         '''Get path setting - concatinating global and sub configs'''

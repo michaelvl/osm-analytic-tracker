@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from __future__ import print_function
 import BackendHtml
 import datetime, pytz
@@ -11,43 +13,40 @@ import logging
 logger = logging.getLogger(__name__)
 
 class Backend(BackendHtml.Backend):
-    def __init__(self, config):
-        super(Backend, self).__init__(config)
-        self.list_fname = config.getpath('path', 'BackendHtmlSummary')+config.get('filename', 'BackendHtmlSummary')
-        self.js_timestamp_fmt = '%a, %d %b %Y %H:%M:%S %Z'
-        self.generation = None
 
-        #self.start_page(self.list_fname)
+    def __init__(self, config, subcfg):
+        super(Backend, self).__init__(config, subcfg)
+        self.list_fname = config.getpath('path', 'BackendHtmlSummary')+subcfg['filename']
+        self.template_name = subcfg['template']
+        self.generation = None
         self.print_state()
-        #self.end_page()
 
     def print_state(self, state=None):
-        force = True
+        force = True # Because otherwise 'summary_created' timestamp below is not updated
         if not state or self.generation != state.generation or force:
             self.start_page(self.list_fname)
             if not state:
                 self.pprint('Nothing here yet')
             else:
+                template = state.env.get_template(self.template_name)
                 self.generation = state.generation
                 csets = state.area_chgsets
                 info = state.area_chgsets_info
-
-                strfmt = '%Y:%m:%d %H:%M:%S'
-
                 now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
-                self.start_list('summary')
-                time1 = state.first_timestamp.strftime(strfmt)
-                #time2 = datetime.datetime.now().strftime(strfmt)
-                time2 = state.timestamp.strftime(strfmt)
-                self.item('Tracked period: {} - {} UTC'.format(time1, time2))
-                tracked_hours = (state.timestamp-state.first_timestamp).total_seconds()/3600
-
+                data = {
+                    'state':             state,
+                    'track_starttime':   state.first_timestamp,
+                    'track_endtime':     state.timestamp,
+                    'tracked_hours':     (state.timestamp-state.first_timestamp).total_seconds()/3600,
+                    'summary_created':   now,
+                    'pointer_timestamp': state.pointer.timestamp()
+                }
+                cset_tracked_hours = 0
                 if state.area_chgsets:
                     first_cset = state.area_chgsets[0]
                     first_cset_ts = oc.Changeset.get_timestamp(state.area_chgsets_info[first_cset]['meta'])[1]
                     cset_tracked_hours = (state.timestamp-first_cset_ts).total_seconds()/3600
-                    self.item('Changeset period: {} - {} UTC'.format(first_cset_ts.strftime(strfmt), time2))
-                    logger.debug('Changeset period: {} - {} UTC'.format(first_cset_ts.strftime(strfmt), time2))
+                    data['cset_first'] = first_cset_ts
 
                 users = {}
                 notes = 0
@@ -70,44 +69,33 @@ class Backend(BackendHtml.Backend):
                             for type in ['node', 'way', 'relation']:
                                 edits[type][action] += summary[action][type]
                     self.merge_int_dict(mileage, info[chgid]['mileage_m'])
+                data['edits'] = edits
+                data['users'] = users
+                data['notes'] = notes
+                data['csets'] = csets
 
-                self.item('<img src=node.png> Nodes created: {} modified: {} deleted: {}'.format(edits['node']['create'],edits['node']['modify'],edits['node']['delete']))
-                self.item('<img src=way.png> Ways created: {} modified: {} deleted: {}'.format(edits['way']['create'],edits['way']['modify'],edits['way']['delete']))
-                self.item('<img src=relation.png> Relations created: {} modified: {} deleted: {}'.format(edits['relation']['create'],edits['relation']['modify'],edits['relation']['delete']))
-                self.item('<img src=note.png> Notes: {}'.format(notes))
-
+                mileage_bytype = []
                 if mileage:
                     sum = 0
                     num_items = 0
-                    self.item('Mileage:')
-                    self.start_list(lclass='sum-list')
                     by_type = mileage['by_type']
                     for cat in by_type.keys():
                         mi = [(t,int(by_type[cat][t])) for t in by_type[cat].keys()]
                         mi = sorted(mi, key=lambda x: x[1], reverse=True)
                         for typ,m in mi:
                             if num_items < 13:
-                                self.item('{}={}: {} meters'.format(cat, typ, self._i2s(m)))
+                                mileage_bytype.append((cat, typ, self._i2s(m)))
                             sum += m
                             num_items += 1
+                    data['mileage_bytype'] = mileage_bytype
                     if cset_tracked_hours>0:
-                        self.item('Total navigable: {} meters ({}m/hour)'.format(self._i2s(sum), self._i2s(int(sum/cset_tracked_hours))))
-                    self.end_list()
-
-                txt_users = 'users'
-                txt_cset = 'changesets'
-                if len(users) == 1:
-                    txt_users = 'user'
-                if len(csets) == 1:
-                    txt_cset = 'changeset'
-                self.item('{} {} by {} {}'.format(len(csets), txt_cset, len(users), txt_users))
-                self.end_list()
+                        data['mileage_meter'] = self._i2s(sum)
+                        data['mileage_meter_per_hour'] = self._i2s(int(sum/cset_tracked_hours))
 
                 if hasattr(state, 'pointer'):
                     lag = now-state.pointer.timestamp()
-                    self.pprint('<div id="lag">Lag: {}s</div>'.format(int(lag.seconds)))
-                self.pprint('<div id="sequence_numbers">Diff sequence numbers: {} - {}</div>'.format(state.first_seqno, state.latest_seqno))
-                self.pprint('<div id="generation">Generation '+str(state.generation)+'</div>')
-                self.pprint('<div id="summary_created">'+now.strftime(self.js_timestamp_fmt)+'</div>')
-                self.pprint('<div id="pointer_timestamp">'+state.pointer.timestamp().strftime(self.js_timestamp_fmt)+'</div>')
+                    data['lag_seconds'] = int(lag.seconds)
+
+                logger.debug('Data passed to template: {}'.format(data))
+                self.pprint(template.render(data))
             self.end_page()

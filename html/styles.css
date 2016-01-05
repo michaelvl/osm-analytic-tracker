@@ -1,5 +1,49 @@
+nav ul {
+    display: inline-block;
+    position:fixed; top:0px; margin:auto; z-index:100000; width:100%;
+    background:rgb(30,85,122);
+    height:28px; line-height: 28px;
+    padding: 5px;
+    opacity:1;
+    border-bottom: 2px solid rgb(255,255,255);
+}
 body {
-font-family: Ubuntu,"Bitstream Vera Sans","DejaVu Sans",Tahoma,sans-serif;font-size:12px;
+    padding-top:40px;
+}
+nav ul li:first-child {
+    #width: 200px;
+}
+#nav ul li:last-child {
+#    float:right;
+#    overflow: hidden;
+#    #width: auto;
+#    font-weight:normal;
+#    padding-right: 20px;
+#}
+nav ul li {
+    #width: 140px;
+    color: #fff;
+    font-weight:bold;
+}
+nav ul li a {
+    display: block;
+    margin-right: 20px;
+    #font-size: 14px;
+    #line-height: 44px;
+    text-align: center;
+    text-decoration: none;
+    color: #fff;
+}
+nav ul li a:hover {
+    color: #fff;
+}
+nav ul li.selected a {
+    color: #fff;
+}
+
+body {
+    font-family: Ubuntu,"Bitstream Vera Sans","DejaVu Sans",Tahoma,sans-serif;font-size:12px;
+    margin: 0;
 }
 
 #map {
@@ -7,6 +51,10 @@ display:inline-block;
 vertical-align:top;
 width: 480px;
 height: 320px;
+}
+
+#csetlist {
+    margin: 8px;
 }
 
 #summary {
@@ -138,11 +186,15 @@ background-color: rgb(220,255,220);
 }
 ul.details li.action_delete div:first-child
 {
-background-color: rgb(255,230,230);
+background-color: rgb(255,220,220);
 }
 ul.details li.action_modify div:first-child
 {
 background-color: rgb(250,250,200);
+}
+ul.details li.action_geomodif div:first-child
+{
+background-color: rgb(236,236,236);
 }
 
 ul.details li div.trailer {
