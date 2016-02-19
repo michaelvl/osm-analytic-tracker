@@ -62,6 +62,8 @@ class TrackedState:
                 logger.debug('Refreshing all cset meta information')
                 self.last_cset_meta_refresh = now
                 self.refresh_all_meta()
+                #FIXME: It would be sufficient to bump generation if something relevant changed, like notes count
+                self.new_generation()
 
     def refresh_all_meta(self):
         for cset_id in self.area_chgsets:
