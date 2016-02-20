@@ -36,8 +36,14 @@ class Backend(Backend.Backend):
         if set(['min_lon', 'min_lat', 'max_lon', 'max_lat']).issubset(meta.keys()):
             (x1, x2, y1, y2) = (meta['min_lat'], meta['max_lat'], meta['min_lon'], meta['max_lon'])
             colour = '#'+self.colours.get_colour(meta['user'])
+            if 'comment' in meta['tag'].keys():
+                comment = meta['tag']['comment']
+            else:
+                comment = '*** no comment ***'
             bbox = { "type": "Feature",
-                     "properties": { 'color': colour, 'user': meta['user'], 'id': meta['id'] },
+                     "properties": { 'color': colour, 'user': meta['user'], 'id': meta['id'], 'comment': comment,
+                                     'url': "http://www.openstreetmap.org/changeset/"+str(meta['id']),
+                                     'visualdiff': "http://osm.expandable.dk/osm/diffmap.php?cid="+str(meta['id'])},
                      "geometry": {
                          #"type": "Polygon",
                          #"coordinates": [[[y1,x1],[y2,x1],[y2,x2],[y1,x2],[y1,x1]]]

@@ -34,6 +34,15 @@ html, body, #map {
   display: block;
   padding: 1px;
 }
+.osmicon {
+  background-image: url(osm-icon.png);
+  width: 24px;
+  height: 25px;
+  background-position: 50% 50%;
+  background-repeat: no-repeat;
+  display: block;
+  padding: 1px;
+}
 .leaflet-control-layers-toggle {
   background-image: url(layers.png);
   width: 26px;
@@ -48,7 +57,7 @@ html, body, #map {
 </div>
 
 <script type="text/javascript">
-<?php echo "var jsonfile = '/osmt/cset-$cid.json';\n";?>
+<?php echo "var jsonfile = '/osmt/cset-$cid.json';\nvar cid = '$cid';";?>
 
 (function($)
 {
@@ -83,6 +92,7 @@ map.attributionControl.setPrefix(''); // Dont show 'powered by..'
 map.fitBounds(<?php echo "[[$bbox[0],$bbox[1]],[$bbox[2],$bbox[3]]]" ?>);
 
 L.easyButton('josmicon', openInJOSM ,"Open in JOSM", map);
+L.easyButton('osmicon', openOSM ,"Open changeset on openstretmap.org", map);
 
 function openInJOSM() {
   var mb = map.getBounds();
@@ -91,6 +101,10 @@ function openInJOSM() {
   var request = new XMLHttpRequest();
   request.open('GET', url, true);
   request.send();
+}
+function openOSM() {
+  var url = "http://www.openstreetmap.org/changeset/"+cid;
+  window.location = url;
 }
 
 var markers;

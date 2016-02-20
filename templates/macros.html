@@ -93,7 +93,7 @@
 {% macro cset_notes_li(info) %}
   <!-- cset_notes -->
   {% for nn in info.meta.discussion %}
-    <li><div class="trailer"><img src=user.png>{{nn.user|e}}: {{nn.text|e}}</div></li>
+    <li><div class="trailer"><img src="/osm/user.png">{{nn.user|e}}: {{nn.text|e}}</div></li>
   {% endfor %}
 {%- endmacro %}
 

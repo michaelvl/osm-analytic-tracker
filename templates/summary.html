@@ -3,10 +3,10 @@
   {% if cset_first%}
   <li><div>Changeset period: {{cset_first|utc_datetime}} - {{track_endtime|utc_datetime}} UTC</div></li>
   {% endif %}
-  <li><div><img src=node.png> Nodes created: {{edits['node']['create']}} modified: {{edits['node']['modify']}} deleted: {{edits['node']['delete']}}</div></li>
-  <li><div><img src=way.png> Ways created: {{edits['way']['create']}} modified: {{edits['way']['modify']}} deleted: {{edits['way']['delete']}}</div></li>
-  <li><div><img src=relation.png> Relations created: {{edits['relation']['create']}} modified: {{edits['relation']['modify']}} deleted: {{edits['relation']['delete']}}</div></li>
-  <li><div><img src=note.png> Notes: {{notes}}</div></li>
+  <li><div><img src="/osm/node.png"> Nodes created: {{edits['node']['create']}} modified: {{edits['node']['modify']}} deleted: {{edits['node']['delete']}}</div></li>
+  <li><div><img src="/osm/way.png"> Ways created: {{edits['way']['create']}} modified: {{edits['way']['modify']}} deleted: {{edits['way']['delete']}}</div></li>
+  <li><div><img src="/osm/relation.png"> Relations created: {{edits['relation']['create']}} modified: {{edits['relation']['modify']}} deleted: {{edits['relation']['delete']}}</div></li>
+  <li><div><img src="/osm/note.png"> Notes: {{notes}}</div></li>
   {% if mileage_bytype %}
   <li><div>Mileage:</div></li>
   <ul class="sum-list" >

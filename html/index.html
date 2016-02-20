@@ -19,7 +19,8 @@
 <li><a href="https://github.com/MichaelVL/osm-analytic-tracker/"><img src="/osm/icon_bw.png"></a></li>
 <li><a href="/osm/index.html">Live Changesets</a></li>
 <li><a href="/osm/cset_notes.html">Changeset Notes</a></li>
-<li><a href="/osm/addresses.html">Address Changes<img src=att_l.png> NEW</a></li>
+<li><a href="/osm/addresses.html">Address Changes</a></li>
+<!-- <li><a href="/osm/addresses.html">New feature<img src=att_l.png> NEW</a></li> -->
 </ul>
 </nav>
 <body>
@@ -94,7 +95,7 @@ function large_load_done() {
     tstype();
 }
 
-function compute_lag() {
+function compute_lag(ts_src, dest) {
   //var ts = $("#summary_created").text();
   var ts = $("#pointer_timestamp").text();
   var hts = htimestamp(ts, undefined, undefined);
@@ -122,19 +123,23 @@ var osm = new L.TileLayer(tileUrl,
 map.addLayer(osm);
 map.attributionControl.setPrefix(''); // Dont show 'powered by..'
 
-var info = L.control();
+//var info = L.control();
 
-info.onAdd = function (map) {
-  this._div = L.DomUtil.create('div', 'mapinfo');
-  this.update();
-  return this._div;
-};
-info.update = function (props) {
-  this._div.innerHTML = '<h4>Changeset Information</h4>' +  (props ?
-        'Changeset ' + props.id + '<br />' + 'by ' + props.user
-        : 'Hover over BBox');
-};
-info.addTo(map);
+//info.onAdd = function (map) {
+//  this._div = L.DomUtil.create('div', 'mapinfo');
+//  this.update();
+//  return this._div;
+//};
+//info.update = function (props) {
+//    if (props) {
+//        this._div.innerHTML = '<h4>Changeset ' + props.id + '</h4>'
+//            + '<span class="mapinfo-comment">' + props.comment + '</span><br />'
+//            + 'by <span class="mapinfo-user">' + props.user + '</span>';
+//    } else {
+//        this._div.innerHTML = '<h4>Changeset Information</h4>' + 'Hover over BBox';
+//    }
+//};
+//info.addTo(map);
 
 var markers = new L.geoJson().addTo(map);
 //load_json();
@@ -150,6 +155,8 @@ function styleFunc(feature) {
 
 function highlightFeature(e) {
   var layer = e.target;
+  var popbody = 'Comment: <span class="mapinfo-comment">'+layer.feature.properties.comment+'</span><br />User: <span class="mapinfo-user">'+layer.feature.properties.user+'</span>';  
+  layer.bindPopup(popbody).openPopup();  
   layer.setStyle({
     weight: 4,
     color: '#404040',
@@ -159,7 +166,7 @@ function highlightFeature(e) {
   if (!L.Browser.ie && !L.Browser.opera) {
     layer.bringToFront();
   }
-  info.update(layer.feature.properties);
+  //info.update(layer.feature.properties);
 }
 
 function resetHighlight(e) {
@@ -170,12 +177,17 @@ function resetHighlight(e) {
 function zoomToFeature(e) {
   map.fitBounds(e.target.getBounds());
 }
+function gotoVisualDiffFeature(e) {
+  window.open(e.target.feature.properties.visualdiff);
+  //window.open(e.target.feature.properties.url);
+}
 
 function onEachFeature(feature, layer) {
   layer.on({
     mouseover: highlightFeature,
     mouseout: resetHighlight,
-    click: zoomToFeature
+    click: gotoVisualDiffFeature
+    //click: zoomToFeature
   });
 }
 

@@ -27,7 +27,9 @@ nav ul li {
 }
 nav ul li a {
     display: block;
-    margin-right: 20px;
+    padding-left: 10px;
+    padding-right: 10px;
+    border-right: 2px solid rgb(50,105,142);
     #font-size: 14px;
     #line-height: 44px;
     text-align: center;
@@ -234,6 +236,14 @@ margin-left: 10px;
 .mapinfo h4 {
     margin: 0 0 5px;
     color: #777;
+}
+.mapinfo-comment {
+    color: #444;
+    font-style: oblique;
+}
+.mapinfo-user {
+    color: #444;
+    font-style: oblique;
 }
 
 h1 {
