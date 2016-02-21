@@ -2,6 +2,7 @@ from __future__ import print_function
 import Backend
 import ColourScheme as col
 import json
+import datetime
 
 class Backend(Backend.Backend):
     def __init__(self, config, subcfg):
@@ -40,8 +41,15 @@ class Backend(Backend.Backend):
                 comment = meta['tag']['comment']
             else:
                 comment = '*** no comment ***'
-            bbox = { "type": "Feature",
+            utfmeta = {}
+            for k in meta:
+                if isinstance(meta[k], datetime.datetime):
+                    utfmeta[k] = str(meta[k])
+                else:
+                    utfmeta[k] = meta[k]
+            feature = { "type": "Feature",
                      "properties": { 'color': colour, 'user': meta['user'], 'id': meta['id'], 'comment': comment,
+                                     'meta': utfmeta,
                                      'url': "http://www.openstreetmap.org/changeset/"+str(meta['id']),
                                      'visualdiff': "http://osm.expandable.dk/osm/diffmap.php?cid="+str(meta['id'])},
                      "geometry": {
@@ -51,7 +59,7 @@ class Backend(Backend.Backend):
                          "coordinates": [[y1,x1],[y2,x1],[y2,x2],[y1,x2],[y1,x1]]
                      }
             }
-            geoj['features'].append(bbox)
+            geoj['features'].append(feature)
 
     def print_chgsets(self, csets, info):
         geoj = { "type": "FeatureCollection",

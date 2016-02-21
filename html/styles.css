@@ -233,17 +233,15 @@ margin-left: 10px;
     box-shadow: 0 0 15px rgba(0,0,0,0.2);
     border-radius: 5px;
 }
-.mapinfo h4 {
-    margin: 0 0 5px;
-    color: #777;
+table {
+    border-spacing: 0;
+    border-collapse: collapse;
 }
-.mapinfo-comment {
-    color: #444;
-    font-style: oblique;
-}
-.mapinfo-user {
-    color: #444;
-    font-style: oblique;
+td {
+    padding-left: 2px;
+    padding-right: 4px;
+    border: 1px solid rgb(100,100,100);
+  font-family: Ubuntu,"Bitstream Vera Sans","DejaVu Sans",Tahoma,sans-serif;font-size:11px;
 }
 
 h1 {
