@@ -162,7 +162,7 @@ function highlightFeature(e) {
   tag = layer.feature.properties.meta['tag'];
   console.log('tag='+tag);
   for (var k in h) {
-      if (k!= 'tag' && k!='min_lat' && k!='max_lat' && k!='min_lon' && k!='max_lon' && k!='open' && k!='uid' && k!='discussion' && h.hasOwnProperty(k)) {
+      if (k!= 'tag' && k!='min_lat' && k!='max_lat' && k!='min_lon' && k!='max_lon' && k!='uid' && k!='discussion' && h.hasOwnProperty(k)) {
       popbody += '<tr><td>' + k + '</td><td>' + h[k] + '</td></tr>';
     }
   }
