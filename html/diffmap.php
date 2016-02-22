@@ -92,7 +92,7 @@ map.attributionControl.setPrefix(''); // Dont show 'powered by..'
 map.fitBounds(<?php echo "[[$bbox[0],$bbox[1]],[$bbox[2],$bbox[3]]]" ?>);
 
 L.easyButton('josmicon', openInJOSM ,"Open in JOSM", map);
-L.easyButton('osmicon', openOSM ,"Open changeset on openstretmap.org", map);
+L.easyButton('osmicon', openOSM ,"Open changeset on openstreetmap.org", map);
 
 function openInJOSM() {
   var mb = map.getBounds();
