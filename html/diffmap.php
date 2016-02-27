@@ -10,7 +10,7 @@ $bbox=explode(",",$bounds);
 <head>
    <title>OpenStreetMap Difference Engine</title>
    <link rel="icon" href="/osm/favicon.png" type="image/png">
-   <!--link href="/osm/styles.css" type="text/css" rel="stylesheet"/ -->
+   <link href="/osm/styles.css" type="text/css" rel="stylesheet"/>
    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
    <script src="/jquery-2.1.3/jquery.min.js"></script>
    <link rel="stylesheet" href="/leaflet-0.7.3/leaflet.css" />
@@ -131,25 +131,88 @@ function pointToLayer(feature, latlng) {
     });
 }
 
+var layerPopup;
 function highlightFeature(e) {
-  var layer = e.target;
-  layer.setStyle({
-    weight: 4,
-    color: '#404040',
-    dashArray: '',
-    fillOpacity: 0.7
-  });
-  if (!L.Browser.ie && !L.Browser.opera) {
-    layer.bringToFront();
-  }
+    var layer = e.target;
+    h = layer.feature.properties.meta;
+    tag = layer.feature.properties.tag;
+    var popbody = 'Action: '+layer.feature.properties.action;
+    var ksum = {}
+    for (var v in tag) {
+        for (var k in tag[v]) {
+            ksum[k] += 1;
+	}
+    }
+    var kstate = {}
+    for (var k in ksum) {
+        console.log('ksum, k='+k);
+	var first = undefined;
+        for (var v in tag) {
+            if (first==undefined) {
+                first = tag[v][k];
+            }
+            if (tag[v][k]==undefined) {
+                kstate[k] = "tagadded";
+            } else if (tag[v][k]!=first) {
+                kstate[k] = "tagchanged";
+            }
+        }
+    }
+
+    popbody += '<table><thead><th>version</th>';
+    for (var v in tag) {
+        popbody += '<th>' + v + '</th>';
+    }
+    popbody += '</thead><tbody>';
+    for (var k in ksum) {
+        console.log('k='+k+' kstate='+kstate[k]);
+        if (ksum.hasOwnProperty(k)) {
+            if (kstate[k]==undefined) {
+                popbody += '<tr><td>' + k + '</td>';
+            } else {
+                popbody += '<tr class="'+kstate[k]+'"><td>' + k + '</td>';
+            }
+            for (var v in tag) {
+          	console.log('v='+v);
+		if (tag[v][k]!=undefined) {
+                    popbody += '<td>' + tag[v][k] + '</td>';
+		} else {
+                    popbody += '<td class="undefined"></td>';
+		}
+	    }
+            popbody += '</tr>';
+        }
+    }
+    popbody += '</tbody></table>';
+    if (layer.feature.properties.popupContent!=undefined) {
+        popbody += layer.feature.properties.popupContent;
+    }
+    console.log('popbody='+popbody);
+
+    //var coords = layer.feature.geometry.coordinates;
+    //var swapped_coords = [coords[0][1], coords[0][0]];
+    if (map) {
+       layerPopup = L.popup({offset:new L.Point(0,-6), closeButton: false})
+           //.setLatLng(swapped_coords)
+           .setLatLng(e.latlng)
+           .setContent(popbody)
+           .openOn(map);
+    }
+}
+
+function resetHighlight(e) {
+    if (layerPopup && map) {
+        map.closePopup(layerPopup);
+        layerPopup = null;
+    }
 }
 
 function onEachFeature(feature, layer) {
-  var popupContent = "";
-  if (feature.properties && feature.properties.popupContent) {
-    popupContent += feature.properties.popupContent;
-    layer.bindPopup(popupContent);
-  }
+  layer.on({
+    mouseover: highlightFeature,
+    mouseout: resetHighlight,
+    //click: gotoVisualDiffFeature
+  });
 }
 
 function load_json(){

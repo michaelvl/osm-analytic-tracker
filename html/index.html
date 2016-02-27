@@ -9,6 +9,7 @@
    <link rel="icon" href="/osm/favicon.png" type="image/png">
    <link href="/osm/styles.css" type="text/css" rel="stylesheet"/>
    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+   <meta http-equiv="refresh" content="86400">
    <script src="/jquery-2.1.3/jquery.min.js"></script>
    <link rel="stylesheet" href="/leaflet-0.7.3/leaflet.css" />
    <script src="/leaflet-0.7.3/leaflet.js"></script>
@@ -23,7 +24,7 @@
 <!-- <li><a href="/osm/addresses.html">New feature<img src=att_l.png> NEW</a></li> -->
 </ul>
 </nav>
-<body>
+<body class="navbar">
 <div id="gen" style="display:none">-</div>
 <div id="gen_loaded" style="display:none">-</div>
 <div style="display:inline-block">
@@ -123,26 +124,7 @@ var osm = new L.TileLayer(tileUrl,
 map.addLayer(osm);
 map.attributionControl.setPrefix(''); // Dont show 'powered by..'
 
-//var info = L.control();
-
-//info.onAdd = function (map) {
-//  this._div = L.DomUtil.create('div', 'mapinfo');
-//  this.update();
-//  return this._div;
-//};
-//info.update = function (props) {
-//    if (props) {
-//        this._div.innerHTML = '<h4>Changeset ' + props.id + '</h4>'
-//            + '<span class="mapinfo-comment">' + props.comment + '</span><br />'
-//            + 'by <span class="mapinfo-user">' + props.user + '</span>';
-//    } else {
-//        this._div.innerHTML = '<h4>Changeset Information</h4>' + 'Hover over BBox';
-//    }
-//};
-//info.addTo(map);
-
 var markers = new L.geoJson().addTo(map);
-//load_json();
 
 function styleFunc(feature) {
   return {
@@ -153,42 +135,41 @@ function styleFunc(feature) {
   };
 }
 
+var layerPopup;
 function highlightFeature(e) {
-  var layer = e.target;
-  //var popbody = 'Comment: <span class="mapinfo-comment">'+layer.feature.properties.comment+'</span><br />User: <span class="mapinfo-user">'+layer.feature.properties.user+'</span>';
-  var popbody = '<table><tbody>';
-  h = layer.feature.properties.meta;
-  console.log('h='+h);
-  tag = layer.feature.properties.meta['tag'];
-  console.log('tag='+tag);
-  for (var k in h) {
-      if (k!= 'tag' && k!='min_lat' && k!='max_lat' && k!='min_lon' && k!='max_lon' && k!='uid' && k!='discussion' && h.hasOwnProperty(k)) {
-      popbody += '<tr><td>' + k + '</td><td>' + h[k] + '</td></tr>';
+    var layer = e.target;
+    var popbody = '<table><tbody>';
+    h = layer.feature.properties.meta;
+    tag = layer.feature.properties.meta['tag'];
+    for (var k in h) {
+        if (k!= 'tag' && k!='min_lat' && k!='max_lat' && k!='min_lon' && k!='max_lon'
+	    && k!='uid' && k!='discussion' && k!='open' &&h.hasOwnProperty(k)) {
+            popbody += '<tr><td>' + k + '</td><td>' + h[k] + '</td></tr>';
+        }
     }
-  }
-  for (var k in tag) {
-      if (k!='locale' && tag.hasOwnProperty(k)) {
-      popbody += '<tr><td>' + k + '</td><td>' + tag[k] + '</td></tr>';
+    for (var k in tag) {
+        if (k!='locale' && tag.hasOwnProperty(k)) {
+            popbody += '<tr><td>' + k + '</td><td>' + tag[k] + '</td></tr>';
+        }
     }
-  }
-  popbody += '</tbody></table>';
-      
-  layer.bindPopup(popbody).openPopup();  
-  layer.setStyle({
-    weight: 4,
-    color: '#404040',
-    dashArray: '',
-    fillOpacity: 0.7
-  });
-  if (!L.Browser.ie && !L.Browser.opera) {
-    layer.bringToFront();
-  }
-  //info.update(layer.feature.properties);
+    popbody += '</tbody></table>';
+
+    //var coords = layer.feature.geometry.coordinates;
+    //var swapped_coords = [coords[0][1], coords[0][0]];
+    if (map) {
+       layerPopup = L.popup({offset:new L.Point(0,-6), closeButton: false})
+           //.setLatLng(swapped_coords)
+           .setLatLng(e.latlng)
+           .setContent(popbody)
+           .openOn(map);
+    }
 }
 
 function resetHighlight(e) {
-  markers.resetStyle(e.target);
-  //info.update();
+    if (layerPopup && map) {
+        map.closePopup(layerPopup);
+        layerPopup = null;
+    }
 }
 
 function zoomToFeature(e) {

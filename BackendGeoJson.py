@@ -3,6 +3,9 @@ import Backend
 import ColourScheme as col
 import json
 import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 class Backend(Backend.Backend):
     def __init__(self, config, subcfg):
@@ -47,8 +50,11 @@ class Backend(Backend.Backend):
                     utfmeta[k] = str(meta[k])
                 else:
                     utfmeta[k] = meta[k]
+            utfmeta['discussion'] = meta['discussion'][:]
+            for n in utfmeta['discussion']:
+                n['date'] = str(n['date'])
             feature = { "type": "Feature",
-                     "properties": { 'color': colour, 'user': meta['user'], 'id': meta['id'], 'comment': comment,
+                     "properties": { 'color': colour, 'id': meta['id'],
                                      'meta': utfmeta,
                                      'url': "http://www.openstreetmap.org/changeset/"+str(meta['id']),
                                      'visualdiff': "http://osm.expandable.dk/osm/diffmap.php?cid="+str(meta['id'])},
@@ -70,5 +76,6 @@ class Backend(Backend.Backend):
                 self.add_cset_bbox(geoj, data['meta'])
 
         self.start_file(self.list_fname)
+        logger.debug('Data sent to json file={}'.format(geoj))
         self.pprint(json.dumps(geoj))
         self.end_file()

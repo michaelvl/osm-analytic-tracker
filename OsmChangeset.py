@@ -66,7 +66,8 @@ class Changeset(object):
         if self.other_users:
             print 'Modifies objects previously edited by: {}'.format(pprint.pformat(self.other_users))
         if self.mileage:
-            print 'Mileage (ways): {} meters'.format(int(self.mileage['_create']-self.mileage['_delete']))
+            print 'Mileage (ways): {} meters'.format(int(self.mileage['_all_create']-self.mileage['_all_delete']))
+            print 'Mileage (navigable): {} meters'.format(int(self.mileage['_navigable_create']-self.mileage['_navigable_delete']))
             for nav_cat in self.mileage['by_type'].keys():
                 for nav_type in self.mileage['by_type'][nav_cat].keys():
                     print 'Mileage ({}={}): {} meters'.format(nav_cat, nav_type,
@@ -239,10 +240,17 @@ class Changeset(object):
 
             self.tags = self.getTags(etype, id, version, self.tags)
             pprint.pprint(self.tags)
-            if etype=='node' and not diff and ('tag' not in data.keys() or not data['tag']):
-                self.simple_nodes[action] += 1
+            if etype=='node':
+                if action == 'delete':
+                    old = self.old(etype,id,version-1)
+                    if not diff and ('tag' not in old.keys() or not old['tag']):
+                        self.simple_nodes[action] += 1
+                else:
+                    if not diff and ('tag' not in data.keys() or not data['tag']):
+                        self.simple_nodes[action] += 1
 
-            if action == 'modify':
+            # For modify and delete we summarize affected users
+            if action != 'create':
                 old = self.old(etype,id,version-1)
                 old_uid = old['uid']
                 if old_uid != data['uid']:
@@ -629,29 +637,23 @@ class Changeset(object):
                     g.addLineStringPoint(f, n['lon'], n['lat'])
 
             if f:
-                if action=='delete':
-                    g.addColour(f, c_delete)
-                elif action=='create':
-                    g.addColour(f, c_create)
-                else:
-                    g.addColour(f, c_mod)
-
-                # Popup content
+                # Popup text
                 txt = ''
 
                 e = self.old(etype,id,version)
                 tag = e['tag']
-                if tag and len(tag.keys())>0:
-                    if action=='delete':
-                        txt = self.joinTxt(txt, u'Deleted {} with tags:'.format(etype), new_ph=True)
-                    else:
-                        txt = self.joinTxt(txt, u'Current tags:', new_ph=True)
-                    for k in tag.keys():
-                        tagval = tag[k]
-                        if ' ' in tagval:
-                            tagval = u"'{}'".format(tagval)
-                        txt = self.joinTxt(txt, u'{}={}'.format(k, tagval))
-                    txt = self.joinTxt(txt, '', new_ph=True)
+
+                g.addProperty(f, 'action', action)
+                if action=='delete':
+                    g.addColour(f, c_delete)
+                    g.addProperty(f, 'tag', {version: tag})
+                elif action=='create':
+                    g.addColour(f, c_create)
+                    g.addProperty(f, 'tag', {version: tag})
+                else:
+                    g.addColour(f, c_mod)
+                    oe = self.old(etype,id,version-1)
+                    g.addProperty(f, 'tag', {version: tag, version-1: oe['tag']})
 
                 if self.diffs:
                     diff = self.diffs[etype][id]

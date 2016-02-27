@@ -8,7 +8,7 @@ class GeoJson(object):
         return self.data
 
     def addProperty(self, f, prop, val):
-        f['properties'][prop] = u'{}'.format(val)
+        f['properties'][prop] = val
 
     def addColour(self, f, col):
         f['properties']['color'] = '#{}'.format(col)

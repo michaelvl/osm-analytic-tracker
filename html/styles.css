@@ -7,7 +7,7 @@ nav ul {
     opacity:1;
     border-bottom: 2px solid rgb(255,255,255);
 }
-body {
+body.navbar{
     padding-top:40px;
 }
 nav ul li:first-child {
@@ -88,7 +88,7 @@ ul
 {
 list-style-type:none;
 padding:0;
-overflow:hidden;
+#overflow:hidden;
 }
 
 ul.details {
@@ -118,9 +118,33 @@ padding-top: 6px;
 padding-bottom: 6px;
 }
 
+ul.csethead div.icon {
+    width: 12px;
+    height: 12px;
+    position:relative;
+    overflow: visible;
+    padding: 0px;
+}
+ul.csethead div.icon img {
+    margin: auto;
+    position: absolute;
+    top: -2;
+    width: 16px;
+    height: 16px;
+}
+
 li.cset div
 {
 display: inline-block;
+}
+
+li.cset ul.csethead:after,ul.details:after
+{
+    content: "."; 
+    visibility: hidden; 
+    display: block; 
+    height: 0;			    
+    clear: both;
 }
 
 li.cset ul.csethead
@@ -237,17 +261,26 @@ table {
     border-spacing: 0;
     border-collapse: collapse;
 }
-td {
+tr.tagadded {
+    background: rgb(0,154,0);
+}
+tr.tagchanged {
+    background: rgb(102,170,204);
+}
+td, th {
     padding-left: 2px;
     padding-right: 4px;
     border: 1px solid rgb(100,100,100);
-  font-family: Ubuntu,"Bitstream Vera Sans","DejaVu Sans",Tahoma,sans-serif;font-size:11px;
+  font-family: Ubuntu,"Bitstream Vera Sans","DejaVu Sans",Tahoma,sans-serif;font-size:10px;
 }
-
+.leaflet-popup-content {
+    width:auto !important;
+}
 h1 {
   font-family: Ubuntu,"Bitstream Vera Sans","DejaVu Sans",Tahoma,sans-serif;font-size:16px;
 }
 
+.csetopen,
 .node_create, .node_delete, .node_modify,
 .way_create, .way_delete, .way_modify,
 .relation_create, .relation_delete, .relation_modify,
@@ -257,6 +290,7 @@ h1 {
     position: relative;
 }
 
+.csetopen:hover:after,
 .node_create:hover:after, .node_delete:hover:after, .node_modify:hover:after,
 .way_create:hover:after, .way_delete:hover:after, .way_modify:hover:after,
 .relation_create:hover:after, .relation_delete:hover:after, .relation_modify:hover:after,
@@ -272,6 +306,7 @@ h1 {
     z-index: 99;
 }
 
+.csetopen:hover:before,
 .node_create:hover:before, .node_delete:hover:before, .node_modify:hover:before,
 .way_create:hover:before, .way_delete:hover:before, .way_modify:hover:before,
 .relation_create:hover:before, .relation_delete:hover:before, .relation_modify:hover:before,
@@ -288,6 +323,9 @@ h1 {
     width: 220px;
 }
 
+.csetopen:hover:before {
+    content: "Changetset is still open for edits";
+}
 .node_create:hover:before {
     content: "Nodes created";
 }
