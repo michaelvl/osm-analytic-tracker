@@ -264,17 +264,24 @@ table {
 tr.tagadded {
     background: rgb(0,154,0);
 }
+tr.tagdeleted {
+    background: rgb(255,34,0);
+}
 tr.tagchanged {
     background: rgb(102,170,204);
+}
+th {
+    background: rgb(220,220,220);
 }
 td, th {
     padding-left: 2px;
     padding-right: 4px;
     border: 1px solid rgb(100,100,100);
-  font-family: Ubuntu,"Bitstream Vera Sans","DejaVu Sans",Tahoma,sans-serif;font-size:10px;
+    max-width: 300px;
+    font-family: Ubuntu,"Bitstream Vera Sans","DejaVu Sans",Tahoma,sans-serif;font-size:10px;
 }
 .leaflet-popup-content {
-    width:auto !important;
+    #width:auto !important;
 }
 h1 {
   font-family: Ubuntu,"Bitstream Vera Sans","DejaVu Sans",Tahoma,sans-serif;font-size:16px;

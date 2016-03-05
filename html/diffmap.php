@@ -145,17 +145,23 @@ function highlightFeature(e) {
     }
     var kstate = {}
     for (var k in ksum) {
-        console.log('ksum, k='+k);
 	var first = undefined;
+	var first_v;
         for (var v in tag) {
             if (first==undefined) {
                 first = tag[v][k];
+		first_v = v;
             }
             if (tag[v][k]==undefined) {
-                kstate[k] = "tagadded";
+                if (parseInt(v) > parseInt(first_v)) {
+                    kstate[k] = "tagdeleted";
+		} else {
+                    kstate[k] = "tagadded";
+                }
             } else if (tag[v][k]!=first) {
                 kstate[k] = "tagchanged";
             }
+	    console.log('k='+k+' v='+v+' tag='+tag[v][k]+' -> state='+kstate[k]);
         }
     }
 
