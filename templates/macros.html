@@ -1,6 +1,14 @@
-{% macro cset_head_ul(info) %}
-  <!-- cset_head -->
-  <ul class="csethead">
+{% macro cset_head_ts_li_start(info) %}
+  <!-- cset_head_ts -->
+{% if info.misc.state=='new' -%}
+<li class="cset new" data-timestamp="{{info.misc.timestamp|js_datetime}} UTC" data-timestamp_type="{{info.misc.timestamp_type_txt}}">
+{% else -%}
+<li class="cset" data-timestamp="{{info.misc.timestamp|js_datetime}} UTC" data-timestamp_type="{{info.misc.timestamp_type_txt}}">
+{% endif -%}
+{%- endmacro %}
+
+{% macro cset_head_basic_li(info) %}
+  <!-- cset_head_basic -->
     <li>
       <div class="legend" style="background-color: #{{info.misc.user_colour}}">&#8203;</div>
       <div class="user"><div class="icon"><img src="/osm/user_l.png"></div><a href="http://www.openstreetmap.org/user/{{info.meta.user}}">{{info.meta.user|e}}</a></div>
@@ -14,6 +22,12 @@
         <div class="changeset-source">{{info.meta.tag.source|e}}</div>
       {% endif -%}
     </li>
+{%- endmacro %}
+
+{% macro cset_head_ul(info) %}
+  <!-- cset_head -->
+  <ul class="csethead">
+    {{ cset_head_basic_li(info) }}
     {% if not (('source' in info.meta.tag) or ('imagery_used' in info.meta.tag)) -%}
     <li><div class="warning"><div class="icon"><img src="/osm/att_l.png"></div><a href="http://wiki.openstreetmap.org/wiki/Changeset">No source attribute</a></div></li>
     {% endif -%}
@@ -119,7 +133,11 @@
         <li><div class="trailer">{{url}}{% if ousr|length >loop.index %},{%endif%}</div></li>
       {%- endif %}
     {% elif loop.index==10 -%}
+      {% if ousr|length==10 -%}	
+      <li><div class="trailer">1 more user</div></li>
+      {% else -%}
       <li><div class="trailer">{{ ousr|length-10}} more users</div></li>
+      {%- endif %}
     {%- endif %}
   {%- endfor %}
 {%- endmacro %}

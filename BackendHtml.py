@@ -50,6 +50,7 @@ class Backend(Backend.Backend):
             csets = state.area_chgsets
             ctx = { 'state': state}
             ctx['csets'] = csets[::-1]
+            ctx['csets_err'] = state.err_chgsets
             ctx['csetinfo'] = state.area_chgsets_info
             ctx['show_details'] = self.show_details
             ctx['show_comments'] = self.show_comments

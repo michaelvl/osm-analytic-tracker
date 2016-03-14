@@ -37,6 +37,7 @@ class TrackedState:
     def clear_csets(self):
         self.chgsets = []
         self.area_chgsets = []
+        self.err_chgsets = []
         self.area_chgsets_info = {}
         self.chgsets_new = []
         self.new_generation()
@@ -234,7 +235,8 @@ def process_diff_result(state, out, track_nonfiltered):
     chgsets = out['changesets']
     area_chgsets = out['area_changesets']
     area_chgsets_info = out['area_changesets_info']
-    logger.debug('Changesets: {}, area changesets: {}'.format(len(chgsets), len(area_chgsets)))
+    err_chgsets = out['err_changesets']
+    logger.debug('Changesets: {}, area changesets: {}, changesets w. errors: {}'.format(len(chgsets), len(area_chgsets), len(err_chgsets)))
 
     if track_nonfiltered:
         for c in chgsets:
@@ -248,6 +250,11 @@ def process_diff_result(state, out, track_nonfiltered):
         # partial in previous update)
         #buildGeoJsonDiff(c)
         state.area_chgsets_info[c] = area_chgsets_info[c]
+
+    for c in err_chgsets:
+        if not c in state.err_chgsets:
+            state.err_chgsets.append(c)
+            logger.info('Received a changeset with errors, id={}'.format(c))
 
     state.metrics['bytes_in'] += out['bytes_in']
     state.timestamp = out['diff']['timestamp']

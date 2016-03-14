@@ -1,21 +1,28 @@
 <h1>Recent Changesets</h1>
 {% import 'macros.html' as macros -%}
 
-{% if csets|length==0 -%}
+{% if csets|length==0 and csets_err|length==0 -%}
 No changesets.
 
 {% else %}
 
 <ul>
+{% for cid in csets_err -%}
+{% set info = csetinfo[cid] -%}
+<!-- ChangesetWErr {{cid}} source type {{info.source.dtype}} seqno {{info.source.sequenceno}} -->
+{{ macros.cset_head_ts_li_start(info) }}  
+  <ul class="csethead">
+  {{ macros.cset_head_basic_li(info) }}
+  <li><div class="warning"><div class="icon"><img src="/osm/att_l.png"></div>Error encountered while processing changeset</div></li>
+  </ul>
+</li>
+{% endfor -%}
+
+
 {% for cid in csets -%}
 {% set info = csetinfo[cid] -%}
-
 <!-- Changeset {{cid}} source type {{info.source.dtype}} seqno {{info.source.sequenceno}} -->
-{% if info.misc.state=='new' -%}
-<li class="cset new" data-timestamp="{{info.misc.timestamp|js_datetime}} UTC" data-timestamp_type="{{info.misc.timestamp_type_txt}}">
-{% else -%}
-<li class="cset" data-timestamp="{{info.misc.timestamp|js_datetime}} UTC" data-timestamp_type="{{info.misc.timestamp_type_txt}}">
-{% endif -%}
+{{ macros.cset_head_ts_li_start(info) }}  
   {{ macros.cset_head_ul(info) }}
   {% if show_details %}
   <ul class="details">

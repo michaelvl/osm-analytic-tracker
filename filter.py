@@ -6,6 +6,7 @@ import OsmDiff as osmdiff
 import pprint
 import json, pickle
 import Poly
+import osmapi
 import OsmChangeset
 import logging
 
@@ -14,6 +15,7 @@ logger = logging.getLogger(__name__)
 def fetch_and_process_diff(dapi, seqno, ctype, area=None, debug=0, strict_inside_check=True):
     chgsets = []
     area_chgsets = []
+    err_chgsets = []
 
     chgsets = dapi.get_diff_csets(seqno, ctype)
     logger.debug('Found {} changesets in diff {}-{}'.format(len(chgsets), ctype, seqno))
@@ -39,14 +41,20 @@ def fetch_and_process_diff(dapi, seqno, ctype, area=None, debug=0, strict_inside
             # Check if node and thus changeset is within area (bbox check)
             #pprint.pprint(c.meta)
             if not area or area.contains_chgset(c.meta):
-                if strict_inside_check:
-                    c.downloadData()
-                    if c.isInside(area):
+                try:
+                    if strict_inside_check:
+                        c.downloadData()
+                        if c.isInside(area):
+                            area_chgsets.append(c)
+                    else:
                         area_chgsets.append(c)
-                else:
-                    area_chgsets.append(c)
+                #except IOError as e:
+                #    pass
+                except osmapi.ApiError as e:
+                    logger.error('Failed reading changeset {}: {}'.format(id, e))
+                    err_chgsets.append(c)
 
-    return (chgsets, area_chgsets)
+    return (chgsets, area_chgsets, err_chgsets)
 
 def process_csets(csets, dtype, seqno, geojson=None, bbox=None):
     stat = {}
@@ -119,7 +127,7 @@ def main(argv):
     state = dapi.get_state(args.dtype, args.seqno)
 
     logger.debug('Fetching and processing')
-    (chgsets, area_chgsets) = fetch_and_process_diff(dapi, args.seqno, args.dtype, area, args.log_level=='DEBUG')
+    (chgsets, area_chgsets, err_chgsets) = fetch_and_process_diff(dapi, args.seqno, args.dtype, area, args.log_level=='DEBUG')
     logger.debug('Area changesets: {}'.format([x.id for x in area_chgsets]))
 
     logger.debug('Processing csets')
@@ -130,6 +138,7 @@ def main(argv):
         "changesets": chgsets,
         "area_changesets": [x.id for x in area_chgsets],
         "area_changesets_info": area_chgsets_info,
+        "err_changesets": [x.id for x in err_chgsets],
         "bytes_in": dapi.netstat[0],
         "bytes_out" : 0
     }
