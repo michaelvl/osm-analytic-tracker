@@ -1,6 +1,6 @@
 <?php
 $cid=filter_input(INPUT_GET, 'cid', FILTER_SANITIZE_NUMBER_INT);
-$bounds=file_get_contents("cset-$cid.bounds", FILE_USE_INCLUDE_PATH);
+$bounds=file_get_contents("dynamic/cset-$cid.bounds", FILE_USE_INCLUDE_PATH);
 $bbox=explode(",",$bounds);
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
