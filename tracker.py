@@ -131,11 +131,9 @@ class TrackedState:
     def cut_horizon(self):
         cfg = self.config
         htype = cfg.get('horizon_type', 'tracker')
-        print 'Cut horizon, type=', htype
         removed = False
         if htype == 'sliding':
             hrs = cfg.get('horizon_hours', 'tracker')
-            print 'Cut horizon, hours=', hrs
             horizon_s = hrs*3600
             now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
             for cset_id in self.area_chgsets[::-1]:
