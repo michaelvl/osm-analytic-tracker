@@ -6,21 +6,21 @@
 
 <head>
    <title>OpenStreetMap Analytic Difference Engine</title>
-   <link rel="icon" href="/osm/favicon.png" type="image/png">
-   <link href="/osm/styles.css" type="text/css" rel="stylesheet"/>
+   <link rel="icon" href="/favicon.png" type="image/png">
+   <link href="/styles.css" type="text/css" rel="stylesheet"/>
    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
    <meta http-equiv="refresh" content="86400">
    <script src="/jquery-2.1.3/jquery.min.js"></script>
    <link rel="stylesheet" href="/leaflet-0.7.3/leaflet.css" />
    <script src="/leaflet-0.7.3/leaflet.js"></script>
-   <script src="/osm/timestamp.js"></script>
+   <script src="/timestamp.js"></script>
 </head>
 <nav>
 <ul>
-<li><a href="https://github.com/MichaelVL/osm-analytic-tracker/"><img src="/osm/icon_bw.png"></a></li>
-<li><a class="vcenter" href="/osm/index.html">Live Changesets</a></li>
-<li><a class="vcenter" href="/osm/cset_notes.html">Changeset Notes</a></li>
-<li><a class="vcenter" href="/osm/addresses.html">Address Changes</a></li>
+<li><a href="https://github.com/MichaelVL/osm-analytic-tracker/"><img src="/icon_bw.png"></a></li>
+<li><a class="vcenter" href="/index.html">Live Changesets</a></li>
+<li><a class="vcenter" href="/cset_notes.html">Changeset Notes</a></li>
+<li><a class="vcenter" href="/addresses.html">Address Changes</a></li>
 </ul>
 </nav>
 <body>
@@ -39,7 +39,7 @@
 
 function small_load() {
   console.log('small_load()');
-  $("#logger").load("/osmt/notes.html", small_load_done);
+  $("#logger").load("/dynamic/notes.html", small_load_done);
 }
 
 function small_load_done(respTxt, txtStatus, req) {

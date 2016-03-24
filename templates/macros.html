@@ -11,12 +11,12 @@
   <!-- cset_head_basic -->
     <li>
       <div class="legend" style="background-color: #{{info.misc.user_colour}}">&#8203;</div>
-      <div class="user"><div class="icon"><img src="/osm/user_l.png"></div><a href="http://www.openstreetmap.org/user/{{info.meta.user}}">{{info.meta.user|e}}</a></div>
+      <div class="user"><div class="icon"><img src="/user_l.png"></div><a href="http://www.openstreetmap.org/user/{{info.meta.user}}">{{info.meta.user|e}}</a></div>
       {% if 'comment' in info.meta.tag and info.meta.tag.comment|trim|length != 0 -%}
       <div class="changeset"><a href="http://www.openstreetmap.org/changeset/{{info.meta.id}}">{{info.meta.tag.comment|e}}</a></div>
       {% else -%}
       <div class="changeset"><a href="http://www.openstreetmap.org/changeset/{{info.meta.id}}">Changeset {{info.meta.id}}</a></div>
-      <li><div class="warning"><div class="icon"><img src="/osm/att_l.png"></div><a href="http://wiki.openstreetmap.org/wiki/Good_changeset_comments">No comment</a></div></li>
+      <li><div class="warning"><div class="icon"><img src="/att_l.png"></div><a href="http://wiki.openstreetmap.org/wiki/Good_changeset_comments">No comment</a></div></li>
       {% endif -%}
       {% if 'source' in info.meta.tag -%}
         <div class="changeset-source">{{info.meta.tag.source|e}}</div>
@@ -29,16 +29,16 @@
   <ul class="csethead">
     {{ cset_head_basic_li(info) }}
     {% if not (('source' in info.meta.tag) or ('imagery_used' in info.meta.tag)) -%}
-    <li><div class="warning"><div class="icon"><img src="/osm/att_l.png"></div><a href="http://wiki.openstreetmap.org/wiki/Changeset">No source attribute</a></div></li>
+    <li><div class="warning"><div class="icon"><img src="/att_l.png"></div><a href="http://wiki.openstreetmap.org/wiki/Changeset">No source attribute</a></div></li>
     {% endif -%}
     {% if 'type = route' in info.summary.create.relation_tags or
           'type = route' in info.summary.modify.relation_tags or
           'type = route' in info.summary.delete.relation_tags -%}
-    <li><div class="warning"><div class="icon"><img src="/osm/att_l.png"></div>Modifies route relation</div></li>
+    <li><div class="warning"><div class="icon"><img src="/att_l.png"></div>Modifies route relation</div></li>
     {% endif%}
 
     {% if info.misc.dk_address_node_changes>0 -%}
-    <li><div class="warning"><div class="icon"><img src="/osm/att_l.png"></div>Modifies address node(s)</div></li>
+    <li><div class="warning"><div class="icon"><img src="/att_l.png"></div>Modifies address node(s)</div></li>
     {%- endif %}
     
     {% if info.meta.comments_count>0 -%}
@@ -49,9 +49,9 @@
     {% endif -%}
     {% endif -%}
     {% if info.meta.open -%}
-    <li><div class="trailer csetopen"><div class="icon"><img src="/osm/csetopen_l.png"></div>Open</div></li>
+    <li><div class="trailer csetopen"><div class="icon"><img src="/csetopen_l.png"></div>Open</div></li>
     {% else -%}
-    <li><div><a href="/osm/diffmap.php?cid={{info.meta.id}}">VisualDiff</a></div></li>
+    <li><div><a href="/diffmap.php?cid={{info.meta.id}}">VisualDiff</a></div></li>
     {%- endif %}
   </ul>
 {%- endmacro %}
@@ -111,7 +111,7 @@
 {% macro cset_notes_li(info) %}
   <!-- cset_notes -->
   {% for nn in info.meta.discussion %}
-    <li><div class="trailer"><img src="/osm/user_l.png">{{nn.user|e}}: {{nn.text|e}}</div></li>
+    <li><div class="trailer"><img src="/user_l.png">{{nn.user|e}}: {{nn.text|e}}</div></li>
   {% endfor %}
 {%- endmacro %}
 

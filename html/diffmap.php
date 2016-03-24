@@ -9,13 +9,13 @@ $bbox=explode(",",$bounds);
 
 <head>
    <title>OpenStreetMap Difference Engine</title>
-   <link rel="icon" href="/osm/favicon.png" type="image/png">
-   <link href="/osm/styles.css" type="text/css" rel="stylesheet"/>
+   <link rel="icon" href="/favicon.png" type="image/png">
+   <link href="/styles.css" type="text/css" rel="stylesheet"/>
    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
    <script src="/jquery-2.1.3/jquery.min.js"></script>
    <link rel="stylesheet" href="/leaflet-0.7.3/leaflet.css" />
    <script src="/leaflet-0.7.3/leaflet.js"></script>
-   <script src="/osm/easy-button.js"></script>
+   <script src="/easy-button.js"></script>
 <style>
 html, body, #map {
   width: 100%;
@@ -57,7 +57,7 @@ html, body, #map {
 </div>
 
 <script type="text/javascript">
-<?php echo "var jsonfile = '/osmt/cset-$cid.json';\nvar cid = '$cid';";?>
+<?php echo "var jsonfile = '/dynamic/cset-$cid.json';\nvar cid = '$cid';";?>
 
 (function($)
 {
