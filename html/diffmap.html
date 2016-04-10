@@ -1,14 +1,9 @@
-<?php
-$cid=filter_input(INPUT_GET, 'cid', FILTER_SANITIZE_NUMBER_INT);
-$bounds=file_get_contents("dynamic/cset-$cid.bounds", FILE_USE_INCLUDE_PATH);
-$bbox=explode(",",$bounds);
-?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 
 <head>
-   <title>OpenStreetMap Difference Engine</title>
+   <title>OpenStreetMap Analytic Difference Engine</title>
    <link rel="icon" href="/favicon.png" type="image/png">
    <link href="/styles.css" type="text/css" rel="stylesheet"/>
    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
@@ -57,14 +52,26 @@ html, body, #map {
 </div>
 
 <script type="text/javascript">
-<?php echo "var jsonfile = '/dynamic/cset-$cid.json';\nvar cid = '$cid';";?>
+
+var cid;
+var jsonfile;
+var boundsfile;
 
 (function($)
 {
   $(document).ready(function()
   {
     $.ajaxSetup( { cache: false });
-    load_json();
+    var kv = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    var cp = kv[0].split('=');
+    if (cp[0]=='cid' && parseInt(cp[1],10)) {
+       cid = parseInt(cp[1],10);
+       jsonfile = '/dynamic/cset-'+cid+'.json';
+       boundsfile = '/dynamic/cset-'+cid+'.bounds';
+       console.log('cid='+cid);
+       load_json(jsonfile);
+       load_bounds(boundsfile);
+    }
   });
 })(jQuery);
 
@@ -89,7 +96,6 @@ L.control.layers(baseMaps).addTo(map);
 //L.control.layers(baseMaps, overlayMaps).addTo(map);
 
 map.attributionControl.setPrefix(''); // Dont show 'powered by..'
-map.fitBounds(<?php echo "[[$bbox[0],$bbox[1]],[$bbox[2],$bbox[3]]]" ?>);
 
 L.easyButton('josmicon', openInJOSM ,"Open in JOSM", map);
 L.easyButton('osmicon', openOSM ,"Open changeset on openstreetmap.org", map);
@@ -108,8 +114,6 @@ function openOSM() {
 }
 
 var markers;
-
-//load_json();
 
 function styleFunc(feature) {
   return {
@@ -221,7 +225,7 @@ function onEachFeature(feature, layer) {
   });
 }
 
-function load_json(){
+function load_json(jsonfile){
   $.ajax({
     datatype: "json",
     url: jsonfile,
@@ -231,5 +235,19 @@ function load_json(){
     }
   }).error(function() {});
 }
+
+function load_bounds(boundsfile){
+  $.ajax({
+    datatype: "json",
+    url: boundsfile,
+    success: function(data) {
+      var bbox = data.split(',');
+      //var bounds = "[["+bbox[0]+","+bbox[1]+"],["+bbox[2]+","+bbox[3]+"]]";
+      //console.log('bounds='+bounds);
+      map.fitBounds([[bbox[0],bbox[1]],[bbox[2],bbox[3]]]);
+    }
+  }).error(function() {});
+}
+
 </script>
 </body>
