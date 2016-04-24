@@ -57,7 +57,7 @@ class Backend(Backend.Backend):
                      "properties": { 'color': colour, 'id': meta['id'],
                                      'meta': utfmeta,
                                      'url': "http://www.openstreetmap.org/changeset/"+str(meta['id']),
-                                     'visualdiff': "http://osm.expandable.dk/osm/diffmap.php?cid="+str(meta['id'])},
+                                     'visualdiff': "http://osm.expandable.dk/osm/diffmap.html?cid="+str(meta['id'])},
                      "geometry": {
                          #"type": "Polygon",
                          #"coordinates": [[[y1,x1],[y2,x1],[y2,x2],[y1,x2],[y1,x1]]]
