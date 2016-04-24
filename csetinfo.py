@@ -16,12 +16,15 @@ def main(argv):
     bbox = False
     bounds = None
     csetid = None
+    apiurl = None
     try:
-        opts, args = getopt.getopt(argv, "dg:i:mchsb:B")
+        opts, args = getopt.getopt(argv, "a:dg:i:mchsb:B")
     except getopt.GetoptError:
         print "..."
         sys.exit(-1)
     for opt, arg in opts:
+        if opt == '-a':
+            apiurl = arg
         if opt == '-d':
             debug = True
         if opt == '-m':
@@ -41,7 +44,10 @@ def main(argv):
         if opt == '-i':
             csetid = int(arg)
 
-    cset = OsmChangeset.Changeset(csetid)
+    if apiurl:
+        cset = OsmChangeset.Changeset(csetid, api=apiurl)
+    else:
+        cset = OsmChangeset.Changeset(csetid)
     cset.apidebug = debug
 
     cset.downloadMeta()

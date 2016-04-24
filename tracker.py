@@ -13,7 +13,6 @@ import subprocess
 import json, pickle
 import importlib
 import multiprocessing as mp
-import OsmChangeset
 import logging
 import urllib2
 import traceback
@@ -44,7 +43,7 @@ class TrackedState:
 
     def sort_csets(self):
         chginfo = self.area_chgsets_info
-        self.area_chgsets.sort(key=lambda c: OsmChangeset.Changeset.get_timestamp(chginfo[c]['meta'])[1])
+        self.area_chgsets.sort(key=lambda c: oc.Changeset.get_timestamp(chginfo[c]['meta'])[1])
 
     def close_open_cset(self):
         # Go through changesset and if anyone is marked as open, update state
@@ -193,13 +192,16 @@ def print_stats(bytes_in, bytes_out):
 
 def fetch_diff(state, seqno, ctype, geojson=None, bounds=None):
     areafile = state.areafile
-    args = ["./filter.py", "-p", "-s", str(seqno), "-t", ctype, "-l", state.log_level]
+    args = ["./filter.py", "-a", state.osm_api_url, "-p", "-s", str(seqno), "-t", ctype, "-l", state.log_level]
     if areafile:
         args += ["-A", areafile]
     if geojson:
         args += ["-g", geojson]
     if bounds:
         args += ["-B", bounds]
+    timeout = state.config.get('cset_processing_time_max_s', 'tracker')
+    if timeout:
+        args += ["-U", str(timeout)]
 
     while True:
         try:
@@ -286,7 +288,8 @@ def fetch_and_process_diff(state, seqno, ctype, track_nonfiltered):
 
 def js_datetime_filter(value):
     '''Jinja2 filter formatting timestamps in format understood by javascript'''
-    JS_TIMESTAMP_FMT = '%a, %d %b %Y %H:%M:%S %Z'
+        # See javascript date/time format: http://tools.ietf.org/html/rfc2822#page-14
+    JS_TIMESTAMP_FMT = '%a, %d %b %Y %H:%M:%S %z'
     return value.strftime(JS_TIMESTAMP_FMT)
 
 def utc_datetime_filter(value):
@@ -315,6 +318,7 @@ def parse_opts(argv, state):
     parser.add_argument('-c', dest='config_file', default='config.json', help='Set configuration file name')
     parser.add_argument('-B', dest='bounds_file', help='Set changeset boundary file name')
     parser.add_argument('-A', dest='areafile', help='Set area filter polygon')
+    parser.add_argument('-a', dest='osm_api_url', help='OpenStreetMap API URL')
     parser.add_argument('-H', dest='history', action='append', help='Define how much history to fetch')
     parser.add_argument('-s', dest='seqno', help='Set initial sequence number')
     parser.add_argument('-T', dest='max_threads', help='Define maximum number of additional worker threads to use (zero means single threaded operation)')
@@ -354,6 +358,7 @@ def parse_opts(argv, state):
     if state.config.get('bounds-filename', 'tracker'):
         state.bounds = state.config.get('path', 'tracker')+state.config.get('bounds-filename', 'tracker')
     state.areafile = args.areafile if args.areafile else state.config.get('area-filter', 'tracker')
+    state.osm_api_url = args.osm_api_url if args.osm_api_url else state.config.get('osm_api_url', 'tracker', default='https://api.openstreetmap.org')
 
     state.env = jinja2.Environment(loader=jinja2.FileSystemLoader(state.config.getpath('template_path', 'tracker')))
     state.env.filters['js_datetime'] = js_datetime_filter
@@ -549,7 +554,8 @@ def main(argv):
     state = TrackedState()
     state = parse_opts(argv, state)
 
-    state.api = osmapi.OsmApi()
+    logger.debug('Using api: {}'.format(state.osm_api_url))
+    state.api = osmapi.OsmApi(api=state.osm_api_url)
     state.dapi = osmdiff.OsmDiffApi()
 
     state.dapi.update_head_states()

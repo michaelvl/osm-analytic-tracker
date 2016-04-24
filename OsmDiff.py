@@ -13,11 +13,11 @@ class OsmDiffException(Exception):
     pass
 
 class OsmDiffApi(object):
-    def __init__(self):
+    def __init__(self, api='http://planet.osm.org'):
         #self.state_cache = {}
         #self.diff_cache = {}
         self.head_state = {}
-        self.api = 'http://planet.osm.org'
+        self.api = api
         self.netstat = [0,0] # rx, tx bytes
         
         # Non-simple below
@@ -146,7 +146,9 @@ class Diff(Base):
     def get_csets(self, osmapi):
         '''Fetch and parse diff to fetch changeset IDs only. More memory efficient than get()'''
         csets = []
-        req = urllib2.Request(self._data_url())
+        url = self._data_url()
+        logger.debug('Fetching url {}'.format(url))
+        req = urllib2.Request(url)
         resp = urllib2.urlopen(req)
         dfile = gzip.GzipFile(fileobj=StringIO(resp.read()))
         for event, element in etree.iterparse(dfile):

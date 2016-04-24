@@ -4,17 +4,21 @@ from osmapi import OsmApi
 import OsmDiff
 import pprint
 import GeoJson as gj
-import sys
+import sys, time
 import GeoTools
 import logging
 import datetime, pytz
 
 logger = logging.getLogger(__name__)
 
+class Timeout(Exception):
+    pass
+
 class Changeset(object):
-    def __init__(self, id):
+    def __init__(self, id, api='https://api.openstreetmap.org'):
         self.id = id
-        self.osmapi = OsmApi()
+        logger.debug('Using api={}'.format(api))
+        self.osmapi = OsmApi(api=api)
 
         self.meta = None
         self.changes = None
@@ -34,6 +38,9 @@ class Changeset(object):
         self.tags = {}
         # Simple (no tags) nodes
         self.simple_nodes = {'create':0, 'modify':0, 'delete':0}
+
+        self.other_users = None
+        self.mileage = None
 
         self.apidebug = False
         self.datadebug = False
@@ -129,9 +136,11 @@ class Changeset(object):
     #             # TODO: Show relation as modified if member changes (e.g. way has added a node)
     #     return txt
 
-    def buildDiffList(self):
+    def buildDiffList(self, maxtime=None):
+        self.startProcessing(maxtime)
         self.diffs = self.getEmptyObjDict()
         for modif in self.changes:
+            self.checkProcessingLimits()
             etype = modif['type']
             data = modif['data']
             id = data['id']
@@ -201,9 +210,23 @@ class Changeset(object):
             if self.datadebug:
                 logger.debug(u'changes({})={}'.format(self.id, self.changes))
 
-    def downloadHistory(self):
+    def startProcessing(self, maxtime=None):
+        self.max_processing_time = maxtime
+        self.processing_start = time.time()
+
+    def checkProcessingLimits(self):
+        if self.max_processing_time:
+            used = time.time()-self.processing_start
+            logger.debug('Used {}s of {}s to process history'.format(used, self.max_processing_time))
+            if used > self.max_processing_time:
+                logger.warning('Timeout: Used {:.2}s of processing time'.format(used))
+                raise Timeout
+
+    def downloadHistory(self, maxtime=None):
         #pprint.pprint(self.changes)
+        self.startProcessing(maxtime)
         for mod in self.changes:
+            self.checkProcessingLimits()
             #print 'Modification:'
             #pprint.pprint(mod)
             self.getElement(mod)
@@ -220,11 +243,13 @@ class Changeset(object):
         navigable = ['highway', 'cycleway', 'busway']
         return set(navigable) & set(tags)
 
-    def buildSummary(self, mileage=True):
+    def buildSummary(self, mileage=True, maxtime=None):
+        self.startProcessing(maxtime)
         self.other_users = {}
         self.mileage = {'_navigable_create':0, '_navigable_delete':0, '_all_create':0, '_all_delete':0, 'by_type': {}}
 
         for modif in self.changes:
+            self.checkProcessingLimits()
             etype = modif['type']
             data = modif['data']
             id = data['id']

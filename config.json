@@ -1,6 +1,7 @@
 {
     "path": "html/",
     "tracker": {
+	"osm_api_url": "https://api.openstreetmap.org",
 	"geojsondiff-filename": "cset-{id}.json",
 	"bounds-filename": "cset-{id}.bounds",
 	"area-filter": "denmark.poly",

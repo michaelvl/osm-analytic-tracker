@@ -294,7 +294,7 @@ h1 {
   font-family: Ubuntu,"Bitstream Vera Sans","DejaVu Sans",Tahoma,sans-serif;font-size:16px;
 }
 
-.csetopen,
+#lag, .csetopen,
 .node_create, .node_delete, .node_modify,
 .way_create, .way_delete, .way_modify,
 .relation_create, .relation_delete, .relation_modify,
@@ -304,7 +304,7 @@ h1 {
     position: relative;
 }
 
-.csetopen:hover:after,
+#lag:hover:after, .csetopen:hover:after,
 .node_create:hover:after, .node_delete:hover:after, .node_modify:hover:after,
 .way_create:hover:after, .way_delete:hover:after, .way_modify:hover:after,
 .relation_create:hover:after, .relation_delete:hover:after, .relation_modify:hover:after,
@@ -320,7 +320,7 @@ h1 {
     z-index: 99;
 }
 
-.csetopen:hover:before,
+#lag:hover:before, .csetopen:hover:before,
 .node_create:hover:before, .node_delete:hover:before, .node_modify:hover:before,
 .way_create:hover:before, .way_delete:hover:before, .way_modify:hover:before,
 .relation_create:hover:before, .relation_delete:hover:before, .relation_modify:hover:before,
@@ -337,8 +337,11 @@ h1 {
     width: 220px;
 }
 
+#lag:hover:before {
+    content: "How much this service is lagging behind OpenStreetMap minutely diffs.  Note that changeset timestamps are shown as the latest change to the changeset.  Since we are tracking changeset close events independently from the minutely diffs, the lag may be larger than the changeset timestamps.";
+}
 .csetopen:hover:before {
-    content: "Changetset is still open for edits";
+    content: "Changeset is still open for edits";
 }
 .node_create:hover:before {
     content: "Nodes created";

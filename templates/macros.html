@@ -1,9 +1,9 @@
 {% macro cset_head_ts_li_start(info) %}
   <!-- cset_head_ts -->
 {% if info.misc.state=='new' -%}
-<li class="cset new" data-timestamp="{{info.misc.timestamp|js_datetime}} UTC" data-timestamp_type="{{info.misc.timestamp_type_txt}}">
+<li class="cset new" data-timestamp="{{info.misc.timestamp|js_datetime}}" data-timestamp_type="{{info.misc.timestamp_type_txt}}">
 {% else -%}
-<li class="cset" data-timestamp="{{info.misc.timestamp|js_datetime}} UTC" data-timestamp_type="{{info.misc.timestamp_type_txt}}">
+<li class="cset" data-timestamp="{{info.misc.timestamp|js_datetime}}" data-timestamp_type="{{info.misc.timestamp_type_txt}}">
 {% endif -%}
 {%- endmacro %}
 
@@ -28,6 +28,9 @@
   <!-- cset_head -->
   <ul class="csethead">
     {{ cset_head_basic_li(info) }}
+    {% if info.meta.truncated %}
+    <li><div class="warning truncated"><div class="icon"><img src="/att_l.png"></div>Truncated</div></li>
+    {% endif %}
     {% if not (('source' in info.meta.tag) or ('imagery_used' in info.meta.tag)) -%}
     <li><div class="warning"><div class="icon"><img src="/att_l.png"></div><a href="http://wiki.openstreetmap.org/wiki/Changeset">No source attribute</a></div></li>
     {% endif -%}
