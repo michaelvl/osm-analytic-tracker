@@ -75,11 +75,11 @@ var boundsfile;
   });
 })(jQuery);
 
-var tileUrl = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-var tileUrlBw = 'http://{s}.tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png'
+var tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+var tileUrlBw = 'https://{s}.tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png'
 var osmAttrib='&copy <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
 
-var  geodkUrl = 'http://osmtools.septima.dk/mapproxy/tiles/1.0.0/kortforsyningen_ortoforaar/EPSG3857/{z}/{x}/{y}.jpeg';
+var  geodkUrl = 'https://osmtools.septima.dk/mapproxy/tiles/1.0.0/kortforsyningen_ortoforaar/EPSG3857/{z}/{x}/{y}.jpeg';
 var geodkAttrib='&copy <a href="http://kortforsyningen.dk">Geodatastyrelsen Denmark</a>';
 
 var osm =   new L.TileLayer(tileUrl, {minZoom: 6, maxZoom: 18, subdomains: ['a','b','c'], attribution: osmAttrib, opacity:0.4});
