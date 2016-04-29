@@ -84,7 +84,7 @@ class TrackedState:
         chginfo = self.area_chgsets_info
         meta = chginfo[cid]['meta']
         summary = chginfo[cid]['summary']
-        if not hasattr(chginfo[cid], 'misc'):
+        if not 'misc' in chginfo[cid]:
             misc = {}
             chginfo[cid]['misc'] = misc
             user = meta['user']
