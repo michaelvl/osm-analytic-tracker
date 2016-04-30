@@ -11,6 +11,8 @@ class Backend(Backend.Backend):
     def __init__(self, config, subcfg):
         super(Backend, self).__init__(config, subcfg)
         self.list_fname = config.getpath('path', 'BackendGeoJson')+subcfg['filename']
+        self.click_url = subcfg['click_url']
+        logger.debug('xx {}'.format(self.click_url))
         self.colours = col.ColourScheme()
 
         self.generation = None
@@ -57,7 +59,7 @@ class Backend(Backend.Backend):
                      "properties": { 'color': colour, 'id': meta['id'],
                                      'meta': utfmeta,
                                      'url': "http://www.openstreetmap.org/changeset/"+str(meta['id']),
-                                     'visualdiff': "http://osm.expandable.dk/osm/diffmap.html?cid="+str(meta['id'])},
+                                     'visualdiff': self.click_url.format(cid=meta['id'])},
                      "geometry": {
                          #"type": "Polygon",
                          #"coordinates": [[[y1,x1],[y2,x1],[y2,x2],[y1,x2],[y1,x1]]]

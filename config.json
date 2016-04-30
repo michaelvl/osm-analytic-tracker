@@ -40,7 +40,8 @@
 	},
 	{
 	    "type": "BackendGeoJson",
-	    "filename" : "today.json"
+	    "filename" : "today.json",
+	    "click_url": "http://osm.expandable.dk/diffmap.html?cid={cid}"
 	}
     ]
 }
