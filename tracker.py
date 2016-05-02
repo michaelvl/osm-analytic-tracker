@@ -117,8 +117,13 @@ class TrackedState:
                     break
             misc['processed_tagdiff_'+action] = tdiff
 
-        tags = chginfo[cid]['tags']
-        misc['dk_address_node_changes'] = len([d for d in tags if d.startswith('osak:identifier')])
+        unchanged_tags = chginfo[cid]['tags']
+        tagdiff = chginfo[cid]['tagdiff']
+        misc['dk_address_node_changes'] = len([d for d in unchanged_tags if d.startswith('osak:identifier')])
+        def isaddr(t):
+            return t.startswith('osak:identifier')
+        for k in tagdiff.keys():
+            misc['dk_address_node_changes'] += len(filter(isaddr, tagdiff[k]))
 
     def cset_evict(self, cid):
         if cid in self.chgsets:
