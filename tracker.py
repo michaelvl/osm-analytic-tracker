@@ -45,13 +45,6 @@ class TrackedState:
         chginfo = self.area_chgsets_info
         self.area_chgsets.sort(key=lambda c: oc.Changeset.get_timestamp(chginfo[c]['meta'])[1])
 
-    def close_open_cset(self):
-        # Go through changesset and if anyone is marked as open, update state
-        for cset_id in self.area_chgsets:
-            if self.area_chgsets_info[cset_id]['meta']['open'] == 'true':
-                logger.debug('Check open cset {}, current state:{}'.format(cset_id, self.area_chgsets_info[cset_id]))
-                self.refresh_cset_meta(cset_id)
-
     def try_refresh_meta(self):
         '''Refresh meta information - mostly to obtain new notes on changesets'''
         cfg = self.config
