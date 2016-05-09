@@ -596,7 +596,7 @@ def main(argv):
             state.cut_horizon()
             state.try_refresh_meta()
 
-        except (osmapi.ApiError, osmdiff.OsmDiffException, urllib2.HTTPError, urllib2.URLError) as e:
+        except (osmapi.ApiError, osmapi.MaximumRetryLimitReachedError, osmdiff.OsmDiffException, urllib2.HTTPError, urllib2.URLError) as e:
             logger.error('Error retrieving data: '.format(e))
             logger.error(traceback.format_exc())
             time.sleep(60)
