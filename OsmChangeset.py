@@ -217,7 +217,7 @@ class Changeset(object):
     def checkProcessingLimits(self):
         if self.max_processing_time:
             used = time.time()-self.processing_start
-            logger.debug('Used {}s of {}s to process history'.format(used, self.max_processing_time))
+            logger.debug('Used {:.2}s of {}s to process history'.format(used, self.max_processing_time))
             if used > self.max_processing_time:
                 logger.warning('Timeout: Used {:.2}s of processing time'.format(used))
                 raise Timeout
