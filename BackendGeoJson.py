@@ -12,7 +12,6 @@ class Backend(Backend.Backend):
         super(Backend, self).__init__(config, subcfg)
         self.list_fname = config.getpath('path', 'BackendGeoJson')+subcfg['filename']
         self.click_url = subcfg['click_url']
-        logger.debug('xx {}'.format(self.click_url))
         self.colours = col.ColourScheme()
 
         self.generation = None
