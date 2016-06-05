@@ -40,22 +40,4 @@ class Config(object):
                 logger.debug("get({}, {}) -> '{}'".format(what, who, c))
                 return c
         logger.debug("get({}, {}) -> '{}'".format(what, who, p1))
-        return p1
-
-if __name__=='__main__':
-    c = Config()
-    try:
-        print "Test loading '{}'".format(sys.argv[1])
-        c.load(sys.argv[1])
-    except Exception as e:
-        print 'Error parsing config file: {}'.format(e)
-        sys.exit(-1)
-    import pprint
-    pprint.pprint(c.cfg)
-    print 'get(path)={}'.format(c.get('path'))
-    print 'getpath(path,BackendHtml)={}'.format(c.getpath('path', 'BackendHtml'))
-    print 'get(filename,BackendHtml)={}'.format(c.get('filename', 'BackendHtml'))
-    print 'get(filter,geosjondiff-filename)={}'.format(c.get('geosjondiff-filename', 'filter'))
-    print 'get(filter, path+geojson-diff)={}'.format(c.get('path', 'tracker')+c.get('geojsondiff-filename', 'tracker'))
-    print 'get(print_meta,BackendDetailed)={}'.format(c.get('print_meta','BackendDetailed'))
-    
+        return p1.rstrip('/')

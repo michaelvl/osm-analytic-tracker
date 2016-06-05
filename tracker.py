@@ -352,9 +352,9 @@ def parse_opts(argv, state):
     state.seqno = args.seqno if args.seqno else state.config.get('initial_sequenceno', 'tracker')
     state.max_threads = args.max_threads if args.max_threads else state.config.get('max_threads', 'tracker')
     if state.config.get('geojsondiff-filename', 'tracker'):
-        state.geojson = state.config.get('path', 'tracker')+state.config.get('geojsondiff-filename', 'tracker')
+        state.geojson = state.config.get('path', 'tracker')+'/'+state.config.get('geojsondiff-filename', 'tracker')
     if state.config.get('bounds-filename', 'tracker'):
-        state.bounds = state.config.get('path', 'tracker')+state.config.get('bounds-filename', 'tracker')
+        state.bounds = state.config.get('path', 'tracker')+'/'+state.config.get('bounds-filename', 'tracker')
     state.areafile = args.areafile if args.areafile else state.config.get('area-filter', 'tracker')
     state.osm_api_url = args.osm_api_url if args.osm_api_url else state.config.get('osm_api_url', 'tracker', default='https://api.openstreetmap.org')
 
@@ -556,8 +556,16 @@ def main(argv):
     state.api = osmapi.OsmApi(api=state.osm_api_url)
     state.dapi = osmdiff.OsmDiffApi()
 
-    state.dapi.update_head_states()
-    state.head = state.dapi.get_state(state.dtype)
+    while True:
+        try:
+            state.dapi.update_head_states()
+            state.head = state.dapi.get_state(state.dtype)
+            break
+        except (urllib2.HTTPError, urllib2.URLError, socket.error, socket.timeout) as e:
+            logger.error('Error retrieving head state: '.format(e))
+            logger.error(traceback.format_exc())
+            time.sleep(60)
+
     if state.history:
         state.pointer = state.dapi.get_seqno_le_timestamp('minute', state.history, state.head)
         if state.history_end:
@@ -589,7 +597,7 @@ def main(argv):
             state.cut_horizon()
             state.try_refresh_meta()
 
-        except (osmapi.ApiError, osmapi.MaximumRetryLimitReachedError, osmdiff.OsmDiffException, urllib2.HTTPError, urllib2.URLError) as e:
+        except (osmapi.ApiError, osmapi.MaximumRetryLimitReachedError, osmdiff.OsmDiffException, urllib2.HTTPError, urllib2.URLError, socket.error, socket.timeout) as e:
             logger.error('Error retrieving data: '.format(e))
             logger.error(traceback.format_exc())
             time.sleep(60)

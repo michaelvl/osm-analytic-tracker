@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 class Backend(Backend.Backend):
     def __init__(self, config, subcfg):
         super(Backend, self).__init__(config, subcfg)
-        self.list_fname = config.getpath('path', 'BackendGeoJson')+subcfg['filename']
+        self.list_fname = config.getpath('path', 'BackendGeoJson')+'/'+subcfg['filename']
         self.click_url = subcfg['click_url']
         self.colours = col.ColourScheme()
 

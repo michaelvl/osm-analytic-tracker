@@ -17,8 +17,8 @@ class Backend(Backend.Backend):
 
     def __init__(self, config, subcfg):
         super(Backend, self).__init__(config, subcfg)
-        self.list_fname = config.getpath('path', 'BackendHtml')+subcfg['filename']
-        #self.list_fname_old = config.getpath('path', 'BackendHtml')+config.get('filename_old', 'BackendHtml')
+        self.list_fname = config.getpath('path', 'BackendHtml')+'/'+subcfg['filename']
+        #self.list_fname_old = config.getpath('path', 'BackendHtml')+'/'+config.get('filename_old', 'BackendHtml')
         self.template_name = subcfg['template']
 
         self.show_details = getattr(subcfg, 'show_details', True)

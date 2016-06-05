@@ -16,7 +16,7 @@ class Backend(BackendHtml.Backend):
 
     def __init__(self, config, subcfg):
         super(Backend, self).__init__(config, subcfg)
-        self.list_fname = config.getpath('path', 'BackendHtmlSummary')+subcfg['filename']
+        self.list_fname = config.getpath('path', 'BackendHtmlSummary')+'/'+subcfg['filename']
         self.template_name = subcfg['template']
         self.generation = None
         self.print_state()

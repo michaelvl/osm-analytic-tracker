@@ -1,5 +1,5 @@
 {
-    "path": "html/",
+    "path": "html",
     "tracker": {
 	"osm_api_url": "https://api.openstreetmap.org",
 	"geojsondiff-filename": "cset-{id}.json",
