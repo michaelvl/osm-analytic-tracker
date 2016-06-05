@@ -20,6 +20,7 @@ import argparse
 import config
 import jinja2
 import operator
+import socket
 
 logger = logging.getLogger(__name__)
 
@@ -469,7 +470,7 @@ def continuous_update(state, direction=1):
     elapsed = end-start
     delay = min(60, max(0, 60-elapsed))
     if not hasattr(state, 'pointer_end'):
-        logger.debug('Processing to ptr {} took {:.2}s. Sleeping {}s'.format(state.pointer, elapsed, delay))
+        logger.debug('Processing to ptr {} took {:.2f}s. Sleeping {:.2f}s'.format(state.pointer, elapsed, delay))
         time.sleep(delay)
 
 
