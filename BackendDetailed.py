@@ -13,7 +13,7 @@ class Backend(Backend.Backend):
         strfmt = '%Y:%m:%d %H:%M:%S'
         time1 = state.first_timestamp.strftime(strfmt)
         time2 = state.timestamp.strftime(strfmt)
-        print('Tracked period: {} - {} UTC'.format(time1, time2))
+        print('Tracked period: {} - {} UTC.  {} changesets.'.format(time1, time2, len(state.area_chgsets)))
         self.print_chgsets(state, self.print_meta)
 
     def print_chgsets(self, state, print_meta=False):
@@ -27,15 +27,15 @@ class Backend(Backend.Backend):
             else:
                 comment = '-no comment-'
             if 'source' in meta['tag'].keys():
-                source = 'source=\''+meta['tag']['source']+'\''
+                source = "source='"+meta['tag']['source']+"'"
             else:
                 source = ''
             timestamp = oc.Changeset.get_timestamp(meta)[1]
             htimestamp = HumanTime.date2human(timestamp)
-            print u'  {0} \'{1}\' {2} (\'{3}\') \'{4}\' {5}'.format(chgid, meta['user'], htimestamp, timestamp, comment, source)
+            print u'  {0} \'{1}\' {2} (\'{3}\') \'{4}\' {5}'.format(chgid, meta['user'], htimestamp, timestamp, comment, source).encode('ascii','backslashreplace')
             if print_meta:
                 for k,v in meta.items():
-                    print u' {0}:{1}'.format(k,v),
+                    print u' {0}:{1}'.format(k,v).encode('ascii','backslashreplace'),
                 for k,v in meta.get('tags',{}).items():
-                    print u' {0}:{1}'.format(k,v),
+                    print u' {0}:{1}'.format(k,v).encode('ascii','backslashreplace'),
                 print
