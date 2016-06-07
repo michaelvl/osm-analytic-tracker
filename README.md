@@ -51,6 +51,16 @@ Geographical changes in the changeset, green are added objects, blue changed and
 
 TL;DR:
 
+Run it using Docker:
+
+```
+docker run -p 8080:80 michaelvl/osmtracker
+```
+
+and point your browser to 127.0.0.1:8080
+
+The manual approach:
+
 0. Download a region polygon from e.g. http://download.geofabrik.de/
 0. Change polygon filename in config.json to your chosen region
 0. Run the main tracker as below
