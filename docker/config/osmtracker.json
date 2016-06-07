@@ -1,0 +1,54 @@
+{
+    "path": "/html/dynamic",
+    "tracker": {
+	"geojsondiff-filename": "cset-{id}.json",
+	"bounds-filename": "cset-{id}.bounds",
+	"area-filter": "region.poly",
+	"history": "2 hours ago",
+	"max_threads": 1,
+	"horizon_type": "sliding",
+        "horizon_hours": 48,
+        "refresh_meta_minutes": 60,
+	"cset_processing_time_max_s": 300,
+        "template_path": "templates"
+    },
+    "backends": [
+	{
+	    "type": "BackendDetailed",
+	    "print_meta": false
+	},
+	{
+	    "type": "BackendHtml",
+	    "show_details": true,
+	    "show_comments": true,
+	    "path": "",
+	    "filename" : "today.html",
+	    "filename_old" : "yesterday.html",
+	    "template": "changeset.html"
+	},
+	{
+	    "type": "BackendHtml",
+	    "path": "",
+	    "filename" : "notes.html",
+	    "filename_old" : "notes-yesterday.html",
+	    "template": "notes.html"
+	},
+	{
+	    "type": "BackendHtml",
+	    "path": "",
+	    "filename" : "dk_addresses.html",
+	    "filename_old" : "dk_addresses-yesterday.html",
+	    "template": "dk_addresses.html"
+	},
+	{
+	    "type": "BackendHtmlSummary",
+	    "filename" : "today-summ.html",
+	    "template": "summary.html"
+	},
+	{
+	    "type": "BackendGeoJson",
+	    "filename" : "today.json",
+	    "click_url": "http://127.0.0.1/diffmap.html?cid={cid}"
+	}
+    ]
+}

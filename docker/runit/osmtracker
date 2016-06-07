@@ -1,0 +1,4 @@
+#!/bin/bash
+set -e
+cd /osmtracker/osm-analytic-tracker/
+exec ./tracker.py
