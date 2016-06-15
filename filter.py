@@ -74,17 +74,20 @@ def process_csets(args, csets):
             diffs = c.buildDiffList(maxtime=args.cset_max_time)
         except OsmChangeset.Timeout as e:
             truncated = True
-        stat[c.id] = {'source': {'type': dtype, 'sequenceno': seqno},
+
+        stat[c.id] = {'state': {'truncated': truncated},
+                      'source': {'type': dtype, 'sequenceno': seqno},
                       'meta': c.meta, 'summary': c.summary,
                       'tags': c.tags, 'tagdiff': c.tagdiff,
                       'simple_nodes': c.simple_nodes, 'diffs': diffs,
                       'other_users': c.other_users, 'mileage_m': c.mileage}
-        stat[c.id]['meta']['truncated'] = truncated
-
-        if geojson:
-            fn = geojson.format(id=c.id)
-            with open(fn, 'w') as f:
-                json.dump(c.getGeoJsonDiff(), f)
+        if truncated:
+            logger.error('Changeset {} not fully processed.'.format(c.id))
+        else:
+            if geojson:
+                fn = geojson.format(id=c.id)
+                with open(fn, 'w') as f:
+                    json.dump(c.getGeoJsonDiff(), f)
 
         if bbox:
             #b = '[[{},{}],[{},{}]]'.format(c.meta['min_lat'], c.meta['min_lon'],
@@ -102,7 +105,7 @@ def process_csets(args, csets):
 def main(argv):
     parser = argparse.ArgumentParser(description='OSM Changeset diff filter')
     parser.add_argument('-p', dest='use_pickle', action='store_true', help='Output state using pickle')
-    parser.add_argument('-t', dest='dtype', help='OSM diff type to retrieve')
+    parser.add_argument('-t', dest='dtype', default='minute', help='OSM diff type to retrieve')
     parser.add_argument('-U', dest='cset_max_time', type=int, default=None, help='Maximum number of seconds to spend on processing a changeset')
     parser.add_argument('-B', dest='bbox', help='Set changeset boundary file name')
     parser.add_argument('-g', dest='geojson', help='Set changeset geojson file name')
@@ -144,6 +147,7 @@ def main(argv):
     area_chgsets_info = process_csets(args, area_chgsets)
 
     res = {
+        "state": "OK",
         "diff": {"type": args.dtype, "seqno": args.seqno, "filtered": args.areafile, "timestamp":state.timestamp()},
         "changesets": chgsets,
         "area_changesets": [x.id for x in area_chgsets],

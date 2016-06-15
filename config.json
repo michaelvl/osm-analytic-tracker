@@ -10,6 +10,7 @@
 	"horizon_type": "sliding",
 	"horizon_hours": 48,
 	"refresh_meta_minutes": 10,
+	"cset_processing_time_max_s": 300,
 	"template_path": "templates"
     },
     "backends": [
@@ -33,6 +34,13 @@
 	    "filename_old" : "notes-yesterday.html",
 	    "template": "notes.html"
 	},
+        {
+            "type": "BackendHtml",
+            "path": "",
+            "filename" : "dk_addresses.html",
+            "filename_old" : "dk_addresses-yesterday.html",
+            "template": "dk_addresses.html"
+        },
 	{
 	    "type": "BackendHtmlSummary",
 	    "filename" : "today-summ.html",

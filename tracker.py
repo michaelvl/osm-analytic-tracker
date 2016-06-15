@@ -189,7 +189,7 @@ def print_stats(bytes_in, bytes_out):
     logger.debug('Memory usage: %s (kb)' % resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
     logger.debug('Network usage: In={0}k, Out={1}k'.format(bytes_in/1024, bytes_out/1024))
 
-def fetch_diff(state, seqno, ctype, geojson=None, bounds=None):
+def fetch_diff(state, seqno, ctype, geojson=None, bounds=None, retries=3):
     areafile = state.areafile
     args = ["./filter.py", "-a", state.osm_api_url, "-p", "-s", str(seqno), "-t", ctype, "-l", state.log_level]
     if areafile:
@@ -202,20 +202,23 @@ def fetch_diff(state, seqno, ctype, geojson=None, bounds=None):
     if timeout:
         args += ["-U", str(timeout)]
 
-    while True:
+    attempts = 1
+    while attempts<=retries:
         try:
-            logger.debug("Calling '{}'".format(args))
+            logger.debug("Calling '{}' - attempt {} of {}".format(args, attempts, retries))
             out = subprocess.check_output(args)
             logger.debug("Call returned: '{}'".format(args, out))
-            break
+            #out = json.loads(out)
+            out = out.split('DATA-SEPARATOR-MAGIC: ')[1]
+            out = pickle.loads(out)
+            return out
         except subprocess.CalledProcessError as e:
             logger.warning('*** Error calling filter.py: {}'.format(e))
             time.sleep(60)
+        attempts += 1
 
-    #out = json.loads(out)
-    out = out.split('DATA-SEPARATOR-MAGIC: ')[1]
-    out = pickle.loads(out)
-    return out
+    logger.warn('Giving up processing diff {},{}'.format(ctype,seqno))
+    return {"state": "failed", "diff": {"type": ctype, "seqno": seqno, "timestamp": datetime.datetime.utcnow().replace(tzinfo=pytz.utc)}}
 
 # def buildGeoJsonDiff(cid, basename):
 #     logger.debug('Build GeoJson for {}'.format(cid))
@@ -270,7 +273,10 @@ def fetch_and_process_diff(state, seqno, ctype, track_nonfiltered):
     logger.debug('Fetching and process diff seqno {}'.format(seqno))
     start = time.time()
     out = fetch_diff(state, seqno, ctype, state.geojson, state.bounds)
-    result = process_diff_result(state, out, track_nonfiltered)
+    if out['state']=='OK':
+        result = process_diff_result(state, out, track_nonfiltered)
+    else:
+        result = None
 
     end = time.time()
     elapsed = end-start
@@ -442,9 +448,10 @@ def update_diffs(state, direction, max_threads=None):
                 logger.debug('Fetching result from {}'.format(r))
                 out = r.get()
                 logger.debug('Got result from {}, seqno={}'.format(r, out['diff']['seqno']))
-                if process_diff_result(state, out, state.track_nonfiltered):
-                    state.sort_csets()
-                    state.new_generation()
+                if out['state']=='OK':
+                    if process_diff_result(state, out, state.track_nonfiltered):
+                        state.sort_csets()
+                        state.new_generation()
                 # Update backends after every diff
                 state.run_backends()
 

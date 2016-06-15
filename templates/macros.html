@@ -51,6 +51,9 @@
     <li><div>{{info.meta.comments_count}} notes</div></li>
     {% endif -%}
     {% endif -%}
+    {% if info.state.truncated -%}
+    <li><div class="warning"><div class="icon"><img src="/att_l.png"></div>Error occured while processing</div></li>
+    {% endif -%}
     {% if info.meta.open -%}
     <li><div class="trailer csetopen"><div class="icon"><img src="/csetopen_l.png"></div>Open</div></li>
     {% else -%}

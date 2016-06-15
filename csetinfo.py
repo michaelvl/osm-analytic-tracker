@@ -12,13 +12,15 @@ def main(argv):
     changes = False
     history = False
     summary = False
+    raw_summary = False
     geojson = None
     bbox = False
     bounds = None
     csetid = None
     apiurl = None
+    tags = False
     try:
-        opts, args = getopt.getopt(argv, "a:dg:i:mchsb:B")
+        opts, args = getopt.getopt(argv, "a:dg:i:mchsb:BTS")
     except getopt.GetoptError:
         print "..."
         sys.exit(-1)
@@ -33,6 +35,8 @@ def main(argv):
             history = True
         if opt == '-s':
             summary = True
+        if opt == '-S':
+            raw_summary = True
         if opt == '-c':
             changes = True
         if opt == '-g':
@@ -43,6 +47,8 @@ def main(argv):
             bounds = arg
         if opt == '-i':
             csetid = int(arg)
+        if opt == '-T':
+            tags = True
 
     if apiurl:
         cset = OsmChangeset.Changeset(csetid, api=apiurl)
@@ -93,6 +99,17 @@ def main(argv):
         if debug:
             print '== Diffs ======'
         cset.printDiffs()
+        if raw_summary:
+            if debug:
+                print '== Raw summary ======'
+            print cset.summary
+            if debug:
+                print '== Raw tagdiff ======'
+            print cset.tagdiff
+    if tags:
+        if debug:
+            print '== Tags ======'
+        print cset.tags
     if geojson:
         if debug:
             print '== GeoJsonDiff ======'
