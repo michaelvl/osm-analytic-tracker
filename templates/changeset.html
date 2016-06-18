@@ -24,7 +24,7 @@ No changesets.
 <!-- Changeset {{cid}} source type {{info.source.dtype}} seqno {{info.source.sequenceno}} -->
 {{ macros.cset_head_ts_li_start(info) }}  
   {{ macros.cset_head_ul(info) }}
-  {% if show_details %}
+  {% if not info.state.truncated and show_details %}
   <ul class="details">
     {{ macros.cset_change_summary(info) }}
     {{ macros.cset_tags(info) }}

@@ -11,7 +11,8 @@
 	"horizon_hours": 48,
 	"refresh_meta_minutes": 10,
 	"cset_processing_time_max_s": 300,
-	"template_path": "templates"
+	"template_path": "templates",
+	"loglevel": "INFO"
     },
     "backends": [
 	{

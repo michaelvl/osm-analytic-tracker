@@ -234,7 +234,7 @@ ul.details li div.trailer {
 border: 0px;
 background-color: transparent;
 }
-ul.csethead li div.warning a, ul.csethead li div.warning {
+ul.csethead li div.warning a, ul.csethead li div.warning, div.error {
 background-color: transparent;
 color: rgb(255,100,100);
 font-style: oblique;

@@ -351,11 +351,16 @@ def parse_opts(argv, state):
             print "Error parsing config file: '{}': {}".format(args.config_file, e)
             sys.exit(-1)
 
-    state.log_level = args.log_level
+    # Update with loglevel from config file
+    state.log_level = state.config.get('loglevel', 'tracker', default=args.log_level)
+    logging.basicConfig(level=getattr(logging, state.log_level))
+
     state.areafile = args.bounds_file if args.bounds_file else state.config.get('bounds_filename', 'tracker')
     if args.history:
-        state.history = HumanTime.human2date(args.history[0]) if len(args.history)>0 else HumanTime.human2date(state.config.get('history', 'tracker'))
+        state.history = HumanTime.human2date(args.history[0])
         state.history_end = HumanTime.human2date(args.history[1]) if len(args.history)>1 else None
+    else:
+        state.history = HumanTime.human2date(state.config.get('history', 'tracker', default='1 minute ago'))
     state.seqno = args.seqno if args.seqno else state.config.get('initial_sequenceno', 'tracker')
     state.max_threads = args.max_threads if args.max_threads else state.config.get('max_threads', 'tracker')
     if state.config.get('geojsondiff-filename', 'tracker'):

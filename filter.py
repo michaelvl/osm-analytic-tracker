@@ -60,7 +60,7 @@ def process_csets(args, csets):
     dtype, seqno, geojson, bbox = (args.dtype, args.seqno, args.geojson, args.bbox)
     stat = {}
     for c in csets:
-        truncated = False
+        truncated = None
         diffs = None
         try:
             c.downloadData()
@@ -73,16 +73,17 @@ def process_csets(args, csets):
             #c.printDiffs()
             diffs = c.buildDiffList(maxtime=args.cset_max_time)
         except OsmChangeset.Timeout as e:
-            truncated = True
+            truncated = 'Timeout'
 
-        stat[c.id] = {'state': {'truncated': truncated},
+        stat[c.id] = {'state': {},
                       'source': {'type': dtype, 'sequenceno': seqno},
                       'meta': c.meta, 'summary': c.summary,
                       'tags': c.tags, 'tagdiff': c.tagdiff,
                       'simple_nodes': c.simple_nodes, 'diffs': diffs,
                       'other_users': c.other_users, 'mileage_m': c.mileage}
         if truncated:
-            logger.error('Changeset {} not fully processed.'.format(c.id))
+            stat[c.id]['state']['truncated'] = truncated
+            logger.error('Changeset {} not fully processed: {}'.format(c.id, truncated))
         else:
             if geojson:
                 fn = geojson.format(id=c.id)

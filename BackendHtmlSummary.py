@@ -63,6 +63,8 @@ class Backend(BackendHtml.Backend):
                          'relation': {'create':0, 'modify':0, 'delete':0}}
                 mileage = {}
                 for chgid in csets[::-1]:
+                    if 'truncated' in info[chgid]['state']:
+                        continue
                     summary = info[chgid]['summary']
                     for action in ['create', 'modify', 'delete']:
                         if summary['_'+action] > 0:
