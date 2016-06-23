@@ -140,7 +140,7 @@ function highlightFeature(e) {
     var layer = e.target;
     h = layer.feature.properties.meta;
     tag = layer.feature.properties.tag;
-    var popbody = 'Action: '+layer.feature.properties.action;
+    var popbody = '<img src="/'+layer.feature.properties.type+'.png"> Action: '+layer.feature.properties.action;
     var ksum = {}
     for (var v in tag) {
         for (var k in tag[v]) {

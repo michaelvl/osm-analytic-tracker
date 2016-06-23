@@ -284,11 +284,14 @@ td, th {
     padding-left: 2px;
     padding-right: 4px;
     border: 1px solid rgb(100,100,100);
-    max-width: 300px;
+    max-width: 400px;
     font-family: Ubuntu,"Bitstream Vera Sans","DejaVu Sans",Tahoma,sans-serif;font-size:10px;
+    #overflow:hidden;
+    #white-space:nowrap;
+    word-wrap:break-word;
 }
 .leaflet-popup-content {
-    #width:auto !important;
+    width:auto !important;
 }
 h1 {
   font-family: Ubuntu,"Bitstream Vera Sans","DejaVu Sans",Tahoma,sans-serif;font-size:16px;

@@ -619,10 +619,10 @@ class Changeset(object):
     def getGeoJsonDiff(self, include_modified_ways=True):
         #self.getReferencedElements()
         g = gj.GeoJson()
-        c_create = '009a00'
-        c_delete = 'ff2200'
-        c_old = 'ffff60'
-        c_mod = '66aacc'
+        c_create = '009a00' # Green
+        c_delete = 'ff2200' # Red
+        c_old = 'ffff60'    # Yellow
+        c_mod = '66aacc'    # Light blue
 
         for modif in self.changes:
             etype = modif['type']
@@ -645,6 +645,8 @@ class Changeset(object):
                     g.addLineStringPoint(l, oe['lon'], oe['lat'])
                     g.addColour(l, c_old)
                     g.addProperty(l, 'popupContent', 'Node moved')
+                    g.addProperty(l, 'action', action)
+                    g.addProperty(l, 'type', etype)
 
                     #f = g.addPoint(oe['lon'], oe['lat'])
                     #g.addColour(f, c_old)
@@ -669,6 +671,8 @@ class Changeset(object):
                 tag = e['tag']
 
                 g.addProperty(f, 'action', action)
+                g.addProperty(f, 'type', etype)
+                g.addProperty(f, 'id', id)
                 if action=='delete':
                     g.addColour(f, c_delete)
                     g.addProperty(f, 'tag', {version: tag})
