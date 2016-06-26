@@ -14,6 +14,7 @@ import json, pickle
 import importlib
 import multiprocessing as mp
 import logging
+import logging.config
 import urllib2
 import traceback
 import argparse
@@ -22,7 +23,7 @@ import jinja2
 import operator
 import socket
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('osmtracker')
 
 class TrackedState:
     def __init__(self):
@@ -327,13 +328,18 @@ def parse_opts(argv, state):
     parser.add_argument('-H', dest='history', action='append', help='Define how much history to fetch')
     parser.add_argument('-s', dest='seqno', help='Set initial sequence number')
     parser.add_argument('-T', dest='max_threads', help='Define maximum number of additional worker threads to use (zero means single threaded operation)')
-    parser.add_argument('-l', dest='log_level', default='INFO',
+    parser.add_argument('-l', dest='log_level',
                         choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], help='Set the log level')
     parser.add_argument('-L', dest='load_state', action='store_true', help='Load state from previous snapshot')
 
     args = parser.parse_args()
 
-    logging.basicConfig(level=getattr(logging, args.log_level, None))
+    logging.basicConfig()
+    if args.log_level:
+        logging.getLogger('').setLevel(getattr(logging, args.log_level, None))
+        state.log_level = args.log_level
+    else:
+        state.log_level = 'WARNING' # FIXME: Move fully to file-based config for filter.py
 
     if args.load_state:
         state = load_state()
@@ -342,18 +348,21 @@ def parse_opts(argv, state):
         state.new_generation()
         return state
 
-    if args.config_file:
-        logger.info("Loading config file '{}'".format(args.config_file))
-        state.config = config.Config()
-        try:
-            state.config.load(args.config_file)
-        except Exception as e:
-            print "Error parsing config file: '{}': {}".format(args.config_file, e)
-            sys.exit(-1)
+    logger.info("Loading config file '{}'".format(args.config_file))
+    state.config = config.Config()
+    try:
+        state.config.load(args.config_file)
+    except Exception as e:
+        print "Error parsing config file: '{}': {}".format(args.config_file, e)
+        sys.exit(-1)
 
-    # Update with loglevel from config file
-    state.log_level = state.config.get('loglevel', 'tracker', default=args.log_level)
-    logging.basicConfig(level=getattr(logging, state.log_level))
+    # Update logging settings
+    logcfg = state.config.get('logging_config', 'tracker', default=None)
+    if logcfg:
+        logging.info("Loading log config from '{}'".format(logcfg))
+        logging.config.fileConfig(logcfg)
+    if args.log_level: # Command-line args overrule file config
+        logging.getLogger('').setLevel(getattr(logging, state.log_level))
 
     state.areafile = args.bounds_file if args.bounds_file else state.config.get('bounds_filename', 'tracker')
     if args.history:
