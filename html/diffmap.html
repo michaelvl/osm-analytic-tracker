@@ -139,7 +139,7 @@ var layerPopup;
 function highlightFeature(e) {
     var layer = e.target;
     h = layer.feature.properties.meta;
-    tag = layer.feature.properties.tag;
+tag = layer.feature.properties.tag;
     var popbody = '<img src="/'+layer.feature.properties.type+'.png"> Action: '+layer.feature.properties.action;
     var ksum = {}
     for (var v in tag) {
@@ -169,36 +169,37 @@ function highlightFeature(e) {
         }
     }
 
-    popbody += '<table><thead><th>version</th>';
-    for (var v in tag) {
-        popbody += '<th>' + v + '</th>';
-    }
-    popbody += '</thead><tbody>';
-    for (var k in ksum) {
-        console.log('k='+k+' kstate='+kstate[k]);
-        if (ksum.hasOwnProperty(k)) {
-            if (kstate[k]==undefined) {
-                popbody += '<tr><td>' + k + '</td>';
-            } else {
-                popbody += '<tr class="'+kstate[k]+'"><td>' + k + '</td>';
+    if (tag) {
+        popbody += '<table><thead><th>version</th>';
+	for (var v in tag) {
+            popbody += '<th>' + v + '</th>';
+	}
+	popbody += '</thead><tbody>';
+	for (var k in ksum) {
+            console.log('k='+k+' kstate='+kstate[k]);
+            if (ksum.hasOwnProperty(k)) {
+                if (kstate[k]==undefined) {
+                    popbody += '<tr><td>' + k + '</td>';
+                } else {
+                    popbody += '<tr class="'+kstate[k]+'"><td>' + k + '</td>';
+                }
+                for (var v in tag) {
+                    console.log('v='+v);
+	            if (tag[v][k]!=undefined) {
+                        popbody += '<td>' + tag[v][k] + '</td>';
+	            } else {
+                        popbody += '<td class="undefined"></td>';
+	            }
+	        }
+                popbody += '</tr>';
             }
-            for (var v in tag) {
-          	console.log('v='+v);
-		if (tag[v][k]!=undefined) {
-                    popbody += '<td>' + tag[v][k] + '</td>';
-		} else {
-                    popbody += '<td class="undefined"></td>';
-		}
-	    }
-            popbody += '</tr>';
+	}
+	popbody += '</tbody></table>';
+        if (layer.feature.properties.popupContent!=undefined) {
+            popbody += layer.feature.properties.popupContent;
         }
+        console.log('popbody='+popbody);
     }
-    popbody += '</tbody></table>';
-    if (layer.feature.properties.popupContent!=undefined) {
-        popbody += layer.feature.properties.popupContent;
-    }
-    console.log('popbody='+popbody);
-
     //var coords = layer.feature.geometry.coordinates;
     //var swapped_coords = [coords[0][1], coords[0][0]];
     if (map) {
