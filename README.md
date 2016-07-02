@@ -59,18 +59,6 @@ docker run -p 8080:80 michaelvl/osmtracker
 
 and point your browser to 127.0.0.1:8080
 
-The manual approach:
-
-0. Download a region polygon from e.g. http://download.geofabrik.de/
-0. Change polygon filename in config.json to your chosen region
-0. Run the main tracker as below
-0. Inspect the files in the local html directory (can be customised also through the config.json file)
-0. Optional - serve the html directory through a web-server.
-
-```
-tracker.py -lDEBUG
-```
-
 The tracker python script tracks OpenStreetMap minutely diffs and optionally
 filters them through a bounding-box polygon (country-based polygons can be found
 on http://download.geofabrik.de/).  Changesets found to be within the area of
@@ -80,38 +68,18 @@ client-side parts include a javascript-based poll feature that will update the
 changeset list whenever it changes (special care has been taken to minimize
 network load).
 
-Do not track changes in a too large area or you might cause unreasonable load on
-the OpenStreetMap API servers!  The definition of 'too-large' depends not on
-geographical size, but the amount of changesets and the number of changes in
-each changeset.  For each change (node, way, relation) in changesets within the
-region, the old version is looked-up through the OSM API to figure out actual
-differences, i.e. each change triggers an API lookup, and you basically want the
-changeset analysis process to take less than a minute (because by default OSM
-minutely diffs are tracked). The tracked supports multiple filter processes, but
-using this will increase memory consumption. Experience has shown that a region
-like Denmark is easily tracked using a low-end server.
-
 Configuration is provided through the config.json file -- especially the paths
 for the backends should be configured.
 
 ### Components
 
-- tracker.py  The main script, tracks OpenStreetMap minutely diffs
-- filter.py   Diff filter, filters a minutely diff through a region polygon and the analyse remaining changesets. Keeping this in a separate process improces control of memory consumption.
+- osmtracker.py  The main script with multiple roles depending on arguments.
+- db.py   MongoDB backend for storing changeset information
 - OsmChangeset.py  The class, which contain the main analysis code.  Can be used from a command line through csetinfo.py
-
-E.g. to view summary of a changeset (in json-format):
-
-```
-csetinfo.py -s -i <changeset-ID>
-```
 
 ### Dependencies
 
-- Python shapely and tilezone libraries:  python-shapepy python-tz
-- Python OSM API: pip install osmapi
-- Templates: pip install jinja2
-
+See Dockerfile.
 
 ### Links
 

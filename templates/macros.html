@@ -1,4 +1,4 @@
-{% macro cset_head_ts_li_start(info) %}
+{% macro cset_head_ts_li_start(meta,info) %}
   <!-- cset_head_ts -->
 {% if info.misc.state=='new' -%}
 <li class="cset new" data-timestamp="{{info.misc.timestamp|js_datetime}}" data-timestamp_type="{{info.misc.timestamp_type_txt}}">
@@ -7,31 +7,31 @@
 {% endif -%}
 {%- endmacro %}
 
-{% macro cset_head_basic_li(info) %}
+{% macro cset_head_basic_li(meta,info) %}
   <!-- cset_head_basic -->
     <li>
       <div class="legend" style="background-color: #{{info.misc.user_colour}}">&#8203;</div>
-      <div class="user"><div class="icon"><img src="/user_l.png"></div><a href="http://www.openstreetmap.org/user/{{info.meta.user}}">{{info.meta.user|e}}</a></div>
-      {% if 'comment' in info.meta.tag and info.meta.tag.comment|trim|length != 0 -%}
-      <div class="changeset"><a href="http://www.openstreetmap.org/changeset/{{info.meta.id}}">{{info.meta.tag.comment|e}}</a></div>
+      <div class="user"><div class="icon"><img src="/user_l.png"></div><a href="http://www.openstreetmap.org/user/{{meta.user}}">{{meta.user|e}}</a></div>
+      {% if 'comment' in meta.tag and meta.tag.comment|trim|length != 0 -%}
+      <div class="changeset"><a href="http://www.openstreetmap.org/changeset/{{meta.id}}">{{meta.tag.comment|e}}</a></div>
       {% else -%}
-      <div class="changeset"><a href="http://www.openstreetmap.org/changeset/{{info.meta.id}}">Changeset {{info.meta.id}}</a></div>
+      <div class="changeset"><a href="http://www.openstreetmap.org/changeset/{{meta.id}}">Changeset {{meta.id}}</a></div>
       <li><div class="warning"><div class="icon"><img src="/att_l.png"></div><a href="http://wiki.openstreetmap.org/wiki/Good_changeset_comments">No comment</a></div></li>
       {% endif -%}
-      {% if 'source' in info.meta.tag -%}
-        <div class="changeset-source">{{info.meta.tag.source|e}}</div>
+      {% if 'source' in meta.tag -%}
+        <div class="changeset-source">{{meta.tag.source|e}}</div>
       {% endif -%}
     </li>
 {%- endmacro %}
 
-{% macro cset_head_ul(info) %}
+{% macro cset_head_ul(meta,info) %}
   <!-- cset_head -->
   <ul class="csethead">
-    {{ cset_head_basic_li(info) }}
-    {% if info.meta.truncated %}
+    {{ cset_head_basic_li(meta,info) }}
+    {% if info.state.truncated %}
     <li><div class="warning truncated"><div class="icon"><img src="/att_l.png"></div>Truncated</div></li>
     {% endif %}
-    {% if not (('source' in info.meta.tag) or ('imagery_used' in info.meta.tag)) -%}
+    {% if not (('source' in meta.tag) or ('imagery_used' in meta.tag)) -%}
     <li><div class="warning"><div class="icon"><img src="/att_l.png"></div><a href="http://wiki.openstreetmap.org/wiki/Changeset">No source attribute</a></div></li>
     {% endif -%}
     {% if 'type = route' in info.summary.create.relation_tags or
@@ -44,25 +44,25 @@
     <li><div class="warning"><div class="icon"><img src="/att_l.png"></div>Modifies address node(s)</div></li>
     {%- endif %}
     
-    {% if info.meta.comments_count>0 -%}
-    {% if info.meta.comments_count==1 -%}
+    {% if meta.comments_count>0 -%}
+    {% if meta.comments_count==1 -%}
     <li><div>1 note</div></li>
     {% else -%}
-    <li><div>{{info.meta.comments_count}} notes</div></li>
+    <li><div>{{meta.comments_count}} notes</div></li>
     {% endif -%}
     {% endif -%}
     {% if info.state.truncated -%}
     <li><div class="error"><div class="icon"><img src="/err_l.png"></div>Error occured while processing:{{info.state.truncated}}</div></li>
     {% endif -%}
-    {% if info.meta.open -%}
+    {% if meta.open -%}
     <li><div class="trailer csetopen"><div class="icon"><img src="/csetopen_l.png"></div>Open</div></li>
     {% else -%}
-    <li><div><a href="/diffmap.html?cid={{info.meta.id}}">VisualDiff</a></div></li>
+    <li><div><a href="/diffmap.html?cid={{meta.id}}">VisualDiff</a></div></li>
     {%- endif %}
   </ul>
 {%- endmacro %}
 
-{% macro cset_tagdiff(info) %}
+{% macro cset_tagdiff(meta,info) %}
   <!-- cset_tagdiff -->
   {% for (k,v,a) in info.misc.processed_tagdiff_create -%}
   <li class="action_{{a}}"><div>{{k|e}}</div><div>{{v|e}}</div></li>
@@ -84,7 +84,7 @@
   {% endif -%}
 {%- endmacro %}
 
-{% macro cset_tags(info) %}
+{% macro cset_tags(meta,info) %}
   <!-- cset_tags -->
   {% for k,v in info.tags.iteritems() -%}
   {% if loop.index<50 -%}
@@ -95,7 +95,7 @@
   {%- endfor -%}
 {%- endmacro %}
 
-{% macro cset_change_summary(info) %}
+{% macro cset_change_summary(meta,info) %}
   <!-- cset_change_summary -->
   {% if info.summary._create>0 -%}
   <li class="action_create"><div>Added:</div><div class="node_create">{{info.summary.create.node}}</div><div class="way_create">{{info.summary.create.way}}</div><div class="relation_create">{{info.summary.create.relation}}</div></li>
@@ -114,14 +114,14 @@
   {% endif -%}
 {%- endmacro %}
   
-{% macro cset_notes_li(info) %}
+{% macro cset_notes_li(meta,info) %}
   <!-- cset_notes -->
-  {% for nn in info.meta.discussion %}
+  {% for nn in meta.discussion %}
     <li><div class="trailer"><img src="/user_l.png">{{nn.user|e}}: {{nn.text|e}}</div></li>
   {% endfor %}
 {%- endmacro %}
 
-{% macro affected_users_li(info) %}
+{% macro affected_users_li(meta,info) %}
   <!-- affected users -->
   {% set ousr = info['other_users'] -%}
   {% for k,v in ousr.iteritems() -%}

@@ -16,9 +16,9 @@
 <nav>
 <ul>
 <li><a href="https://github.com/MichaelVL/osm-analytic-tracker/"><img src="/icon_bw.png"></a></li>
-<li><a class="vcenter" href="/index.html">Live Changesets</a></li>
-<li><a class="vcenter" href="/cset_notes.html">Changeset Notes</a></li>
-<li><a class="vcenter" href="/addresses.html">Address Changes</a></li>
+<li><a class="vcenter" href="/index.html">Live Changesets<span id="num_csets"></span></a></li>
+<li><a class="vcenter" href="/cset_notes.html">Changeset Notes<span id="num_csets_w_notes"></span></a></li>
+<li><a class="vcenter" href="/addresses.html">Address Changes<span id="num_csets_w_addr_chgs"></span></a></li>
 <!-- <li><a  class="vcenter"href="/addresses.html">New feature<img src=att_l.png> NEW</a></li> -->
 </ul>
 </nav>
@@ -63,13 +63,19 @@ function small_load() {
 
 function small_load_done(respTxt, txtStatus, req) {
   console.log('small_load_done():'+txtStatus);
+  $("#gen").text($("#generation").text());
+  append_count($("#summ_csets").text(), "#num_csets");
+  append_count($("#summ_csets_w_notes").text(), "#num_csets_with_notes");
+  append_count($("#summ_csets_w_addr_chgs").text(), "#num_csets_with_addr_changes");
+  //$("#num_csets").text($("#summ_csets").text());
+  //$("#num_csets_w_notes").text($("#summ_csets_with_notes").text());
+  //$("#num_csets_w_addr_chgs").text($("#summ_csets_with_addr_changes").text());
+  compute_lag();
   large_load_test();  
 }
 
 function large_load_test() {
   console.log('large_load_test()');
-  $("#gen").text($("#generation").text());
-  compute_lag();
   if ($("#gen").text() != $("#gen_loaded").text()) {
     console.log('Not in sync, have '+$("#gen").text()+' and '+$("#gen_loaded").text());
     age = 0;
@@ -99,6 +105,14 @@ function compute_lag(ts_src, dest) {
   var ts = $("#pointer_timestamp").text();
   var hts = htimestamp(ts, undefined, undefined);
   $("#lag").text("Lag: "+hts);
+}
+
+function append_count(cnt, cnt_dest_id) {
+  if (cnt>0) {
+    $(cnt_dest_id).text(" ("+cnt+")");
+  } else {
+    $(cnt_dest_id).text("");
+  }
 }
 
 function tstype() {
@@ -155,7 +169,7 @@ function highlightFeature(e) {
     //var coords = layer.feature.geometry.coordinates;
     //var swapped_coords = [coords[0][1], coords[0][0]];
     if (map) {
-       layerPopup = L.popup({offset:new L.Point(0,-6), closeButton: false})
+       layerPopup = L.popup({offset:new L.Point(0,-1), closeButton: false, autoPan: false})
            //.setLatLng(swapped_coords)
            .setLatLng(e.latlng)
            .setContent(popbody)

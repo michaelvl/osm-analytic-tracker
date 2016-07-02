@@ -1,7 +1,8 @@
 nav ul {
     display: inline-block;
     position:fixed; top:0px; margin:auto; z-index:100000; width:100%;
-    background:rgb(30,85,122);
+    background:rgb(32,100,128);
+    v1background:rgb(30,85,122);
     height:28px;
     #line-height: 28px;
     padding: 5px;
@@ -74,7 +75,7 @@ border-radius: 3px;
 background-color: rgb(240,247,252);
 }
 
-#generation {
+#generation, #summ_csets, #summ_csets_with_notes, #summ_csets_with_addr_changes {
 display: none;
 }
 #summary_created {

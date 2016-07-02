@@ -7,33 +7,37 @@ No changesets.
 {% else %}
 
 <ul>
-{% for cid in csets_err -%}
+{% for c in csets_err -%}
+{% set cid = c.cid -%}
+{% set meta = csetmeta[cid] -%}
 {% set info = csetinfo[cid] -%}
-<!-- ChangesetWErr {{cid}} source type {{info.source.dtype}} seqno {{info.source.sequenceno}} -->
-{{ macros.cset_head_ts_li_start(info) }}  
+<!-- ChangesetWErr {{cid}} source type {{c.source.dtype}} seqno {{c.source.sequenceno}} -->
+{{ macros.cset_head_ts_li_start(meta,info) }}  
   <ul class="csethead">
-  {{ macros.cset_head_basic_li(info) }}
+  {{ macros.cset_head_basic_li(meta,info) }}
   <li><div class="warning"><div class="icon"><img src="/att_l.png"></div>Error encountered while processing changeset</div></li>
   </ul>
 </li>
 {% endfor -%}
 
 
-{% for cid in csets -%}
+{% for c in csets -%}
+{% set cid = c.cid -%}
+{% set meta = csetmeta[cid] -%}
 {% set info = csetinfo[cid] -%}
-<!-- Changeset {{cid}} source type {{info.source.dtype}} seqno {{info.source.sequenceno}} -->
-{{ macros.cset_head_ts_li_start(info) }}  
-  {{ macros.cset_head_ul(info) }}
+<!-- Changeset {{cid}} source type {{c.source.type}} seqno {{c.source.sequenceno}} -->
+{{ macros.cset_head_ts_li_start(meta,info) }}  
+  {{ macros.cset_head_ul(meta,info) }}
   {% if not info.state.truncated and show_details %}
   <ul class="details">
-    {{ macros.cset_change_summary(info) }}
-    {{ macros.cset_tags(info) }}
-    {{ macros.cset_tagdiff(info) }}
-    {{ macros.affected_users_li(info) }}
+    {{ macros.cset_change_summary(meta,info) }}
+    {{ macros.cset_tags(meta,info) }}
+    {{ macros.cset_tagdiff(meta,info) }}
+    {{ macros.affected_users_li(meta,info) }}
   {% endif -%}
 
-  {% if show_comments and info.meta.comments_count>0 %}
-  {{ macros.cset_notes_li(info) }}
+  {% if show_comments and meta.comments_count>0 %}
+  {{ macros.cset_notes_li(meta,info) }}
   {% endif -%}
   </ul>
 </li>

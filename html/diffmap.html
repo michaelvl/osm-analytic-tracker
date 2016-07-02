@@ -203,7 +203,7 @@ tag = layer.feature.properties.tag;
     //var coords = layer.feature.geometry.coordinates;
     //var swapped_coords = [coords[0][1], coords[0][0]];
     if (map) {
-       layerPopup = L.popup({offset:new L.Point(0,-6), closeButton: false})
+       layerPopup = L.popup({offset:new L.Point(0,-1), closeButton: false, autoPan: false})
            //.setLatLng(swapped_coords)
            .setLatLng(e.latlng)
            .setContent(popbody)

@@ -18,20 +18,32 @@ class Backend(Backend.Backend):
     def __init__(self, config, subcfg):
         super(Backend, self).__init__(config, subcfg)
         self.list_fname = config.getpath('path', 'BackendHtml')+'/'+subcfg['filename']
-        #self.list_fname_old = config.getpath('path', 'BackendHtml')+'/'+config.get('filename_old', 'BackendHtml')
         self.template_name = subcfg['template']
 
         self.show_details = getattr(subcfg, 'show_details', True)
         self.show_comments = getattr(subcfg, 'show_comments', True)
-        self.generation = None
         self.last_chg_seen = None
         self.last_update = datetime.datetime.now()
+
+        self.env = jinja2.Environment(loader=jinja2.FileSystemLoader(config.getpath('template_path', 'tracker')))
+        self.env.filters['js_datetime'] = self._js_datetime_filter
+        self.env.filters['utc_datetime'] = self._utc_datetime_filter
 
         self.start_page(self.list_fname)
         self.no_items()
         self.end_page()
 
-    def print_state(self, state):
+    def _js_datetime_filter(self, value):
+        '''Jinja2 filter formatting timestamps in format understood by javascript'''
+            # See javascript date/time format: http://tools.ietf.org/html/rfc2822#page-14
+        JS_TIMESTAMP_FMT = '%a, %d %b %Y %H:%M:%S %z'
+        return value.strftime(JS_TIMESTAMP_FMT)
+
+    def _utc_datetime_filter(self, value):
+        TIMESTAMP_FMT = '%Y:%m:%d %H:%M:%S'
+        return value.strftime(TIMESTAMP_FMT)
+
+    def print_state(self, db):
         now = datetime.datetime.now()
         #if now.day != self.last_update.day:
         #    print('Cycler - new day: {} {}'.format(now.day, self.last_update.day))
@@ -41,18 +53,24 @@ class Backend(Backend.Backend):
         #    print('Cycler')
         #    state.clear_csets()
         self.last_update = datetime.datetime.now()
-        if self.generation != state.generation:
-            self.generation = state.generation
+        if self.generation != db.generation:
+            self.generation = db.generation
 
             self.start_page(self.list_fname)
-            template = state.env.get_template(self.template_name)
-            csets = state.area_chgsets
-            ctx = { 'state': state}
-            ctx['csets'] = csets[::-1]
-            ctx['csets_err'] = state.err_chgsets
-            ctx['csetinfo'] = state.area_chgsets_info
-            ctx['show_details'] = self.show_details
-            ctx['show_comments'] = self.show_comments
+            template = self.env.get_template(self.template_name)
+            ctx = { #'state': state,
+                    'csets': [],
+                    'csets_err': [],
+                    'csetmeta': {},
+                    'csetinfo': {},
+                    'show_details': self.show_details,
+                    'show_comments': self.show_comments }
+            for c in db.chgsets_ready():
+                cid = c['cid']
+                ctx['csets'].append(c)
+                #ctx['csets_err'] = state.err_chgsets
+                ctx['csetmeta'][cid] = db.chgset_get_meta(cid)
+                ctx['csetinfo'][cid] = db.chgset_get_info(cid)
             logger.debug('Data passed to template: {}'.format(ctx))
             self.pprint(template.render(ctx))
             self.end_page()

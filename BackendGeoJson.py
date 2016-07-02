@@ -13,16 +13,13 @@ class Backend(Backend.Backend):
         self.list_fname = config.getpath('path', 'BackendGeoJson')+'/'+subcfg['filename']
         self.click_url = subcfg['click_url']
         self.colours = col.ColourScheme()
+        self.print_chgsets(None)
 
-        self.generation = None
-        self.print_chgsets(None, None)
-
-    def print_state(self, state):
-        if self.generation != state.generation:
-            self.generation = state.generation
-            if len(state.area_chgsets) > 0:
-                self.print_chgsets(state.area_chgsets,
-                                   state.area_chgsets_info)
+    def print_state(self, db):
+        if self.generation != db.generation:
+            self.generation = db.generation
+            if db.chgsets.count() > 0:
+                self.print_chgsets(db)
 
     def pprint(self, txt):
         #print(txt.encode('utf8'), file=self.f)
@@ -68,13 +65,13 @@ class Backend(Backend.Backend):
             }
             geoj['features'].append(feature)
 
-    def print_chgsets(self, csets, info):
+    def print_chgsets(self, db):
         geoj = { "type": "FeatureCollection",
                  "features": [] }
-        if csets and len(csets) > 0:
-            for chgid in csets[::-1]:
-                data = info[chgid]
-                self.add_cset_bbox(geoj, data['meta'])
+        if db:
+            for c in db.chgsets_ready():
+                cid = c['cid']
+                self.add_cset_bbox(geoj, db.chgset_get_meta(cid))
 
         self.start_file(self.list_fname)
         logger.debug('Data sent to json file={}'.format(geoj))

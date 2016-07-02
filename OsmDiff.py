@@ -44,14 +44,14 @@ class OsmDiffApi(object):
         #    logger.debug("Getting cached state '"+stype+"' sequenceNo "+str(seqno)+" from cache")
         #    return self.state_cache[stype+str(seqno)]
         state = State(stype=stype, autoload=False, seqno=seqno)
-        logger.debug("### Retrieving '"+stype+"' state, seqno "+str(state.sequenceno()))
+        logger.debug("### Retrieving '"+stype+"' state, seqno "+str(state.sequenceno))
         state.load_state()
-        #self.state_cache[stype+str(state.sequenceno())] = state
+        #self.state_cache[stype+str(state.sequenceno)] = state
         logger.debug("Loaded state: "+str(state))
         return state
 
     def get_diff_from_state(self, state):
-        return self.get_diff(state.sequenceno(), state.type)
+        return self.get_diff(state.sequenceno, state.type)
 
     def get_diff(self, seqno, type):
         diff = Diff(seqno, type)
@@ -67,7 +67,7 @@ class OsmDiffApi(object):
         """Get state object that has timestamp less than or equal to supplied
            timestamp. Searching back from supplied start object"""
         ptr = start
-        seqno = ptr.sequenceno()
+        seqno = ptr.sequenceno
         if type=='minute':
             now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
             secs = (now-timestamp).total_seconds()
@@ -80,7 +80,7 @@ class OsmDiffApi(object):
             iter = seqno-max_iter
         else:
             iter = seqno+1 # Infinite
-        while ptr.timestamp() > timestamp and ptr.sequenceno() != iter and seqno > 0:
+        while ptr.timestamp() > timestamp and ptr.sequenceno != iter and seqno > 0:
             seqno -= 1
             ptr = self.get_state(type, seqno)
         if ptr.timestamp() > timestamp:
@@ -104,7 +104,7 @@ class Base(object):
             self.type = type
 
     def _path_frag(self):
-        seqno = self.sequenceno()
+        seqno = self.sequenceno
         a = seqno/1000000
         b = (seqno/1000)%1000
         c = seqno % 1000
@@ -116,15 +116,22 @@ class Base(object):
     def timestamp(self):
         return self.state['timestamp_dt']
 
+    @property
     def sequenceno(self):
         if self.state.has_key('sequenceNumber'):
             return self.state['sequenceNumber']
         else:
             return None
 
-    def set_sequenceno(self, seqno):
+    @sequenceno.setter
+    def sequenceno(self, seqno):
         self.state['sequenceNumber'] = seqno
 
+
+    def sequenceno_advance(self, offset=1):
+        self.sequenceno = self.sequenceno+offset
+        if self.autoload:
+            self.load_state()
 
 class Diff(Base):
     """OSM diff class"""
@@ -165,19 +172,19 @@ class State(Base):
     """OSM replication state"""
     def __init__(self, stype=None, autoload=True, seqno=None):
         Base.__init__(self, stype)
-        self.set_sequenceno(seqno)
+        self.sequenceno = seqno
         self.autoload = autoload
         if autoload:
             self.load_state()
 
     def __str__(self):
         if (self.type=='day'):
-            return 'daily, sequenceNo:'+str(self.sequenceno())+', timestamp:'+self.timestamp_str()
+            return 'daily, sequenceNo:'+str(self.sequenceno)+', timestamp:'+self.timestamp_str()
         else:
-            return self.type+'ly, sequenceNo:'+str(self.sequenceno())+', timestamp:'+self.timestamp_str()
+            return self.type+'ly, sequenceNo:'+str(self.sequenceno)+', timestamp:'+self.timestamp_str()
 
     def _state_url(self):
-        if self.sequenceno()==None:
+        if self.sequenceno==None:
             return self.repl_url+self.type+'/state.txt'
         else:
             return self.repl_url+self.type+'/'+self._path_frag()+'.state.txt'

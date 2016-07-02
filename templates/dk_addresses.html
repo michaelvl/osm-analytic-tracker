@@ -7,22 +7,26 @@ No changesets.
 {% else -%}
 
 <ul>
-{% for cid in csets if csetinfo[cid].misc.dk_address_node_changes>0 -%}
+{% for c in csets -%}
+{% set cid = c.cid -%}
+{% set meta = csetmeta[cid] -%}
 {% set info = csetinfo[cid] -%}
+{% if info.misc.dk_address_node_changes -%}
 
-{% if info.misc.state=='new' -%}
-<li class="cset new" data-timestamp="{{info.misc.timestamp|js_datetime}} UTC" data-timestamp_type="{{info.misc.timestamp_type_txt}}">
-{% else -%}
-<li class="cset" data-timestamp="{{info.misc.timestamp|js_datetime}} UTC" data-timestamp_type="{{info.misc.timestamp_type_txt}}">
-{% endif -%}
-  {{ macros.cset_head_ul(info) }}
-  <ul class="details">
-  {{ macros.cset_change_summary(info) }}
-  {{ macros.cset_tags(info) }}
-  {{ macros.cset_tagdiff(info) }}
-  {{ macros.cset_notes_li(info) }}
-  </ul>
-</li>
+  {% if info.misc.state=='new' -%}
+  <li class="cset new" data-timestamp="{{info.misc.timestamp|js_datetime}} UTC" data-timestamp_type="{{info.misc.timestamp_type_txt}}">
+  {% else -%}
+  <li class="cset" data-timestamp="{{info.misc.timestamp|js_datetime}} UTC" data-timestamp_type="{{info.misc.timestamp_type_txt}}">
+  {% endif -%}
+    {{ macros.cset_head_ul(meta,info) }}
+    <ul class="details">
+    {{ macros.cset_change_summary(meta,info) }}
+    {{ macros.cset_tags(meta,info) }}
+    {{ macros.cset_tagdiff(meta,info) }}
+    {{ macros.cset_notes_li(meta,info) }}
+    </ul>
+  </li>
+{%- endif %}
 
 {% endfor -%}
 </ul>

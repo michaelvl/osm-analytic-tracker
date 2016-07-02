@@ -7,7 +7,7 @@ import pprint
 class Backend(object):
     def __init__(self, config, subcfg):
         self.debug = False
-        self.generation = None
+        self.generation = -1 # DB might start out with 'None'
         self.config = config
         self.subcfg = subcfg
 

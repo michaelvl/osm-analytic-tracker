@@ -19,8 +19,9 @@ def main(argv):
     csetid = None
     apiurl = None
     tags = False
+    mileage = False
     try:
-        opts, args = getopt.getopt(argv, "a:dg:i:mchsb:BTS")
+        opts, args = getopt.getopt(argv, "a:dg:i:mchsb:BTSM")
     except getopt.GetoptError:
         print "..."
         sys.exit(-1)
@@ -49,6 +50,8 @@ def main(argv):
             csetid = int(arg)
         if opt == '-T':
             tags = True
+        if opt == '-M':
+            mileage = True
 
     if apiurl:
         cset = OsmChangeset.Changeset(csetid, api=apiurl)
@@ -106,6 +109,9 @@ def main(argv):
             if debug:
                 print '== Raw tagdiff ======'
             print cset.tagdiff
+        if mileage:
+            print '== Mileage ======'
+            print cset.mileage
     if tags:
         if debug:
             print '== Tags ======'

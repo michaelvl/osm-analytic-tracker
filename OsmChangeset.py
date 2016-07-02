@@ -8,6 +8,7 @@ import sys, time
 import GeoTools
 import logging
 import datetime, pytz
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -46,13 +47,14 @@ class Changeset(object):
         self.datadebug = False
 
     @staticmethod
-    def get_timestamp(meta):
-        if 'closed_at' in meta.keys():
-            typeof = 'closed_at'
-            cset_ts = meta['closed_at']
-        else:
-            typeof = 'created_at'
-            cset_ts = meta['created_at']
+    def get_timestamp(meta, typeof=None):
+        if not typeof:
+            if 'closed_at' in meta.keys():
+                typeof = 'closed_at'
+            else:
+                typeof = 'created_at'
+
+        cset_ts = meta[typeof]
         if type(cset_ts) is datetime.datetime:
             # Some osmapi's pass datetime's here without tz instead of a unicode string?
             timestamp = cset_ts.replace(tzinfo=pytz.utc)
@@ -90,52 +92,6 @@ class Changeset(object):
             return ''
         return 's'
 
-    # def buildDiffList_old(self):
-    #     txt = []
-    #     for modif in self.changes:
-    #         etype = modif['type']
-    #         data = modif['data']
-    #         id = data['id']
-    #         version = data['version']
-    #         action = modif['action']
-    #         diff = self.getTagDiff(etype, id, version)
-    #         label = self.getLabel(etype, id, version)
-    #         #logger.debug('-- {} {} {} --'.format(action, etype, id))
-    #         notes = []
-    #         entry = (action, label, diff, notes)
-    #         txt.append(entry)
-    #         if action == 'modify':
-    #             old = self.old(etype,id,version-1)
-    #             if etype=='way':
-    #                 nd_ops = self.diffStat(old['nd'], data['nd'])
-    #                 if nd_ops or diff:
-    #                     if nd_ops:
-    #                         if nd_ops[0]:
-    #                             notes.append(u'added {} node{}'.format(nd_ops[0], self._pluS(nd_ops[0])))
-    #                         if nd_ops[1]:
-    #                             notes.append(u'removed {} node{}'.format(nd_ops[1], self._pluS(nd_ops[1])))
-    #                     if old['uid'] != data['uid']:
-    #                         notes.append(u', prev by: {}'.format(old['user']))
-    #             if etype=='relation':
-    #                 # member is list of dict's: {u'role': u'', u'ref': 1234, u'type': u'way'}
-    #                 ombr = [x['ref'] for x in old['member']]
-    #                 nmbr = [x['ref'] for x in data['member']]
-    #                 m_ops = self.diffStat(ombr, nmbr)
-    #                 if m_ops or diff:
-    #                     txt.append(u'{}: '.format(label)) # FIXME, leftover?
-    #                     if m_ops:
-    #                         if m_ops[0]:
-    #                             notes.append(u'added {} member{}'.format(m_ops[0], self._pluS(m_ops[0])))
-    #                         if m_ops[1]:
-    #                             notes.append(u'deleted {} member{}'.format(m_ops[1], self._pluS(m_ops[1])))
-    #                     if old['uid'] != data['uid']:
-    #                         notes.append(u', prev by: {}'.format(old['user']))
-    #                 if not m_ops and ombr!=nmbr:
-    #                     notes.append(u'{}: Reordered members'.format(label))
-    #             # TODO: Handle relation role changes (e.g. inner to outer)
-    #             # TODO: Show relation as modified if member changes (e.g. way has added a node)
-    #     return txt
-
     def buildDiffList(self, maxtime=None):
         self.startProcessing(maxtime)
         self.diffs = self.getEmptyObjDict()
@@ -152,7 +108,7 @@ class Changeset(object):
             notes = []
             prev_authors = []
             entry = (action, label, diff, notes, prev_authors)
-            self.diffs[etype][id] = entry
+            self.diffs[etype][str(id)] = entry
             if action == 'modify':
                 old = self.old(etype,id,version-1)
                 if etype=='way':
@@ -194,11 +150,15 @@ class Changeset(object):
             return None
         return (len(d2), len(d1))
 
-    def downloadMeta(self):
+    def downloadMeta(self, set_tz=True):
         if not self.meta:
             if self.apidebug:
                 logger.debug('osmapi.ChangesetGet({}, include_discussion=True)'.format(self.id))
             self.meta = self.osmapi.ChangesetGet(self.id, include_discussion=True)
+            if set_tz:
+                for ts in ['created_at', 'closed_at']:
+                    if ts in self.meta:
+                        self.meta[ts] = self.meta[ts].replace(tzinfo=pytz.utc)
             if self.datadebug:
                 logger.debug(u'meta({})={}'.format(self.id, self.meta))
 
@@ -209,6 +169,22 @@ class Changeset(object):
             self.changes = self.osmapi.ChangesetDownload(self.id)
             if self.datadebug:
                 logger.debug(u'changes({})={}'.format(self.id, self.changes))
+
+    def downloadGeometry(self, overpass_api='https://overpass-api.de/api'):
+        # https://overpass-api.de/api/interpreter?data=[adiff:"2016-07-02T22:23:17Z","2016-07-02T22:23:19Z"];(node(bbox)(changed);way(bbox)(changed););out meta geom(bbox);&bbox=11.4019207,55.8270254,11.4030363,55.8297091
+        opened = self.get_timestamp(self.meta, 'created_at')[1] - datetime.timedelta(seconds=1)
+        closed = self.get_timestamp(self.meta, 'closed_at')[1] + datetime.timedelta(seconds=1)
+        tfmt = '%Y-%m-%dT%h:%M:%sZ'
+        url = overpass_api+'/interpreter?data=[adiff:"'+ \
+            opened.strftime(tfmt) + '","' + closed.strftime(tfmt) + \
+            '"];(node(bbox)(changed);way(bbox)(changed););out meta geom(bbox);&bbox=' + \
+            '{},{},{},{}'.format(self.meta['min_lon'], self.meta['min_lat'], self.meta['max_lon'], self.meta['max_lat'])
+        #r = requests.get(url, stream=True, headers={'Connection':'close'})
+        r = requests.get(url)
+        if r.status_code!=200:
+            raise Exception('Overpass error:{}:{}:{}'.format(r.status_code,r.text,url))
+        #r.raw.decode_content = True
+        print 'XX:'+r.text
 
     def startProcessing(self, maxtime=None):
         self.max_processing_time = maxtime
@@ -279,6 +255,7 @@ class Changeset(object):
                 old = self.old(etype,id,version-1)
                 old_uid = old['uid']
                 if old_uid != data['uid']:
+                    old_uid = str(old_uid)
                     if not old_uid in self.other_users.keys():
                         if old['user']:
                             usr = old['user']
@@ -685,7 +662,7 @@ class Changeset(object):
                     g.addProperty(f, 'tag', {version: tag, version-1: oe['tag']})
 
                 if self.diffs:
-                    diff = self.diffs[etype][id]
+                    diff = self.diffs[etype][str(id)]
                     if diff:
                         if action!='create': # Dont show tags twice
                             d = diff[2]

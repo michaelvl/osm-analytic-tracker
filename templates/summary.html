@@ -19,7 +19,10 @@
   <li><div>{{ csets|length }} changesets by {{ users|length }} users</div></li>
   <li><div id="lag">Lag</div></li>
 </ul>
-<div id="sequence_numbers">Diff sequence numbers: {{state.first_seqno}} - {{state.latest_seqno}}</div>
-<div id="generation">Generation {{state.generation}}</div>
+<div id="sequence_numbers">Diff sequence numbers: {{first_seqno}} - {{latest_seqno}}</div>
+<div id="generation">Generation {{generation}}</div>
 <div id="summary_created">{{summary_created|js_datetime}}</div>
-<div id="pointer_timestamp">{{state.timestamp|js_datetime}}</div>
+<div id="pointer_timestamp">{{pointer_timestamp|js_datetime}}</div>
+<div id="summ_csets">{{csets|length}}</div>
+<div id="summ_csets_with_notes">{{csets_with_notes}}</div>
+<div id="summ_csets_with_addr_changes">{{csets_with_addr_changes}}</div>

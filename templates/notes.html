@@ -7,22 +7,25 @@ No changesets.
 {% else -%}
 
 <ul>
-{% for cid in csets if csetinfo[cid].meta.comments_count>0 -%}
-{% set info = csetinfo[cid] -%}
+{% for c in csets -%}
+{% set cid = c.cid -%}
+{% set meta = csetmeta[cid] -%}
+{% if meta.comments_count>0 -%}
 
-{% if info.misc.state=='new' -%}
+  {% if info.misc.state=='new' -%}
 <li class="cset new" data-timestamp="{{info.misc.timestamp|js_datetime}} UTC" data-timestamp_type="{{info.misc.timestamp_type_txt}}">
-{% else -%}
+  {% else -%}
 <li class="cset" data-timestamp="{{info.misc.timestamp|js_datetime}} UTC" data-timestamp_type="{{info.misc.timestamp_type_txt}}">
-{% endif -%}
-  {{ macros.cset_head_ul(info) }}
-  {% if show_comments and info.meta.comments_count>0 -%}
-  <ul class="details">
-  {{ macros.cset_notes_li(info) }}
-  </ul>
   {% endif -%}
-</li>
+    {{ macros.cset_head_ul(meta,info) }}
+    {% if show_comments and info.meta.comments_count>0 -%}
+    <ul class="details">
+    {{ macros.cset_notes_li(meta,info) }}
+    </ul>
+    {% endif -%}
+  </li>
 
+{% endif -%}
 {% endfor -%}
 </ul>
 {%- endif %}
