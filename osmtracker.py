@@ -14,6 +14,7 @@ import db as database
 import config as configfile
 import importlib
 import ColourScheme as col
+import HumanTime
 import operator
 import urllib2, socket
 import traceback
@@ -42,34 +43,23 @@ def cset_check_bounds(args, config, area, cid, debug=0, strict_inside_check=True
             return c
     return None
 
-def dict_changed(old, new):
-    logger.info('Compare old: {}'.format(old))
-    logger.info('Compare new: {}'.format(new))
-    for k in old:
-        if k not in new or old[k]!=new[k]:
-            return True
-    for k in new:
-        if k not in old or old[k]!=new[k]:
-            return True
-    return False
-
 def cset_refresh_meta(args, config, db, cset, no_delay=False):
     cid = cset['cid']
-    timeout = config.get('refresh_meta_minutes', 'tracker')
+    timeout_s = config.get('refresh_meta_minutes', 'tracker')*60
     refresh = no_delay
-    if timeout>0:
+    if timeout_s>0:
         now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
         last_refresh = db.chgset_get_meta_meta(cid)['timestamp']
-        if (now-last_refresh).total_seconds()/60 > timeout:
+        age_s = (now-last_refresh).total_seconds()
+        if age_s > timeout_s:
+            logger.debug('Refresh meta due to age {}s, timeout {}s'.format(age_s, timeout_s))
             refresh = True
     if refresh:
-        logger.info('Refresh meta for cid {} (no_delay={})'.format(cid, no_delay))
-        logger.debug('Refresh meta for cid {}'.format(cid))
+        logger.debug('Refresh meta for cid {} (no_delay={})'.format(cid, no_delay))
         c = OsmChangeset.Changeset(cid, api=config.get('osm_api_url','tracker'))
         c.downloadMeta()
         old_meta = db.chgset_get_meta(cid)
-        db.chgset_set_meta(cid, c.meta)
-        return dict_changed(old_meta, c.meta)
+        return db.chgset_set_meta(cid, c.meta)
     return False
 
 def cset_process_local1(args, config, db, cset, info):
@@ -94,8 +84,6 @@ def cset_process_local1(args, config, db, cset, info):
         misc['timestamp_type'] = tstype
         misc['timestamp_type_txt'] = ts_type2txt[tstype]
         misc['timestamp'] = timestamp
-        logger.debug('New generation due to meta change to cset {}'.format(cid))
-        db.generation_advance()
 
     now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
     observed_s = (now-cset['source']['observed']).total_seconds()
@@ -104,10 +92,7 @@ def cset_process_local1(args, config, db, cset, info):
         state = 'new'
     else:
         state = 'old'
-    if 'state' not in misc or misc['state'] != state:
-        logger.debug('New generation due to state change to {} by cset {}'.format(state, cid))
-        db.generation_advance()
-        misc['state'] = state
+    misc['state'] = state
 
 def cset_process_local2(args, config, db, cset, meta, info):
     '''Preprocess cset, i.e. locally compute various information based on meta, tag
@@ -209,7 +194,7 @@ def diff_fetch(args, config, db, area):
     if args.history:
         history = HumanTime.human2date(args.history)
         head = dapi.get_state('minute')
-        pointer = dapi.get_seqno_le_timestamp('minute', args.history, head)
+        pointer = dapi.get_seqno_le_timestamp('minute', history, head)
         db.pointer = pointer
     elif args.initptr or not ptr:
         head = dapi.get_state('minute', seqno=None)
@@ -266,8 +251,8 @@ def csets_check_bounds(args, config, db, area):
             c = cset_check_bounds(args, config, area, cid)
             if c:
                 logger.debug('Cset {} within area'.format(cid))
-                db.chgset_processed(cset, state=db.STATE_BOUNDS_CHECKED)
                 db.chgset_set_meta(cid, c.meta)
+                db.chgset_processed(cset, state=db.STATE_BOUNDS_CHECKED)
             else:
                 logger.debug('Cset {} not within area'.format(cid))
                 db.chgset_drop(cid)
@@ -315,7 +300,13 @@ def csets_analyze(args, config, db, area):
             db.chgset_processed(cset, state=db.STATE_CLOSED)
 
     # Peridic reprocessing of closed changesets
+    now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+    horizon_s = config.get('horizon_hours','tracker')*3600
     for cset in db.chgsets_ready():
+        age_s = (cset['state_changed']-now).total_seconds()
+        if age_s>horizon_s:
+            logger.debug('Dropping cset {} due to age {}s'.format(cset['cid'], age_s))
+            db.chgset_drop(cset['cid'])
         info = cset_reprocess(args, config, db, cset)
         db.chgset_set_info(cset['cid'], info)
     return 0

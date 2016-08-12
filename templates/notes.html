@@ -10,15 +10,16 @@ No changesets.
 {% for c in csets -%}
 {% set cid = c.cid -%}
 {% set meta = csetmeta[cid] -%}
-{% if meta.comments_count>0 -%}
+{% set info = csetinfo[cid] -%}
+{% if not meta.open and meta.comments_count>0 -%}
 
   {% if info.misc.state=='new' -%}
 <li class="cset new" data-timestamp="{{info.misc.timestamp|js_datetime}} UTC" data-timestamp_type="{{info.misc.timestamp_type_txt}}">
   {% else -%}
 <li class="cset" data-timestamp="{{info.misc.timestamp|js_datetime}} UTC" data-timestamp_type="{{info.misc.timestamp_type_txt}}">
   {% endif -%}
-    {{ macros.cset_head_ul(meta,info) }}
-    {% if show_comments and info.meta.comments_count>0 -%}
+    {{ macros.cset_head_ul(c,meta,info) }}
+    {% if show_comments and meta.comments_count>0 -%}
     <ul class="details">
     {{ macros.cset_notes_li(meta,info) }}
     </ul>
@@ -29,3 +30,6 @@ No changesets.
 {% endfor -%}
 </ul>
 {%- endif %}
+<div id="summ_csets">{{csets|length}}</div>
+<div id="summ_csets_with_notes">{{csets_with_notes}}</div>
+<div id="summ_csets_with_addr_changes">{{csets_with_addr_changes}}</div>

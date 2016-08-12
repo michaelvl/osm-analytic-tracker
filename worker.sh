@@ -1,7 +1,7 @@
 #!/bin/sh
 
 set -e
-set -x
+#set -x
 
 while true; do
   ./osmtracker.py csets-check-bounds

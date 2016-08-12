@@ -15,10 +15,6 @@
     },
     "backends": [
 	{
-	    "type": "BackendDetailed",
-	    "print_meta": false
-	},
-	{
 	    "type": "BackendHtml",
 	    "show_details": true,
 	    "show_comments": true,

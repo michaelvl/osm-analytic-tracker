@@ -18,16 +18,21 @@ No changesets.
   {% else -%}
   <li class="cset" data-timestamp="{{info.misc.timestamp|js_datetime}} UTC" data-timestamp_type="{{info.misc.timestamp_type_txt}}">
   {% endif -%}
-    {{ macros.cset_head_ul(meta,info) }}
-    <ul class="details">
-    {{ macros.cset_change_summary(meta,info) }}
-    {{ macros.cset_tags(meta,info) }}
-    {{ macros.cset_tagdiff(meta,info) }}
-    {{ macros.cset_notes_li(meta,info) }}
-    </ul>
+    {{ macros.cset_head_ul(c,meta,info) }}
+    {% if c.state=="DONE" %}
+      <ul class="details">
+      {{ macros.cset_change_summary(meta,info) }}
+      {{ macros.cset_tags(meta,info) }}
+      {{ macros.cset_tagdiff(meta,info) }}
+      {{ macros.cset_notes_li(meta,info) }}
+      </ul>
+    {%- endif %}
   </li>
 {%- endif %}
 
 {% endfor -%}
 </ul>
 {%- endif %}
+<div id="summ_csets">{{csets|length}}</div>
+<div id="summ_csets_with_notes">{{csets_with_notes}}</div>
+<div id="summ_csets_with_addr_changes">{{csets_with_addr_changes}}</div>

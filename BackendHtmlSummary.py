@@ -3,10 +3,6 @@
 from __future__ import print_function
 import BackendHtml
 import datetime, pytz
-import HumanTime
-import OsmDiff as osmdiff
-import OsmChangeset as oc
-import ColourScheme as col
 import operator
 import logging
 import jinja2
@@ -47,26 +43,25 @@ class Backend(BackendHtml.Backend):
                     'generation': self.generation
                 }
                 cset_tracked_hours = 0
-                #if state.area_chgsets:  # FIXME
-                #    first_cset = state.area_chgsets[0]
-                #    first_cset_ts = oc.Changeset.get_timestamp(state.area_chgsets_info[first_cset]['meta'])[1]
-                #    cset_tracked_hours = (state.timestamp-first_cset_ts).total_seconds()/3600
-                #    data['cset_first'] = first_cset_ts
-
                 users = {}
                 notes = 0
                 csets_w_notes = 0
                 csets_w_addr_changes = 0
-                for c in db.chgsets_ready():
+                for c in db.chgsets_ready(state=[db.STATE_CLOSED, db.STATE_OPEN, db.STATE_ANALYZING2, db.STATE_DONE]):
+                    data['csets'].append(c)
                     cid = c['cid']
                     meta = db.chgset_get_meta(cid)
                     info = db.chgset_get_info(cid)
                     user = meta['user']
                     users[user] = users.get(user,0) + 1
+                    if meta['open'] or (info and 'truncated' in info['state']):
+                        continue
                     notecnt = int(meta['comments_count'])
                     if notecnt > 0:
                         notes += int(meta['comments_count'])
                         csets_w_notes += 1
+                    if c['state'] != db.STATE_DONE:
+                        continue
                     if int(info['misc']['dk_address_node_changes'])>0:
                         csets_w_addr_changes += 1
                 data['csets_with_notes'] = csets_w_notes
@@ -81,7 +76,6 @@ class Backend(BackendHtml.Backend):
                 for c in db.chgsets_ready():
                     cid = c['cid']
                     info = db.chgset_get_info(cid)
-                    data['csets'].append(c)
                     if 'truncated' in info['state']:
                         continue
                     summary = info['summary']

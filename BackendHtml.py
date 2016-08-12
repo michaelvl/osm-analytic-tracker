@@ -58,19 +58,43 @@ class Backend(Backend.Backend):
 
             self.start_page(self.list_fname)
             template = self.env.get_template(self.template_name)
-            ctx = { #'state': state,
-                    'csets': [],
+            ctx = { 'csets': [],
                     'csets_err': [],
                     'csetmeta': {},
                     'csetinfo': {},
                     'show_details': self.show_details,
                     'show_comments': self.show_comments }
-            for c in db.chgsets_ready():
+            notes = 0
+            csets_w_notes = 0
+            csets_w_addr_changes = 0
+            for c in db.chgsets_ready(state=[db.STATE_CLOSED, db.STATE_OPEN, db.STATE_ANALYZING2, db.STATE_DONE]):
                 cid = c['cid']
                 ctx['csets'].append(c)
-                #ctx['csets_err'] = state.err_chgsets
-                ctx['csetmeta'][cid] = db.chgset_get_meta(cid)
-                ctx['csetinfo'][cid] = db.chgset_get_info(cid)
+                info = db.chgset_get_info(cid)
+                meta = db.chgset_get_meta(cid)
+                ctx['csetmeta'][cid] = meta
+                if info:
+                    ctx['csetinfo'][cid] = info
+                else:
+                    logger.warn('No info for cid {}: {}'.format(cid, c))
+                if meta['open'] or (info and 'truncated' in info['state']):
+                    continue
+                notecnt = int(meta['comments_count'])  # FIXME: This is duplicate w. BackendHtmlSummary.py
+                if notecnt > 0:
+                    notes += int(meta['comments_count'])
+                    csets_w_notes += 1
+                if c['state'] != db.STATE_DONE:
+                    continue
+                if not 'dk_address_node_changes' in info['misc']:
+                    logger.error('No dk_address_node_changes key found')
+                    logger.error('cset: {}'.format(c))
+                    logger.error('meta: {}'.format(meta))
+                    logger.error('info: {}'.format(info))
+
+                if int(info['misc']['dk_address_node_changes'])>0:
+                    csets_w_addr_changes += 1
+            ctx['csets_with_notes'] = csets_w_notes
+            ctx['csets_with_addr_changes'] = csets_w_addr_changes
             logger.debug('Data passed to template: {}'.format(ctx))
             self.pprint(template.render(ctx))
             self.end_page()

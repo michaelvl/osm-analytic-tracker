@@ -18,7 +18,7 @@
 <li><a href="https://github.com/MichaelVL/osm-analytic-tracker/"><img src="/icon_bw.png"></a></li>
 <li><a class="vcenter" href="/index.html">Live Changesets<span id="num_csets"></span></a></li>
 <li><a class="vcenter" href="/cset_notes.html">Changeset Notes<span id="num_csets_w_notes"></span></a></li>
-<li><a class="vcenter" href="/addresses.html">Address Changes<span id="num_csets_w_addr_chgs"></span></a></li>
+<li><a class="vcenter" href="/addresses.html">Address Changes<span id="num_csets_w_addr_changes"></span></a></li>
 <!-- <li><a  class="vcenter"href="/addresses.html">New feature<img src=att_l.png> NEW</a></li> -->
 </ul>
 </nav>
@@ -29,7 +29,7 @@
   <div id="map"></div>
   <div id="status">
     <div id="summary">Loading...</div>
-    <div id="dev_notes"><img src=dev_work.png>This is a much refactored OSM-analytic-tracker, which may contain bugs.</div>
+    <div id="dev_notes"><img src=dev_work.png>This is a beta version of OSM-analytic-tracker, which may contain bugs. Proceed as if this was a <em>highway=track</em> with <em>tracktype=grade2</em>.  Please report issues to <a href="https://github.com/MichaelVL/osm-analytic-tracker/">OSM-analytic-tracker on GitHub</a></div>
   </div>
 </div>
 <div id="csetlist">
@@ -68,11 +68,8 @@ function small_load_done(respTxt, txtStatus, req) {
   console.log('small_load_done():'+txtStatus);
   $("#gen").text($("#generation").text());
   append_count($("#summ_csets").text(), "#num_csets");
-  append_count($("#summ_csets_w_notes").text(), "#num_csets_with_notes");
-  append_count($("#summ_csets_w_addr_chgs").text(), "#num_csets_with_addr_changes");
-  //$("#num_csets").text($("#summ_csets").text());
-  //$("#num_csets_w_notes").text($("#summ_csets_with_notes").text());
-  //$("#num_csets_w_addr_chgs").text($("#summ_csets_with_addr_changes").text());
+  append_count($("#summ_csets_with_notes").text(), "#num_csets_w_notes");
+  append_count($("#summ_csets_with_addr_changes").text(), "#num_csets_w_addr_changes");
   compute_lag();
   large_load_test();  
 }

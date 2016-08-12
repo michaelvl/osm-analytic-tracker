@@ -159,6 +159,9 @@ class Changeset(object):
                 for ts in ['created_at', 'closed_at']:
                     if ts in self.meta:
                         self.meta[ts] = self.meta[ts].replace(tzinfo=pytz.utc)
+                if 'discussion' in self.meta:
+                    for disc in self.meta['discussion']:
+                        disc['date'] = disc['date'].replace(tzinfo=pytz.utc)
             if self.datadebug:
                 logger.debug(u'meta({})={}'.format(self.id, self.meta))
 

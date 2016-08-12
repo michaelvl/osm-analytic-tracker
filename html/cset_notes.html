@@ -17,9 +17,9 @@
 <nav>
 <ul>
 <li><a href="https://github.com/MichaelVL/osm-analytic-tracker/"><img src="/icon_bw.png"></a></li>
-<li><a class="vcenter" href="/index.html">Live Changesets</a></li>
-<li><a class="vcenter" href="/cset_notes.html">Changeset Notes</a></li>
-<li><a class="vcenter" href="/addresses.html">Address Changes</a></li>
+<li><a class="vcenter" href="/index.html">Live Changesets<span id="num_csets"></span></a></li>
+<li><a class="vcenter" href="/cset_notes.html">Changeset Notes<span id="num_csets_w_notes"></span></a></li>
+<li><a class="vcenter" href="/addresses.html">Address Changes<span id="num_csets_w_addr_changes"></span></a></li>
 </ul>
 </nav>
 <body>
@@ -42,7 +42,10 @@ function small_load() {
 }
 
 function small_load_done(respTxt, txtStatus, req) {
-    tstype();
+  tstype();
+  append_count($("#summ_csets").text(), "#num_csets");
+  append_count($("#summ_csets_with_notes").text(), "#num_csets_w_notes");
+  append_count($("#summ_csets_with_addr_changes").text(), "#num_csets_w_addr_changes");
 }
 
 function tstype() {
@@ -53,5 +56,14 @@ function tstype() {
     $(this).find(".hts").text(hts);
   });
 }
+
+function append_count(cnt, cnt_dest_id) {
+  if (cnt>0) {
+    $(cnt_dest_id).text(" ("+cnt+")");
+  } else {
+    $(cnt_dest_id).text("");
+  }
+}
+
 </script>
 </body>

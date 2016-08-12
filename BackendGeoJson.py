@@ -1,6 +1,5 @@
 from __future__ import print_function
 import Backend
-import ColourScheme as col
 import json
 import datetime
 import logging
@@ -12,7 +11,6 @@ class Backend(Backend.Backend):
         super(Backend, self).__init__(config, subcfg)
         self.list_fname = config.getpath('path', 'BackendGeoJson')+'/'+subcfg['filename']
         self.click_url = subcfg['click_url']
-        self.colours = col.ColourScheme()
         self.print_chgsets(None)
 
     def print_state(self, db):
@@ -33,11 +31,14 @@ class Backend(Backend.Backend):
         self.f.close()
         self.f = None
 
-    def add_cset_bbox(self, geoj, meta):
+    def add_cset_bbox(self, cset, db, geoj):
+        cid = cset['cid']
+        meta = db.chgset_get_meta(cid)
+        info = db.chgset_get_info(cid)
         # Changesets that only modify relation members do not have a bbox
         if set(['min_lon', 'min_lat', 'max_lon', 'max_lat']).issubset(meta.keys()):
             (x1, x2, y1, y2) = (meta['min_lat'], meta['max_lat'], meta['min_lon'], meta['max_lon'])
-            colour = '#'+self.colours.get_colour(meta['user'])
+            colour = '#'+info['misc']['user_colour']
             if 'comment' in meta['tag'].keys():
                 comment = meta['tag']['comment']
             else:
@@ -70,8 +71,7 @@ class Backend(Backend.Backend):
                  "features": [] }
         if db:
             for c in db.chgsets_ready():
-                cid = c['cid']
-                self.add_cset_bbox(geoj, db.chgset_get_meta(cid))
+                self.add_cset_bbox(c, db, geoj)
 
         self.start_file(self.list_fname)
         logger.debug('Data sent to json file={}'.format(geoj))

@@ -1,8 +1,6 @@
 FROM debian:jessie
 #FROM resin/rpi-raspbian
 
-MAINTAINER osmtracker@network42.dk
-
 ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get -y update && apt-get install -y supervisor git python python-pip python-shapely python-tz python-dev mongodb nginx
