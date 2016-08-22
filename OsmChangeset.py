@@ -243,7 +243,6 @@ class Changeset(object):
                 self.addDiffDicts(self.tagdiff, diff)
 
             self.tags = self.getTags(etype, id, version, self.tags)
-            pprint.pprint(self.tags)
             if etype=='node':
                 if action == 'delete':
                     old = self.old(etype,id,version-1)

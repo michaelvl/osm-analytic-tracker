@@ -70,7 +70,7 @@ class Backend(Backend.Backend):
         geoj = { "type": "FeatureCollection",
                  "features": [] }
         if db:
-            for c in db.chgsets_ready():
+            for c in db.chgsets_find(state=db.STATE_DONE):
                 self.add_cset_bbox(c, db, geoj)
 
         self.start_file(self.list_fname)

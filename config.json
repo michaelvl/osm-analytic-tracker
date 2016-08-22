@@ -6,9 +6,9 @@
 	"bounds-filename": "cset-{id}.bounds",
 	"area-filter": "region.poly",
 	"history": "5 minutes ago",
-	"max_threads": 1,
 	"horizon_type": "sliding",
 	"horizon_hours": 48,
+	"refresh_open_minutes": 5,
 	"refresh_meta_minutes": 10,
 	"cset_processing_time_max_s": 300,
 	"template_path": "templates"

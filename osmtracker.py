@@ -87,7 +87,6 @@ def cset_process_local1(args, config, db, cset, info):
 
     now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
     observed_s = (now-cset['source']['observed']).total_seconds()
-    logger.debug('New check: observed={}, s={}'.format(cset['source']['observed'],observed_s))
     if observed_s < 240:
         state = 'new'
     else:
@@ -267,48 +266,64 @@ def csets_analyze(args, config, db, area):
         cset = db.chgset_start_processing(db.STATE_BOUNDS_CHECKED, db.STATE_ANALYZING1)
         if not cset:
             break
-        cid = cset['cid']
-        meta = db.chgset_get_meta(cid)
-        logger.debug('Cset {} analysis step 1'.format(cid))
+        logger.debug('Cset {} analysis step 1'.format(cset['cid']))
         info = cset_process_open(args, config, db, cset)
+        db.chgset_set_info(cset['cid'], info)
+        meta = db.chgset_get_meta(cset['cid'])
         if meta['open']:
-            db.chgset_processed(cset, state=db.STATE_OPEN)
+            db.chgset_processed(cset, state=db.STATE_OPEN, refreshed=True)
         else:
-            db.chgset_processed(cset, state=db.STATE_CLOSED)
-        db.chgset_set_info(cid, info)
+            db.chgset_processed(cset, state=db.STATE_CLOSED, refreshed=True)
 
     # One-time processing when changesets are closed
     while True:
         cset = db.chgset_start_processing(db.STATE_CLOSED, db.STATE_ANALYZING2)
         if not cset:
             break
-        cid = cset['cid']
-        meta = db.chgset_get_meta(cid)
-        logger.debug('Cset {} analysis step 2'.format(cid))
+        logger.debug('Cset {} analysis step 2'.format(cset['cid']))
         info = cset_process(args, config, db, cset)
-        db.chgset_set_info(cid, info)
-        db.chgset_processed(cset, state=db.STATE_DONE)
+        db.chgset_set_info(cset['cid'], info)
+        db.chgset_processed(cset, state=db.STATE_DONE, refreshed=True)
 
-    # FIXME: Delay on the two below
-        
     # Peridic reprocessing of open changesets
-    for cset in db.chgsets_ready(state=db.STATE_OPEN):
+    now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+    dt = now-datetime.timedelta(minutes=config.get('refresh_open_minutes','tracker'))
+    while True:
+        cset = db.chgset_start_processing(db.STATE_OPEN, db.STATE_ANALYZING1, before=dt, timestamp='refreshed')
+        if not cset:
+            break
+        logger.info('Reprocess OPEN changeset, cid={}'.format(cset['cid']))
         info = cset_process_open(args, config, db, cset)
         db.chgset_set_info(cset['cid'], info)
         meta = db.chgset_get_meta(cset['cid'])
-        if not meta['open']:
-            db.chgset_processed(cset, state=db.STATE_CLOSED)
+        if meta['open']:
+            db.chgset_processed(cset, state=db.STATE_OPEN, refreshed=True)
+        else:
+            db.chgset_processed(cset, state=db.STATE_CLOSED, refreshed=True)
 
-    # Peridic reprocessing of closed changesets
+    # Peridic reprocessing of finished changesets
+    # Called functions may have longer delays on e.g. when meta is refreshed
     now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
-    horizon_s = config.get('horizon_hours','tracker')*3600
-    for cset in db.chgsets_ready():
-        age_s = (cset['state_changed']-now).total_seconds()
-        if age_s>horizon_s:
-            logger.debug('Dropping cset {} due to age {}s'.format(cset['cid'], age_s))
-            db.chgset_drop(cset['cid'])
+    dt = now-datetime.timedelta(minutes=config.get('refresh_meta_minutes','tracker'))
+    while True:
+        cset = db.chgset_start_processing(db.STATE_DONE, db.STATE_REANALYZING, before=dt, timestamp='refreshed')
+        if not cset:
+            break
         info = cset_reprocess(args, config, db, cset)
         db.chgset_set_info(cset['cid'], info)
+        db.chgset_processed(cset, state=db.STATE_DONE, refreshed=True)
+
+    # Drop old changesets
+    now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+    horizon_s = config.get('horizon_hours','tracker')*3600
+    dt = now-datetime.timedelta(seconds=horizon_s)
+    while True:
+        cset = db.chgset_start_processing(db.STATE_DONE, db.STATE_REANALYZING, before=dt, timestamp='refreshed')
+        if not cset:
+            break
+        logger.info('Dropping cset {} due to age {}s'.format(cset['cid'], age_s))
+        db.chgset_drop(cset['cid'])
+
     return 0
 
 def load_backend(backend, config):
@@ -337,13 +352,6 @@ def run_backends(args, config, db, area):
 def main(argv):
     logging.config.fileConfig('logging.conf')
     parser = argparse.ArgumentParser(description='OSM Changeset diff filter')
-    #parser.add_argument('-U', dest='cset_max_time', type=int, default=None,
-    #                    help='Maximum number of seconds to spend on processing a changeset')
-    #parser.add_argument('-B', dest='bbox', help='Set changeset boundary file name')
-    #parser.add_argument('-g', dest='geojson', help='Set changeset geojson file name')
-    #parser.add_argument('-A', dest='areafile', help='Set area filter polygon')
-    #parser.add_argument('-a', dest='osm_api_url', help='OpenStreetMap API URL',
-    #                    default='https://api.openstreetmap.org')
     parser.add_argument('-l', dest='log_level', default='INFO',
                         choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
                         help='Set the log level')

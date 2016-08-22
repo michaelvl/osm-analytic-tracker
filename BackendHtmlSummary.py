@@ -47,7 +47,8 @@ class Backend(BackendHtml.Backend):
                 notes = 0
                 csets_w_notes = 0
                 csets_w_addr_changes = 0
-                for c in db.chgsets_ready(state=[db.STATE_CLOSED, db.STATE_OPEN, db.STATE_ANALYZING2, db.STATE_DONE]):
+                for c in db.chgsets_find(state=[db.STATE_CLOSED, db.STATE_OPEN, db.STATE_ANALYZING2,
+                                                db.STATE_REANALYZING, db.STATE_DONE]):
                     data['csets'].append(c)
                     cid = c['cid']
                     meta = db.chgset_get_meta(cid)
@@ -73,7 +74,7 @@ class Backend(BackendHtml.Backend):
                          'way':      {'create':0, 'modify':0, 'delete':0},
                          'relation': {'create':0, 'modify':0, 'delete':0}}
                 mileage = {}
-                for c in db.chgsets_ready():
+                for c in db.chgsets_find(state=db.STATE_DONE):
                     cid = c['cid']
                     info = db.chgset_get_info(cid)
                     if 'truncated' in info['state']:

@@ -28,7 +28,7 @@
   <!-- cset_head -->
   <ul class="csethead">
     {{ cset_head_basic_li(meta,info) }}
-    {% if c.state!="DONE" and not meta.open %}
+    {% if c.state!="DONE" and c.state!="REANALYZING" and not meta.open %}
     <li><div class="in_progress"><div class="icon"><img src="/gear_l.png"></div>Processing...</div></li>
     {% elif info.state.truncated %}
     <li><div class="warning truncated"><div class="icon"><img src="/att_l.png"></div>Truncated</div></li>
@@ -60,7 +60,7 @@
     {% endif -%}
     {% if  meta.open -%}
     <li><div class="trailer csetopen"><div class="icon"><img src="/csetopen_l.png"></div>Open</div></li>
-    {% else -%}
+    {% elif c.state=="DONE" or c.state=="REANALYZING" -%}
     <li><div><a href="/diffmap.html?cid={{meta.id}}">VisualDiff</a></div></li>
     {%- endif %}
   </ul>

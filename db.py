@@ -20,6 +20,7 @@ class DataBase(object):
     STATE_OPEN = 'OPEN'
     STATE_CLOSED = 'CLOSED'
     STATE_ANALYZING2 = 'ANALYZING2'
+    STATE_REANALYZING = 'REANALYZING'
     STATE_DONE = 'DONE'
     
     def __init__(self, url='mongodb://localhost:27017/'):
@@ -29,7 +30,10 @@ class DataBase(object):
         self.db = pymongo.database.Database(self.client, 'osmtracker', codec_options=CodecOptions(tz_aware=True))
         self.ctx = self.db.context
         self.csets = self.db.chgsets
-        self.csets.create_index([('state_changed', pymongo.DESCENDING)])
+        self.csets.create_index('state')
+        self.csets.create_index([('state', pymongo.ASCENDING),('state_changed', pymongo.DESCENDING)])
+        self.csets.create_index([('state', pymongo.ASCENDING),('updated', pymongo.DESCENDING)])
+        self.csets.create_index([('state', pymongo.ASCENDING),('refreshed', pymongo.DESCENDING)])
         self.meta = self.db.csetmeta
         self.info = self.db.csetinfo
         logger.debug(self.client.database_names())
@@ -99,30 +103,56 @@ class DataBase(object):
     def chgsets(self):
         return self.csets
 
-    def chgsets_ready(self, state=STATE_DONE):
+    def chgsets_find(self, state=STATE_DONE, before=None, after=None, timestamp='updated', sort=True):
         if type(state) is list:
-            return self.csets.find({'state': {'$in': state}}).sort('state_changed', pymongo.DESCENDING)
+            sel = {'state': {'$in': state}}
         else:
-            return self.csets.find({'state': state}).sort('state_changed', pymongo.DESCENDING)
+            sel = {'state': state}
+        if before or after:
+            sel[timestamp] = {}
+        if before:
+            sel[timestamp]['$lt'] = before
+        if after:
+            sel[timestamp]['$gt'] = after
+        if sort:
+            return self.csets.find(sel).sort(timestamp, pymongo.DESCENDING)
+        else:
+            return self.csets.find(sel)
 
     def chgset_append(self, cid, source=None):
-        c = {u'_id': cid, u'cid': cid,
-             u'state': self.STATE_NEW,
-             u'queued': datetime.datetime.utcnow().replace(tzinfo=pytz.utc)}
+        now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+        c = {'_id': cid, u'cid': cid,
+             'state': self.STATE_NEW,
+             'queued': now,
+             'updated': now,   # Last time csets content changed
+             'refreshed': now, # Last attempt at refresh meta (for e.g. notes)
+             'state_changed': now}
         if source:
             c[u'source'] = source
         self.csets.replace_one({'_id':cid}, c, upsert=True)
 
-    def chgset_start_processing(self, istate, nstate):
+    def chgset_start_processing(self, istate, nstate, before=None, after=None, timestamp='state_changed'):
         '''Start a processing of a changeset with state istate and set intermediate state nstate''' 
+        now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+        sel = {}
+        if type(istate) is list:
+            sel['state'] = {'$in': istate}
+        else:
+            sel['state'] = istate
+        if before or after:
+            sel[timestamp] = {}
+        if before:
+            sel[timestamp]['$lt'] = before
+        if after:
+            sel[timestamp]['$gt'] = after
         c = self.csets.find_one_and_update(
-            {'state': istate},
+            sel,
             {'$set': {'state': nstate,
-                      'state_changed': datetime.datetime.utcnow().replace(tzinfo=pytz.utc)}},
+                      'state_changed': now}},
+            sort=[('queued', pymongo.DESCENDING)],
             return_document=pymongo.ReturnDocument.AFTER)
         if c:
             logger.debug('Start processing: {}'.format(c))
-            #self.generation_advance()
             return c
         else:
             logger.debug('No csets available for processing from state {}'.format(istate))
@@ -137,12 +167,15 @@ class DataBase(object):
         else:
             logger.debug('Dropped cset {}'.format(cid))
 
-    def chgset_processed(self, c, state, failed=False):
+    def chgset_processed(self, c, state, failed=False, refreshed=False):
+        now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
         cid = c['cid']
+        setter = {'$set': {'state': state,
+                           'state_changed': now}}
+        if refreshed:
+            setter['$set']['refreshed'] = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
         c = self.csets.update_one(
-            {'_id': cid},
-            {'$set': {'state': state,
-                      'state_changed': datetime.datetime.utcnow().replace(tzinfo=pytz.utc)}})
+            {'_id': cid}, setter)
         if failed:
             logger.error('Failed processing cset {}'.format(cid))
         else:
@@ -151,10 +184,10 @@ class DataBase(object):
             logger.debug('New generation due to cset state DONE, cid={}'.format(cid))
             self.generation_advance()
 
-    def chgset_update_timestamp(self, cid):
+    def chgset_update_timestamp(self, cid, timestamp='updated'):
         c = self.csets.update_one(
             {'_id': cid},
-            {'$set': {'state_changed': datetime.datetime.utcnow().replace(tzinfo=pytz.utc)}})
+            {'$set': {timestamp: datetime.datetime.utcnow().replace(tzinfo=pytz.utc)}})
 
     def chgset_set_meta(self, cid, meta):
         old_meta = self.chgset_get_meta(cid)
@@ -198,6 +231,7 @@ class DataBase(object):
         _info[u'ts'] = dumps(info) # Changeset info
         logger.debug('Setting info for cset {}: {}'.format(cid, pprint.pformat(info)))
         self.info.replace_one({'_id':cid}, _info, upsert=True)
+        self.chgset_update_timestamp(cid)
         self.generation_advance()
         return True
 
@@ -232,31 +266,48 @@ def drop(args, db):
     else:
         db.drop()
 
+def show_brief(args, db):
+    print 'CsetID   State          Queued          Updated         Refreshed       User :: Comment'
+    for c in db.chgsets.find():
+        cid = c['cid']
+        def ts(dt):
+            now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+            df = now-dt
+            return u'{:.2f}s ago'.format(df.total_seconds())
+        if c['state'] != 'NEW' and c['state'] != 'BOUNDS_CHECK':
+            meta = db.chgset_get_meta(cid)
+            print u'{:8} {:14} {:15} {:15} {:15} {} :: {}'.format(cid, c['state'], ts(c['queued']), ts(c['updated']), ts(c['refreshed']), meta['user'], meta['tag']['comment']).encode('ascii', errors='backslashreplace')
+        else:
+            print u'{:8} {:14} {:15}'.format(cid, c['state'], ts(c['queued'])).encode('ascii', errors='backslashreplace')
+
 def show(args, db):
     print '-- Pointer: -----------'
     pprint.pprint(db.pointer)
     print '-- Generation:', db.generation
-    print '-- Changesets: ({} csets) -----------'.format(db.chgsets.count())
-    for c in db.chgsets.find():
-        if not args.cid or args.cid==c['cid']:
-            print '  cid={}: {}'.format(c['cid'], c)
-    print '-- Changeset meta: ({} csets) -----------'.format(db.meta.count())
-    for m in db.meta.find():
-        _m = loads(m['ts'])
-        if not args.cid or args.cid==m['_id']:
-            print '  cid={}: {}'.format(m['_id'], pprint.pformat(_m))
-    print '-- Changeset info: ({} csets) -----------'.format(db.info.count())
-    for i in db.info.find():
-        _i = loads(i['ts'])
-        if not args.cid or args.cid==i['_id']:
-            print '  cid={}: {}'.format(i['_id'], pprint.pformat(_i))
+    if args.brief:
+        show_brief(args, db)
+    else:
+        print '-- Changesets: ({} csets) -----------'.format(db.chgsets.count())
+        for c in db.chgsets.find():
+            if not args.cid or args.cid==c['cid']:
+                print '  cid={}: {}'.format(c['cid'], pprint.pformat(c))
+        print '-- Changeset meta: ({} csets) -----------'.format(db.meta.count())
+        for m in db.meta.find():
+            _m = loads(m['ts'])
+            if not args.cid or args.cid==m['_id']:
+                print '  cid={}: {}'.format(m['_id'], pprint.pformat(_m))
+        print '-- Changeset info: ({} csets) -----------'.format(db.info.count())
+        for i in db.info.find():
+            _i = loads(i['ts'])
+            if not args.cid or args.cid==i['_id']:
+                print '  cid={}: {}'.format(i['_id'], pprint.pformat(_i))
 
 def reanalyze(args, db):
     newstate = db.STATE_BOUNDS_CHECKED
     if args.new:
         newstate = db.STATE_NEW
     states = [db.STATE_BOUNDS_CHECK, db.STATE_ANALYZING1, db.STATE_OPEN,
-              db.STATE_CLOSED, db.STATE_ANALYZING2, db.STATE_DONE]
+              db.STATE_CLOSED, db.STATE_ANALYZING2, db.STATE_REANALYZING, db.STATE_DONE]
     if args.cid:
         cnt = db.chgsets.update_one({'cid': args.cid, 'state': {'$in': states}},
                                     {'$set': {'state': newstate}}).modified_count
@@ -283,6 +334,7 @@ def main(argv):
     parser_show = subparsers.add_parser('show')
     parser_show.set_defaults(func=show)
     parser_show.add_argument('--cid', type=int, default=None, help='Changeset ID')
+    parser_show.add_argument('--brief', action='store_true', default=False, help='Show less information')
 
     parser_reanalyze = subparsers.add_parser('reanalyze')
     parser_reanalyze.set_defaults(func=reanalyze)

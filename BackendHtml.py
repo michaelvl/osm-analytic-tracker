@@ -67,7 +67,8 @@ class Backend(Backend.Backend):
             notes = 0
             csets_w_notes = 0
             csets_w_addr_changes = 0
-            for c in db.chgsets_ready(state=[db.STATE_CLOSED, db.STATE_OPEN, db.STATE_ANALYZING2, db.STATE_DONE]):
+            for c in db.chgsets_find(state=[db.STATE_CLOSED, db.STATE_OPEN, db.STATE_ANALYZING2,
+                                            db.STATE_REANALYZING, db.STATE_DONE]):
                 cid = c['cid']
                 ctx['csets'].append(c)
                 info = db.chgset_get_info(cid)
