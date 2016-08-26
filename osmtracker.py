@@ -25,6 +25,9 @@ def fetch_and_process_diff(config, dapi, seqno, ctype, area=None):
     chgsets = dapi.get_diff_csets(seqno, ctype)
     return chgsets
 
+#NOTE: Checking bounds on an open changeset is problematic since additions added
+#later might change an otherwise failed bounds check. The way it works here is
+#that new additions will show up in a new diff and reschedule a bounds check.
 def cset_check_bounds(args, config, area, cid, debug=0, strict_inside_check=True):
     # Read changeset meta and check if within area
     c = OsmChangeset.Changeset(cid, api=config.get('osm_api_url','tracker'))
@@ -43,17 +46,20 @@ def cset_check_bounds(args, config, area, cid, debug=0, strict_inside_check=True
             return c
     return None
 
+# FIXME: Refactor to use db.find with timestamps
 def cset_refresh_meta(args, config, db, cset, no_delay=False):
     cid = cset['cid']
     timeout_s = config.get('refresh_meta_minutes', 'tracker')*60
     refresh = no_delay
-    if timeout_s>0:
-        now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
-        last_refresh = db.chgset_get_meta_meta(cid)['timestamp']
-        age_s = (now-last_refresh).total_seconds()
-        if age_s > timeout_s:
-            logger.debug('Refresh meta due to age {}s, timeout {}s'.format(age_s, timeout_s))
-            refresh = True
+    # FIXME
+    #if timeout_s>0:
+    #    now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+    #    last_refresh = db.chgset_get_meta_meta(cid)['timestamp']
+    #    age_s = (now-last_refresh).total_seconds()
+    #    if age_s > timeout_s:
+    #        logger.debug('Refresh meta due to age {}s, timeout {}s'.format(age_s, timeout_s))
+    #        refresh = True
+    refresh = True
     if refresh:
         logger.debug('Refresh meta for cid {} (no_delay={})'.format(cid, no_delay))
         c = OsmChangeset.Changeset(cid, api=config.get('osm_api_url','tracker'))

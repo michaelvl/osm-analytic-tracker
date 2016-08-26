@@ -34,14 +34,12 @@ class DataBase(object):
         self.csets.create_index([('state', pymongo.ASCENDING),('state_changed', pymongo.DESCENDING)])
         self.csets.create_index([('state', pymongo.ASCENDING),('updated', pymongo.DESCENDING)])
         self.csets.create_index([('state', pymongo.ASCENDING),('refreshed', pymongo.DESCENDING)])
-        self.meta = self.db.csetmeta
-        self.info = self.db.csetinfo
         logger.debug(self.client.database_names())
 
     def __str__(self):
         return self.url
         
-    def drop(self, drop_ctx=True, drop_chgsets=True, drop_meta=True, drop_info=True):
+    def drop(self, drop_ctx=True, drop_chgsets=True):
         if drop_ctx:
             cnt = self.ctx.pointer.delete_many({}).deleted_count
             cnt = self.ctx.generation.delete_many({}).deleted_count
@@ -49,12 +47,6 @@ class DataBase(object):
         if drop_chgsets:
             cnt = self.chgsets.delete_many({}).deleted_count
             logger.debug('Deleted {} changesets from work queue'.format(cnt))
-        if drop_meta:
-            cnt = self.meta.delete_many({}).deleted_count
-            logger.debug('Deleted {} meta structs'.format(cnt))
-        if drop_info:
-            cnt = self.info.delete_many({}).deleted_count
-            logger.debug('Deleted {} info structs'.format(cnt))
 
     def pointer_meta_update(self, _dict):
         self.ctx.pointer.update({u'_id':0}, {'$set': _dict}, upsert=True)
@@ -164,8 +156,6 @@ class DataBase(object):
             return None
 
     def chgset_drop(self, cid):
-        self.meta.delete_one({'_id': cid})
-        self.info.delete_one({'_id': cid})
         cnt = self.csets.delete_one({'_id': cid})
         if cnt==0:
             logger.error('Error dropping cset {}'.format(cid))
@@ -199,28 +189,25 @@ class DataBase(object):
         if old_meta:
             if not self.dict_changed(old_meta, meta):
                 logger.debug('Setting meta for cset {}, but nothing changed'.format(cid))
-                self.meta.update_one(
-                    {'_id': cid},
-                    {'$set': {'timestamp': datetime.datetime.utcnow().replace(tzinfo=pytz.utc)}})
+                #self.meta.update_one(
+                #    {'_id': cid},
+                #    {'$set': {'timestamp': datetime.datetime.utcnow().replace(tzinfo=pytz.utc)}})
                 return False
-        _meta = dict()
-        _meta[u'_id'] = cid
-        _meta[u'ts'] = dumps(meta) # OSM changeset tags
-        _meta[u'timestamp'] = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+        _meta = dumps(meta) # OSM changeset tags may contain unicode
         logger.debug('Setting meta for cset {}: {}'.format(cid, pprint.pformat(meta)))
-        self.meta.replace_one({'_id':cid}, _meta, upsert=True)
-        self.chgset_update_timestamp(cid)
+        now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc) #FIXME: From cset
+        self.csets.update_one({'_id':cid}, {'$set':
+                                            {'meta': _meta,
+                                             'updated': now}}, upsert=True)
         self.generation_advance()
         return True
 
-    def chgset_get_meta_meta(self, cid):
-        return self.meta.find_one({'_id':cid})
-
+    # FIXME: Refactor and remove
     def chgset_get_meta(self, cid):
-        _meta = self.chgset_get_meta_meta(cid)
-        if not _meta:
+        cset = self.csets.find_one({'_id':cid})
+        if not 'meta' in cset:
             return None
-        return loads(_meta['ts'])
+        return loads(cset['meta'])
 
     def chgset_set_info(self, cid, info):
         old_info = self.chgset_get_info(cid)
@@ -228,20 +215,21 @@ class DataBase(object):
             if not self.dict_changed(old_info, info):
                 logger.debug('Setting info for cset {}, but nothing changed'.format(cid))
                 return False
-        _info = dict()
-        _info[u'_id'] = cid
-        _info[u'ts'] = dumps(info) # Changeset info
+        _info = dumps(info) # Changeset info may contain unicode
         logger.debug('Setting info for cset {}: {}'.format(cid, pprint.pformat(info)))
-        self.info.replace_one({'_id':cid}, _info, upsert=True)
-        self.chgset_update_timestamp(cid)
+        now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc) #FIXME: From cset
+        self.csets.update_one({'_id':cid}, {'$set':
+                                            {'info': _info,
+                                             'updated': now}}, upsert=True)
         self.generation_advance()
         return True
 
+    # FIXME: Refactor and remove
     def chgset_get_info(self, cid):
-        _info = self.info.find_one({'_id':cid})
-        if not _info:
+        cset = self.csets.find_one({'_id':cid})
+        if not 'info' in cset:
             return None
-        return loads(_info['ts'])
+        return loads(cset['info'])
 
     def dict_changed(self, old, new):
         logger.debug('Compare old: {}'.format(old))
@@ -298,16 +286,6 @@ def show(args, db):
         for c in db.chgsets.find():
             if not args.cid or args.cid==c['cid']:
                 print '  cid={}: {}'.format(c['cid'], pprint.pformat(c))
-        print '-- Changeset meta: ({} csets) -----------'.format(db.meta.count())
-        for m in db.meta.find():
-            _m = loads(m['ts'])
-            if not args.cid or args.cid==m['_id']:
-                print '  cid={}: {}'.format(m['_id'], pprint.pformat(_m))
-        print '-- Changeset info: ({} csets) -----------'.format(db.info.count())
-        for i in db.info.find():
-            _i = loads(i['ts'])
-            if not args.cid or args.cid==i['_id']:
-                print '  cid={}: {}'.format(i['_id'], pprint.pformat(_i))
 
 def reanalyze(args, db):
     now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
