@@ -103,7 +103,7 @@ class DataBase(object):
     def chgsets(self):
         return self.csets
 
-    def chgsets_find(self, state=STATE_DONE, before=None, after=None, timestamp='updated', sort=True):
+    def chgsets_find_selector(self, state=STATE_DONE, before=None, after=None, timestamp='updated'):
         if type(state) is list:
             sel = {'state': {'$in': state}}
         else:
@@ -114,6 +114,10 @@ class DataBase(object):
             sel[timestamp]['$lt'] = before
         if after:
             sel[timestamp]['$gt'] = after
+        return sel
+    
+    def chgsets_find(self, state=STATE_DONE, before=None, after=None, timestamp='updated', sort=True):
+        sel = self.chgsets_find_selector(state, before, after, timestamp)
         if sort:
             return self.csets.find(sel).sort(timestamp, pymongo.DESCENDING)
         else:
@@ -131,6 +135,7 @@ class DataBase(object):
             c[u'source'] = source
         self.csets.replace_one({'_id':cid}, c, upsert=True)
 
+    # TODO: Use chgsets_find_selector()
     def chgset_start_processing(self, istate, nstate, before=None, after=None, timestamp='state_changed'):
         '''Start a processing of a changeset with state istate and set intermediate state nstate''' 
         now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
@@ -215,9 +220,6 @@ class DataBase(object):
         _meta = self.chgset_get_meta_meta(cid)
         if not _meta:
             return None
-        #mt = loads(_meta['ts'])
-        #mt['open'] = True
-        #return mt
         return loads(_meta['ts'])
 
     def chgset_set_info(self, cid, info):
@@ -267,18 +269,23 @@ def drop(args, db):
         db.drop()
 
 def show_brief(args, db):
-    print 'CsetID   State          Queued          Updated         Refreshed       User :: Comment'
+    print 'CsetID   State          Queued          StateChanged    Updated         Refreshed       User :: Comment'
     for c in db.chgsets.find():
         cid = c['cid']
         def ts(dt):
             now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
             df = now-dt
             return u'{:.2f}s ago'.format(df.total_seconds())
-        if c['state'] != 'NEW' and c['state'] != 'BOUNDS_CHECK':
+        if c['state'] != 'NEW' and c['state'] != 'BOUNDS_CHECK' and c['state'] != 'ANALYZING1':
             meta = db.chgset_get_meta(cid)
-            print u'{:8} {:14} {:15} {:15} {:15} {} :: {}'.format(cid, c['state'], ts(c['queued']), ts(c['updated']), ts(c['refreshed']), meta['user'], meta['tag']['comment']).encode('ascii', errors='backslashreplace')
+            logger.debug('cset={}, meta: {}'.format(c, meta))
+            if 'comment' in meta['tag']:
+                comment = meta['tag']['comment']
+            else:
+                comment = '*no comment*'
+            print u'{:8} {:14} {:15} {:15} {:15} {:15} {} :: {}'.format(cid, c['state'], ts(c['queued']), ts(c['state_changed']), ts(c['updated']), ts(c['refreshed']), meta['user'], comment).encode('ascii', errors='backslashreplace')
         else:
-            print u'{:8} {:14} {:15}'.format(cid, c['state'], ts(c['queued'])).encode('ascii', errors='backslashreplace')
+            print u'{:8} {:14} {:15} {:15}'.format(cid, c['state'], ts(c['queued']), ts(c['state_changed'])).encode('ascii', errors='backslashreplace')
 
 def show(args, db):
     print '-- Pointer: -----------'
@@ -303,17 +310,25 @@ def show(args, db):
                 print '  cid={}: {}'.format(i['_id'], pprint.pformat(_i))
 
 def reanalyze(args, db):
+    now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
     newstate = db.STATE_BOUNDS_CHECKED
     if args.new:
         newstate = db.STATE_NEW
-    states = [db.STATE_BOUNDS_CHECK, db.STATE_ANALYZING1, db.STATE_OPEN,
-              db.STATE_CLOSED, db.STATE_ANALYZING2, db.STATE_REANALYZING, db.STATE_DONE]
-    if args.cid:
-        cnt = db.chgsets.update_one({'cid': args.cid, 'state': {'$in': states}},
-                                    {'$set': {'state': newstate}}).modified_count
+    if args.timeout:
+        states = [db.STATE_BOUNDS_CHECK, db.STATE_ANALYZING1, db.STATE_ANALYZING2, db.STATE_REANALYZING]
+        dt = now-datetime.timedelta(seconds=1200)
+        selector = db.chgsets_find_selector(state=states, before=dt, after=None, timestamp='state_changed')
     else:
-        cnt = db.chgsets.update_many({'state': {'$in': states}},
-                                     {'$set': {'state': newstate}}).modified_count
+        states = [db.STATE_BOUNDS_CHECK, db.STATE_ANALYZING1, db.STATE_OPEN,
+                  db.STATE_CLOSED, db.STATE_ANALYZING2, db.STATE_REANALYZING, db.STATE_DONE]
+        selector = {'state': {'$in': states}}
+    if args.cid:
+        selector['cid'] = args.cid
+
+    logger.debug('Reanalyze selector: {}'.format(selector))
+    cnt = db.chgsets.update_many(selector,
+                                 {'$set': {'state': newstate,
+                                           'state_changed': now}}).modified_count
     print 'Re-scheduled {} csets for analysis (state {})'.format(cnt, newstate)
 
 def ptrset(args, db):
@@ -340,6 +355,7 @@ def main(argv):
     parser_reanalyze.set_defaults(func=reanalyze)
     parser_reanalyze.add_argument('--cid', type=int, default=None, help='Changeset ID')
     parser_reanalyze.add_argument('--new', action='store_true', default=False, help='Reset states to NEW')
+    parser_reanalyze.add_argument('--timeout', action='store_true', default=False, help='Perform timeout check only')
     parser_reanalyze.add_argument('--hard', action='store_true', default=False, help='Re-analyze changesets already fully analyzed. Default is only re-analyze those that are partially analyzed.')
 
     parser_ptrset = subparsers.add_parser('ptrset')

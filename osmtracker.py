@@ -68,6 +68,8 @@ def cset_process_local1(args, config, db, cset, info):
     '''
     cid = cset['cid']
     meta = db.chgset_get_meta(cid)
+    if not meta:
+        logger.error('No meta for cset:{}'.format(cset))
 
     if not 'misc' in info:
         misc = {}
