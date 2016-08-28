@@ -63,7 +63,7 @@ instances. It is however not a good example of a 'production' deployment.
 
 ### Architecture
 
-![Image](doc/varchitecture.png?raw=true)
+![Image](doc/architecture.png?raw=true)
 
 ### Components
 
