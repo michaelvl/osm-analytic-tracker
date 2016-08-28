@@ -5,6 +5,7 @@
 	"geojsondiff-filename": "cset-{id}.json",
 	"bounds-filename": "cset-{id}.bounds",
 	"area-filter": "region.poly",
+	"regex-filter": [{"comment": "^Adjustments"}],
 	"history": "5 minutes ago",
 	"horizon_type": "sliding",
 	"horizon_hours": 48,
