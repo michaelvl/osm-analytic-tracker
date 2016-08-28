@@ -57,9 +57,21 @@ Run it using Docker:
 docker run -p 8080:80 michaelvl/osmtracker
 ```
 
-and point your browser to 127.0.0.1:8080
+and point your browser to 127.0.0.1:8080. This docker image contain all
+necessary services to demonstrate the analytic tracker, including two worker
+instances. It is however not a good example of a 'production' deployment.
 
-The tracker python script tracks OpenStreetMap minutely diffs and optionally
+### Architecture
+
+![Image](doc/varchitecture.png?raw=true)
+
+### Components
+
+- osmtracker.py  The main script with multiple roles depending on arguments.
+- db.py   MongoDB backend for storing changeset information
+- OsmChangeset.py  The class which contain the main analysis code.  Can be used from a command line through csetinfo.py
+
+The osmtracker.py script tracks OpenStreetMap minutely diffs and optionally
 filters them through a bounding-box polygon (country-based polygons can be found
 on http://download.geofabrik.de/).  Changesets found to be within the area of
 interest are analysed further and a number of backends generate output.  The
@@ -70,12 +82,6 @@ network load).
 
 Configuration is provided through the config.json file -- especially the paths
 for the backends should be configured.
-
-### Components
-
-- osmtracker.py  The main script with multiple roles depending on arguments.
-- db.py   MongoDB backend for storing changeset information
-- OsmChangeset.py  The class, which contain the main analysis code.  Can be used from a command line through csetinfo.py
 
 ### Dependencies
 
