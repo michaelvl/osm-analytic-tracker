@@ -3,10 +3,10 @@
 import sys, time
 import argparse
 import osmapi
-import OsmChangeset
-import Poly
+import osm.changeset
+import osm.diff as osmdiff
+import osm.poly
 import json, pickle
-import OsmDiff as osmdiff
 import datetime, pytz
 import pprint
 import logging, logging.config
@@ -21,7 +21,7 @@ import traceback
 
 logger = logging.getLogger('osmtracker')
 
-def fetch_and_process_diff(config, dapi, seqno, ctype, area=None):
+def fetch_and_process_diff(config, dapi, seqno, ctype):
     chgsets = dapi.get_diff_csets(seqno, ctype)
     return chgsets
 
@@ -30,7 +30,7 @@ def fetch_and_process_diff(config, dapi, seqno, ctype, area=None):
 #that new additions will show up in a new diff and reschedule a bounds check.
 def cset_check_bounds(args, config, area, cid, debug=0, strict_inside_check=True):
     # Read changeset meta and check if within area
-    c = OsmChangeset.Changeset(cid, api=config.get('osm_api_url','tracker'))
+    c = osm.changeset.Changeset(cid, api=config.get('osm_api_url','tracker'))
     c.apidebug = debug
     c.datadebug = debug
     c.downloadMeta()
@@ -51,18 +51,16 @@ def cset_refresh_meta(args, config, db, cset, no_delay=False):
     cid = cset['cid']
     timeout_s = config.get('refresh_meta_minutes', 'tracker')*60
     refresh = no_delay
-    # FIXME
-    #if timeout_s>0:
-    #    now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
-    #    last_refresh = db.chgset_get_meta_meta(cid)['timestamp']
-    #    age_s = (now-last_refresh).total_seconds()
-    #    if age_s > timeout_s:
-    #        logger.debug('Refresh meta due to age {}s, timeout {}s'.format(age_s, timeout_s))
-    #        refresh = True
-    refresh = True
+    if timeout_s>0:
+       now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+       last_refresh = cset['refreshed']
+       age_s = (now-last_refresh).total_seconds()
+       if age_s > timeout_s:
+           logger.debug('Refresh meta due to age {}s, timeout {}s'.format(age_s, timeout_s))
+           refresh = True
     if refresh:
-        logger.debug('Refresh meta for cid {} (no_delay={})'.format(cid, no_delay))
-        c = OsmChangeset.Changeset(cid, api=config.get('osm_api_url','tracker'))
+        logger.info('Refresh meta for cid {} (no_delay={})'.format(cid, no_delay))
+        c = osm.changeset.Changeset(cid, api=config.get('osm_api_url','tracker'))
         c.downloadMeta()
         old_meta = db.chgset_get_meta(cid)
         return db.chgset_set_meta(cid, c.meta)
@@ -87,7 +85,7 @@ def cset_process_local1(args, config, db, cset, info):
         misc = info['misc']
 
     if cset_refresh_meta(args, config, db, cset, no_delay=('timestamp_type' not in misc)) or 'timestamp_type' not in misc:
-        (tstype, timestamp) = OsmChangeset.Changeset.get_timestamp(meta)
+        (tstype, timestamp) = osm.changeset.Changeset.get_timestamp(meta)
         ts_type2txt = { 'created_at': 'Started', 'closed_at': 'Closed' }
         misc['timestamp_type'] = tstype
         misc['timestamp_type_txt'] = ts_type2txt[tstype]
@@ -120,15 +118,7 @@ def cset_process_local2(args, config, db, cset, meta, info):
                 misc['processed_tagdiff_'+action+'_trailer'] = '{} other {} item{}'.format(num, action, '' if num==1 else 's')
                 break
         misc['processed_tagdiff_'+action] = tdiff
-
-    unchanged_tags = info['tags']
-    tagdiff = info['tagdiff']
-    misc['dk_address_node_changes'] = len([d for d in unchanged_tags if d.startswith('osak:identifier')])
-    def isaddr(t):
-        return t.startswith('osak:identifier')
-    for k in tagdiff.keys():
-        misc['dk_address_node_changes'] += len(filter(isaddr, tagdiff[k]))
-
+        
 def cset_process_open(args, config, db, cset, debug=0):
     '''Initial processing of changesets. Also applied to open changesets'''
     info = {'state': {}}
@@ -143,7 +133,7 @@ def cset_process(args, config, db, cset, debug=0):
     truncated = None
     diffs = None
     try:
-        c = OsmChangeset.Changeset(cid, api=config.get('osm_api_url','tracker'))
+        c = osm.changeset.Changeset(cid, api=config.get('osm_api_url','tracker'))
         c.apidebug = debug
         c.datadebug = debug
         c.downloadMeta() # FIXME: Use data from db
@@ -154,7 +144,7 @@ def cset_process(args, config, db, cset, debug=0):
         #c.getReferencedElements()
         c.buildSummary(maxtime=maxtime)
         diffs = c.buildDiffList(maxtime=maxtime)
-    except OsmChangeset.Timeout as e:
+    except osm.changeset.Timeout as e:
         truncated = 'Timeout'
 
     info = {'state': {},
@@ -180,6 +170,13 @@ def cset_process(args, config, db, cset, debug=0):
             f.write(b)
 
     cset_process_local2(args, config, db, cset, c.meta, info)
+
+    # Apply labels
+    labelrules = config.get('post_labels','tracker')
+    clabels = c.build_labels(labelrules)
+    logger.debug('Added post labels to cid {}: {}'.format(cid, clabels))
+    cset['labels'] += clabels
+
     c.unload()
     return info
 
@@ -190,8 +187,17 @@ def cset_reprocess(args, config, db, cset):
     cset_process_local1(args, config, db, cset, info)
     return info
 
-def diff_fetch(args, config, db, area):
+def diff_fetch(args, config, db):
     logger.debug('Fetching minutely diff')
+
+    if args and args.simulate:
+        cid = args.simulate
+        source = {'type': 'minute',
+                  'sequenceno': 123456789,
+                  'observed': datetime.datetime.utcnow().replace(tzinfo=pytz.utc)}
+        db.chgset_append(cid, source)
+        return
+
     dapi = osmdiff.OsmDiffApi()
     if args.log_level == 'DEBUG':
         dapi.debug = True
@@ -247,28 +253,44 @@ def diff_fetch(args, config, db, area):
             break
     return 0
 
-def csets_check_bounds(args, config, db, area):
+def csets_filter(args, config, db):
     while True:
         cset = db.chgset_start_processing(db.STATE_NEW, db.STATE_BOUNDS_CHECK)
         if not cset:
             break
         cid = cset['cid']
-        logger.debug('Cset checking bounds, cid={}'.format(cid))
+
+        # Apply labels
+        labelrules = config.get('pre_labels','tracker')
         try:
-            c = cset_check_bounds(args, config, area, cid)
-            if c:
-                logger.debug('Cset {} within area'.format(cid))
-                db.chgset_set_meta(cid, c.meta)
-                db.chgset_processed(cset, state=db.STATE_BOUNDS_CHECKED)
-            else:
-                logger.debug('Cset {} not within area'.format(cid))
-                db.chgset_drop(cid)
+            c = osm.changeset.Changeset(cid, api=config.get('osm_api_url','tracker'))
+            c.downloadMeta()
+            clabels = c.build_labels(labelrules)
+            logger.debug('Added labels to cid {}: {}'.format(cid, clabels))
+            cset['labels'] = clabels
         except osmapi.ApiError as e:
             logger.error('Failed reading changeset {}: {}'.format(cid, e))
             db.chgset_processed(c, state=db.STATE_DONE, failed=True)
+
+        # Check labels
+        labelfilters = config.get('prefilter_labels','tracker')
+        passed_filters = False
+        for lf in labelfilters:
+            logger.debug('lf={}'.format(lf))
+            if set(lf).issubset(set(clabels)):
+                logger.debug("Cset labels '{}' is subset of '{}'".format(clabels, lf))
+                passed_filters = True
+        
+        if not passed_filters:
+            logger.debug('Cset {} not within area'.format(cid))
+            db.chgset_drop(cid)
+        else:
+            logger.debug('Cset {} passed filters'.format(cid))
+            db.chgset_set_meta(cid, c.meta)
+            db.chgset_processed(cset, state=db.STATE_BOUNDS_CHECKED)
     return 0
 
-def csets_analyze(args, config, db, area):
+def csets_analyze_initial(args, config, db):
     # Initial and open changesets
     while True:
         cset = db.chgset_start_processing(db.STATE_BOUNDS_CHECKED, db.STATE_ANALYZING1)
@@ -283,6 +305,7 @@ def csets_analyze(args, config, db, area):
         else:
             db.chgset_processed(cset, state=db.STATE_CLOSED, refreshed=True)
 
+def csets_analyze_on_close(args, config, db):
     # One-time processing when changesets are closed
     while True:
         cset = db.chgset_start_processing(db.STATE_CLOSED, db.STATE_ANALYZING2)
@@ -291,8 +314,10 @@ def csets_analyze(args, config, db, area):
         logger.debug('Cset {} analysis step 2'.format(cset['cid']))
         info = cset_process(args, config, db, cset)
         db.chgset_set_info(cset['cid'], info)
+        meta = db.chgset_get_meta(cset['cid'])
         db.chgset_processed(cset, state=db.STATE_DONE, refreshed=True)
 
+def csets_analyze_periodic_reprocess_open(args, config, db):
     # Peridic reprocessing of open changesets
     now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
     dt = now-datetime.timedelta(minutes=config.get('refresh_open_minutes','tracker'))
@@ -309,6 +334,7 @@ def csets_analyze(args, config, db, area):
         else:
             db.chgset_processed(cset, state=db.STATE_CLOSED, refreshed=True)
 
+def csets_analyze_periodic_reprocess_closed(args, config, db):
     # Peridic reprocessing of finished changesets
     # Called functions may have longer delays on e.g. when meta is refreshed
     now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
@@ -319,20 +345,29 @@ def csets_analyze(args, config, db, area):
             break
         info = cset_reprocess(args, config, db, cset)
         db.chgset_set_info(cset['cid'], info)
+        meta = db.chgset_get_meta(cset['cid'])
         db.chgset_processed(cset, state=db.STATE_DONE, refreshed=True)
 
+def csets_analyze_drop_old(args, config, db):
     # Drop old changesets
     now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
     horizon_s = config.get('horizon_hours','tracker')*3600
     dt = now-datetime.timedelta(seconds=horizon_s)
     while True:
-        cset = db.chgset_start_processing(db.STATE_DONE, db.STATE_REANALYZING, before=dt, timestamp='refreshed')
+        cset = db.chgset_start_processing(db.STATE_DONE, db.STATE_REANALYZING, before=dt, timestamp='updated')
         if not cset:
             break
-        logger.info('Dropping cset {} due to age {}s'.format(cset['cid'], age_s))
+        logger.info('Dropping cset {} due to age'.format(cset['cid']))
         db.chgset_drop(cset['cid'])
 
     return 0
+
+def csets_analyze(args, config, db):
+    csets_analyze_initial(args, config, db)
+    csets_analyze_on_close(args, config, db)
+    csets_analyze_periodic_reprocess_open(args, config, db)
+    csets_analyze_periodic_reprocess_closed(args, config, db)
+    csets_analyze_drop_old(args, config, db)
 
 def load_backend(backend, config):
     logger.debug("Loading backend {}".format(backend))
@@ -340,10 +375,10 @@ def load_backend(backend, config):
     back = reload(back) # In case it changed
     return back.Backend(config, backend)
 
-def run_backends(args, config, db, area):
-    blist = config.get('backends', 'tracker')
+def run_backends(args, config, db):
+    blist = config.get('backends')
     if not blist:
-        print 'No backends specified'
+        logger.warning('No backends specified')
         return
     backends = []
     for backend in blist:
@@ -352,17 +387,29 @@ def run_backends(args, config, db, area):
     while True:
         for b in backends:
             b.print_state(db)
-        if not args.track:
+        if not (args and args.track):
             break
         time.sleep(60)
     return 0
 
-def main(argv):
+def worker(args, config, db):
+    while True:
+        csets_filter(args, config, db)
+        csets_analyze(args, config, db)
+        if not (args and args.track):
+            break
+        time.sleep(15)
+
+def main():
     logging.config.fileConfig('logging.conf')
     parser = argparse.ArgumentParser(description='OSM Changeset diff filter')
     parser.add_argument('-l', dest='log_level', default='INFO',
                         choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
                         help='Set the log level')
+    parser.add_argument('--configdir', dest='configdir', default='.',
+                        help='Set path to config file')
+    parser.add_argument('--db', dest='db_url', default='mongodb://localhost:27017/',
+                        help='Set url for database')
     subparsers = parser.add_subparsers()
 
     parser_diff_fetch = subparsers.add_parser('diff-fetch')
@@ -372,9 +419,10 @@ def main(argv):
     parser_diff_fetch.add_argument('-H', dest='history', help='Define how much history to fetch')
     parser_diff_fetch.add_argument('--track', action='store_true', default=False,
                                    help='Fetch current and future minutely diffs')
+    parser_diff_fetch.add_argument('--simulate', type=int, default=None, help='Simulate changeset observation')
 
-    parser_csets_checkbounds = subparsers.add_parser('csets-check-bounds')
-    parser_csets_checkbounds.set_defaults(func=csets_check_bounds)
+    parser_csets_filter = subparsers.add_parser('csets-filter')
+    parser_csets_filter.set_defaults(func=csets_filter)
 
     parser_csets_analyze = subparsers.add_parser('csets-analyze')
     parser_csets_analyze.set_defaults(func=csets_analyze)
@@ -382,25 +430,23 @@ def main(argv):
     parser_run_backends = subparsers.add_parser('run-backends')
     parser_run_backends.set_defaults(func=run_backends)
     parser_run_backends.add_argument('--track', action='store_true', default=False,
-                                   help='Track changes and re-run backends')
+                                   help='Track changes and re-run backends peridically')
+
+    parser_worker = subparsers.add_parser('worker')
+    parser_worker.set_defaults(func=worker)
+    parser_worker.add_argument('--track', action='store_true', default=False,
+                               help='Track changes and re-run worker tasks peridically')
 
     args = parser.parse_args()
     logging.getLogger('').setLevel(getattr(logging, args.log_level))
 
     config = configfile.Config()
-    config.load()
+    config.load(path=args.configdir)
 
-    areafile = config.get('area-filter', 'tracker')
-    if areafile:
-        area = Poly.Poly()
-        area.load(areafile)
-        logger.debug('Loaded area polygon from \'{0}\' with {1} points.'.format(areafile, len(area)))
-        logger.debug('bounds={}'.format(area.poly.bounds))
-
-    db = database.DataBase()
+    db = database.DataBase(url=args.db_url)
     logger.debug('Connected to db: {}'.format(db))
 
-    return args.func(args, config, db, area)
+    return args.func(args, config, db)
 
 if __name__ == "__main__":
-   sys.exit(main(sys.argv[1:]))
+   sys.exit(main())

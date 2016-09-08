@@ -79,7 +79,7 @@ background-color: rgb(240,247,252);
 }
 
 #dev_notes {
-#display: none;
+display: none;
 width: 360px;
 background-color: rgb(250,250,250);
 }
@@ -240,7 +240,7 @@ ul.details li.action_geomodif div:first-child
 background-color: rgb(236,236,236);
 }
 
-ul.details li div.trailer {
+ul.details li div.trailer, ul.details li.comment div {
 border: 0px;
 background-color: transparent;
 }

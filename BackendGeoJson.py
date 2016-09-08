@@ -3,20 +3,20 @@ import Backend
 import json
 import datetime
 import logging
+import tempfilewriter
 
 logger = logging.getLogger(__name__)
 
 class Backend(Backend.Backend):
-    def __init__(self, config, subcfg):
-        super(Backend, self).__init__(config, subcfg)
-        self.list_fname = config.getpath('path', 'BackendGeoJson')+'/'+subcfg['filename']
+    def __init__(self, globalconfig, subcfg):
+        super(Backend, self).__init__(globalconfig, subcfg)
+        self.list_fname = globalconfig.getpath('path', 'tracker')+'/'+subcfg['filename']
         self.click_url = subcfg['click_url']
-        self.print_chgsets(None)
 
     def print_state(self, db):
         if self.generation != db.generation:
             self.generation = db.generation
-            if db.chgsets.count() > 0:
+            if db.chgsets_count() > 0:
                 self.print_chgsets(db)
 
     def pprint(self, txt):
@@ -73,7 +73,6 @@ class Backend(Backend.Backend):
             for c in db.chgsets_find(state=db.STATE_DONE):
                 self.add_cset_bbox(c, db, geoj)
 
-        self.start_file(self.list_fname)
         logger.debug('Data sent to json file={}'.format(geoj))
-        self.pprint(json.dumps(geoj))
-        self.end_file()
+        with tempfilewriter.TempFileWriter(self.list_fname) as f:
+            f.write(json.dumps(geoj))

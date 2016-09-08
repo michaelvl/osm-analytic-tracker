@@ -85,7 +85,8 @@ function large_load_test() {
     set_refresher(refresh);
   } else {
     age += Math.round(refresh/1000);
-    tstype();
+    tstype("li.cset");
+    tstype("li.comment");
     console.log('In sync, have '+$("#gen").text()+' and '+$("#gen_loaded").text()+' age '+age);
     if (age > 5*60) {
       set_refresher(5*refresh); // Backoff
@@ -96,8 +97,10 @@ function large_load_test() {
 function large_load_done() {
   console.log('large_load_done()');
     $(".legend").after("<div class=\"hts\"></div>");
+    $(".comment_legend").after("<div class=\"hts\"></div>");
     $(".new").slideDown(1000);
-    tstype();
+    tstype("li.cset");
+    tstype("li.comment");
 }
 
 function compute_lag(ts_src, dest) {
@@ -115,8 +118,8 @@ function append_count(cnt, cnt_dest_id) {
   }
 }
 
-function tstype() {
-  $("li.cset").each(function(index) {
+function tstype(selector) {
+  $(selector).each(function(index) {
     var ts = $(this).data("timestamp");
     var hts = htimestamp(ts, "Now", "ago");
     //console.log(index+" timetamp "+ts+" htimetamp "+hts);

@@ -54,7 +54,7 @@ TL;DR:
 Run it using Docker:
 
 ```
-docker run -p 8080:80 michaelvl/osmtracker
+docker run -p 8080:80 michaelvl/osmtracker-all-in-one
 ```
 
 and point your browser to 127.0.0.1:8080. This docker image contain all

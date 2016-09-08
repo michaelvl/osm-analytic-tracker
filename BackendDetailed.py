@@ -7,7 +7,7 @@ import OsmChangeset as oc
 class Backend(Backend.Backend):
     def __init__(self, config, subcfg):
         super(Backend, self).__init__(config, subcfg)
-        self.print_meta = getattr(subcfg, 'print_meta', False)
+        self.print_meta = subcfg.get('print_meta', False)
 
     def print_state(self, db):
         strfmt = '%Y:%m:%d %H:%M:%S'

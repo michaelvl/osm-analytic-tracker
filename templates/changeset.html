@@ -1,47 +1,45 @@
-<h1>Recent Changesets</h1>
-{% import 'macros.html' as macros -%}
+<h1>{{page_title}}</h1>
+{% import 'macros.html' as macros %}
 
-{% if csets|length==0 and csets_err|length==0 -%}
+{% if csets|length==0 and csets_err|length==0 %}
 No changesets.
 
 {% else %}
 
 <ul>
-{% for c in csets_err -%}
-{% set cid = c.cid -%}
-{% set meta = csetmeta[cid] -%}
+{% for c in csets_err %}
+{% set cid = c.cid %}
+{% set meta = csetmeta[cid] %}
 {% set info = csetinfo[cid] -%}
-<!-- ChangesetWErr {{cid}} source type {{c.source.dtype}} seqno {{c.source.sequenceno}} -->
+<!-- ChangesetWErr {{cid}} ource type {{c.source.dtype}} seqno {{c.source.sequenceno}} -->
 {{ macros.cset_head_ts_li_start(meta,info) }}  
   <ul class="csethead">
   {{ macros.cset_head_basic_li(meta,info) }}
   <li><div class="warning"><div class="icon"><img src="/att_l.png"></div>Error encountered while processing changeset</div></li>
   </ul>
 </li>
-{% endfor -%}
-
-
-{% for c in csets -%}
-{% set cid = c.cid -%}
-{% set meta = csetmeta[cid] -%}
-{% set info = csetinfo[cid] -%}
-<!-- Changeset {{cid}} source type {{c.source.type}} seqno {{c.source.sequenceno}} -->
-{{ macros.cset_head_ts_li_start(meta,info) }}  
-  {{ macros.cset_head_ul(c,meta,info) }}
+{% endfor %}
+{##}
+{##}
+{% for c in csets %}
+{% set cid = c.cid %}
+{% set meta = csetmeta[cid] %}
+{% set info = csetinfo[cid] %}
+<!-- Changeset {{cid}} source type {{c.source.type}} seqno {{c.source.sequenceno}} labels {{c.labels}} -->
+{{ macros.cset_head_ts_li_start(meta,info) -}}  
+  {{ macros.cset_head_ul(c,meta,info) -}}
   {% if not info.state.truncated and show_details and (c.state=='DONE' or c.state=='REANALYZING') %}
     <ul class="details">
-    {{ macros.cset_change_summary(meta,info) }}
-    {{ macros.cset_tags(meta,info) }}
-    {{ macros.cset_tagdiff(meta,info) }}
-    {{ macros.affected_users_li(meta,info) }}
-
+    {{ macros.cset_change_summary(meta,info) -}}
+    {{ macros.cset_tags(meta,info) -}}
+    {{ macros.cset_tagdiff(meta,info) -}}
+    {{ macros.affected_users_li(meta,info) -}}
     {% if show_comments and meta.comments_count>0 %}
-    {{ macros.cset_notes_li(meta,info) }}
-    {% endif -%}
+    {{ macros.cset_notes_li(meta,info) -}}
+    {% endif %}
     </ul>
-  {% endif -%}
+  {% endif %}
 </li>
-
-{% endfor -%}
+{% endfor %}
 </ul>
-{% endif -%}
+{% endif %}

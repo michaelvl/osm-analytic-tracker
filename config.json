@@ -4,13 +4,19 @@
 	"osm_api_url": "https://api.openstreetmap.org",
 	"geojsondiff-filename": "cset-{id}.json",
 	"bounds-filename": "cset-{id}.bounds",
-	"area-filter": "region.poly",
-	"regex-filter": [{"comment": "^Adjustments"}],
+	"pre_labels": [
+	    {"area": "region.poly", "area_check_type": "bbox", "label": "inside-area"},
+	    {"__unused_example_regex": [{".meta.comment": "^Adjustments"}], "label": "adjustment"}
+	],
+	"prefilter_labels": [["inside-area"]],
+	"post_labels": [
+	    {"regex": [{".changes.tag.osak:identifier": ""}], "label": "address-node-change"}
+	],
 	"history": "5 minutes ago",
 	"horizon_type": "sliding",
 	"horizon_hours": 48,
 	"refresh_open_minutes": 5,
-	"refresh_meta_minutes": 10,
+	"refresh_meta_minutes": 15,
 	"cset_processing_time_max_s": 300,
 	"template_path": "templates"
     },
@@ -20,6 +26,7 @@
 	    "show_details": true,
 	    "show_comments": true,
 	    "path": "",
+	    "title": "Recent Changesets",
 	    "filename" : "today.html",
 	    "template": "changeset.html"
 	},
@@ -32,8 +39,10 @@
         {
             "type": "BackendHtml",
             "path": "",
+	    "labels": "address-node-change",
+	    "title": "Recent Changesets Which Modifies Address Nodes",
             "filename" : "dk_addresses.html",
-            "template": "dk_addresses.html"
+            "template": "changeset.html"
         },
         {
             "type": "BackendHtmlSummary",

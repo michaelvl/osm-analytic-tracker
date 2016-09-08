@@ -8,20 +8,20 @@ import pymongo
 from bson.json_util import dumps, loads
 from bson.codec_options import CodecOptions
 import datetime, pytz
-import OsmDiff
+import osm.diff
 
 logger = logging.getLogger('db')
 
 class DataBase(object):
     STATE_NEW = 'NEW'
-    STATE_BOUNDS_CHECK = 'BOUNDS_CHECK'
-    STATE_BOUNDS_CHECKED = 'BOUNDS_CHECKED'
-    STATE_ANALYZING1 = 'ANALYZING1'
-    STATE_OPEN = 'OPEN'
-    STATE_CLOSED = 'CLOSED'
-    STATE_ANALYZING2 = 'ANALYZING2'
-    STATE_REANALYZING = 'REANALYZING'
-    STATE_DONE = 'DONE'
+    STATE_BOUNDS_CHECK = 'BOUNDS_CHECK'     # Used for combined bounds and regex filtering
+    STATE_BOUNDS_CHECKED = 'BOUNDS_CHECKED' # Cset passed filter
+    STATE_ANALYZING1 = 'ANALYZING1'         # Initial processing (meta etc)
+    STATE_OPEN = 'OPEN'                     # Wait state
+    STATE_CLOSED = 'CLOSED'                 # Staging state for deep analysis
+    STATE_ANALYZING2 = 'ANALYZING2'         # Deeper analysis of closed csets
+    STATE_REANALYZING = 'REANALYZING'       # Updates (notes etc)
+    STATE_DONE = 'DONE'                     # For now, all analysis completed
     
     def __init__(self, url='mongodb://localhost:27017/'):
         self.url = url
@@ -58,8 +58,8 @@ class DataBase(object):
     @pointer.setter
     def pointer(self, ptr):
         if type(ptr) is int:
-            ptr = OsmDiff.State(seqno=ptr)
-        if type(ptr) is OsmDiff.State:
+            ptr = osm.diff.State(seqno=ptr)
+        if type(ptr) is osm.diff.State:
             ptr = {u'stype': ptr.type,
                    u'seqno': ptr.sequenceno,
                    u'timestamp': ptr.timestamp() }
@@ -95,6 +95,9 @@ class DataBase(object):
     def chgsets(self):
         return self.csets
 
+    def chgsets_count(self):
+        return self.csets.count()
+
     def chgsets_find_selector(self, state=STATE_DONE, before=None, after=None, timestamp='updated'):
         if type(state) is list:
             sel = {'state': {'$in': state}}
@@ -119,6 +122,7 @@ class DataBase(object):
         now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
         c = {'_id': cid, u'cid': cid,
              'state': self.STATE_NEW,
+             'labels': [],
              'queued': now,
              'updated': now,   # Last time csets content changed
              'refreshed': now, # Last attempt at refresh meta (for e.g. notes)
@@ -169,6 +173,12 @@ class DataBase(object):
                            'state_changed': now}}
         if refreshed:
             setter['$set']['refreshed'] = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+        if 'meta' in c:
+            meta = loads(c['meta'])
+            setter['$set']['updated'] = osm.changeset.Changeset.get_timestamp(meta, include_discussion=True)[1]
+
+        if 'labels' in c:
+            setter['$set']['labels'] = c['labels']
         c = self.csets.update_one(
             {'_id': cid}, setter)
         if failed:
@@ -189,9 +199,6 @@ class DataBase(object):
         if old_meta:
             if not self.dict_changed(old_meta, meta):
                 logger.debug('Setting meta for cset {}, but nothing changed'.format(cid))
-                #self.meta.update_one(
-                #    {'_id': cid},
-                #    {'$set': {'timestamp': datetime.datetime.utcnow().replace(tzinfo=pytz.utc)}})
                 return False
         _meta = dumps(meta) # OSM changeset tags may contain unicode
         logger.debug('Setting meta for cset {}: {}'.format(cid, pprint.pformat(meta)))
@@ -284,7 +291,7 @@ def show(args, db):
     else:
         print '-- Changesets: ({} csets) -----------'.format(db.chgsets.count())
         for c in db.chgsets.find():
-            if not args.cid or args.cid==c['cid']:
+            if (not args.cid or args.cid==c['cid']) and (args.new or c['state']!=db.STATE_NEW):
                 print '  cid={}: {}'.format(c['cid'], pprint.pformat(c))
 
 def reanalyze(args, db):
@@ -328,6 +335,7 @@ def main(argv):
     parser_show.set_defaults(func=show)
     parser_show.add_argument('--cid', type=int, default=None, help='Changeset ID')
     parser_show.add_argument('--brief', action='store_true', default=False, help='Show less information')
+    parser_show.add_argument('--new', action='store_true', default=False, help='Show changesets in NEW state')
 
     parser_reanalyze = subparsers.add_parser('reanalyze')
     parser_reanalyze.set_defaults(func=reanalyze)

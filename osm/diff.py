@@ -13,6 +13,8 @@ class OsmDiffException(Exception):
     pass
 
 class OsmDiffApi(object):
+    OSM_TIMESTAMP_FMT = '%Y-%m-%dT%H:%M:%SZ'
+
     def __init__(self, api='http://planet.osm.org'):
         #self.state_cache = {}
         #self.diff_cache = {}
@@ -91,7 +93,7 @@ class OsmDiffApi(object):
     def timetxt2datetime(ts):
         if isinstance(ts, datetime.datetime):
             return ts
-        return datetime.datetime.strptime(ts, '%Y-%m-%dT%H:%M:%SZ').replace(tzinfo=pytz.utc)
+        return datetime.datetime.strptime(ts, OsmDiffApi.OSM_TIMESTAMP_FMT).replace(tzinfo=pytz.utc)
 
 class Base(object):
     repl_url = 'http://planet.osm.org/replication/'
