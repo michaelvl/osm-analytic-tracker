@@ -10,8 +10,8 @@ class Config(object):
     def __init__(self):
         self.cfg = None
 
-    def load(self, filename='config.json'):
-        with open(filename) as f:
+    def load(self, filename='config.json', path='.'):
+        with open(path+'/'+filename) as f:
             self.cfg = json.load(f)
 
     def get(self, what, who=None, default=None):

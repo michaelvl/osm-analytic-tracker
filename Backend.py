@@ -1,7 +1,6 @@
 import datetime, pytz
 import HumanTime
-import OsmDiff as osmdiff
-import OsmChangeset as oc
+import osm.changeset as oc
 import pprint
 
 class Backend(object):
@@ -20,7 +19,8 @@ class Backend(object):
             self.print_chgsets(state.area_chgsets,
                                state.area_chgsets_info)
 
-    def print_chgsets(self, csets, chginfo, print_tags=False):
+    # FIXME:Delete
+    def xxprint_chgsets(self, csets, chginfo, print_tags=False):
         for chgid in csets[::-1]:
             meta = chginfo[chgid]['meta']
             #print '>>cset=', pprint.pprint(meta)

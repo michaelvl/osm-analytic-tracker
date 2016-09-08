@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 
 from osmapi import OsmApi
-import OsmDiff
+import diff
 import pprint
-import GeoJson as gj
+import geojson as gj
 import sys, time
-import GeoTools
+import geotools
+import poly
 import logging
 import datetime, pytz
 import requests
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +61,7 @@ class Changeset(object):
             # Some osmapi's pass datetime's here without tz instead of a unicode string?
             timestamp = cset_ts.replace(tzinfo=pytz.utc)
         else:
-            timestamp = osmdiff.OsmDiffApi.timetxt2datetime(cset_ts)
+            timestamp = diff.OsmDifApi.timetxt2datetime(cset_ts)
         return (typeof, timestamp)
 
     def printSummary(self):
@@ -93,9 +95,11 @@ class Changeset(object):
         return 's'
 
     def buildDiffList(self, maxtime=None):
+        logger.debug('Start building diff list')
         self.startProcessing(maxtime)
         self.diffs = self.getEmptyObjDict()
         for modif in self.changes:
+            logger.debug('Processing modif: {}'.format(modif))
             self.checkProcessingLimits()
             etype = modif['type']
             data = modif['data']
@@ -187,7 +191,6 @@ class Changeset(object):
         if r.status_code!=200:
             raise Exception('Overpass error:{}:{}:{}'.format(r.status_code,r.text,url))
         #r.raw.decode_content = True
-        print 'XX:'+r.text
 
     def startProcessing(self, maxtime=None):
         self.max_processing_time = maxtime
@@ -223,11 +226,13 @@ class Changeset(object):
         return set(navigable) & set(tags)
 
     def buildSummary(self, mileage=True, maxtime=None):
+        logger.debug('Start building change summary')
         self.startProcessing(maxtime)
         self.other_users = {}
         self.mileage = {'_navigable_create':0, '_navigable_delete':0, '_all_create':0, '_all_delete':0, 'by_type': {}}
 
         for modif in self.changes:
+            logger.debug('Processing modif: {}'.format(modif))
             self.checkProcessingLimits()
             etype = modif['type']
             data = modif['data']
@@ -279,7 +284,7 @@ class Changeset(object):
                     n = self.old('node', nid, nv)
                     #logger.debug('({}, {})'.format(n['lon'], n['lat']))
                     if flon:
-                        d += GeoTools.haversine(flon, flat, n['lon'], n['lat'])
+                        d += geotools.haversine(flon, flat, n['lon'], n['lat'])
                     flon, flat = (n['lon'], n['lat'])
                 if action == 'delete':
                     d = -d
@@ -425,11 +430,23 @@ class Changeset(object):
         logger.debug('Get old {} id {} version {}'.format(etype, id, version))
         if not isinstance(version, int):
             '''Support timestamp versioning. Ways and relations refer un-versioned
-               nodes/ways/relations, i.e. if a way is deleted and the node it
-               referred is moved subsequently, the deleted way should refer to
-               the version existing when it was deleted.
+               nodes/ways/relations, i.e. the only way to find the relevant node
+               postion when the node was e.g. edited is to lookup using the
+               timestamp. Using the latest version of the node is node correct
+               if the node was moved subsequently..
             '''
-            ts = OsmDiff.OsmDiffApi.timetxt2datetime(version)
+            ts = diff.OsmDiffApi.timetxt2datetime(version)
+            # First look if we have version very close in time
+            if id in self.hist[etype]:
+                for v in self.hist[etype][id].keys():
+                    e = self.hist[etype][id][v]
+                    diffsec = abs((ts-e['timestamp']).total_seconds())
+                    # If timestamp difference is less than two seconds, return the element we have
+                    # This will cover e.g. newly created ways
+                    if diffsec<2:
+                        return e
+
+            # Lookup the old node
             if self.apidebug:
                 logger.debug('cset {} -> osmapi.{}History({})'.format(self.id, etype.capitalize(), id))
             if etype == 'node':
@@ -443,7 +460,7 @@ class Changeset(object):
             version = 1 # Default, if timestamps does not work - should never be needed
             for v in k:
                 e = self.hist[etype][id][v]
-                ets = OsmDiff.OsmDiffApi.timetxt2datetime(e['timestamp'])
+                ets = diff.OsmDiffApi.timetxt2datetime(e['timestamp'])
                 if ets<=ts:
                     version = e['version']
                     break;
@@ -716,3 +733,116 @@ class Changeset(object):
                         t1 += ', '
                     t1 += t2
         return t1
+
+    def get_elem_elem(self, obj, elem):
+        '''Find elements within elements'''
+        els = elem.split('.')[1:]
+        try:
+            for e in els:
+                logger.debug('get e={} obj={}'.format(e,obj))
+                if type(obj) is dict:
+                    obj = obj[e]
+                else:
+                    obj = getattr(obj, e)
+                logger.debug('new obj={}'.format(obj))
+            return obj
+        except (AttributeError, KeyError):
+            return None
+
+    def regex_test(self, regex_filter):
+        '''Check if changeset matches regexp.  Input regex_filter is a list of
+           dicts. For each dict in list, check if all dict elements match, if a
+           full match is found, return True. I.e. match is OR between list of
+           dicts and AND between elements in each dict.
+        '''
+
+        logger.debug('Cset check regex filter: {}'.format(regex_filter))
+        for rf in regex_filter:
+            matchcnt = 0
+            for k,v in rf.iteritems():
+                logger.debug("Evaluating: '{}'='{}'".format(k,v))
+                if k.startswith('.changes'):
+                    if self.regex_test_changes(k, v):
+                        logger.debug("Match found")
+                        matchcnt += 1
+                else:
+                    e = self.get_elem_elem(self, k)
+                    logger.debug("regex: field '{}'='{}', regex '{}'".format(k,e,v))
+                    if e:
+                        m = re.match(v, e)
+                        if m:
+                            logger.debug("Match found on '{}'".format(e))
+                            matchcnt += 1
+            if matchcnt == len(rf.keys()):
+                logger.debug("Found '{}' matches of: '{}'".format(matchcnt, rf))
+                return True
+            logger.debug("No match: '{}' (found {} of {})".format(rf, matchcnt, len(rf.keys())))
+        return False
+
+    def regex_test_changes(self, k, v):
+        '''Regex test on changeset changes.  Format is:
+
+        .changes[.action][.element-type].elements
+
+        where optional '.action' is either '.modify', '.create' or '.delete' and  optional
+        '.element-type' is either '.node', '.way' or '.relation'
+
+        Examples: '.changes.modify.node.tag.name'
+                  '.changes.node.tag.name'
+        '''
+        # FIXME: This code only looks at the new values (e.g. tags on new
+        # version). We need to investigate old version also to detect e.g. deleted tags
+        if not self.changes:
+            return False
+        action = None
+        elemtype = None
+        rg = k.split('.')[2:]
+        if rg[0] in ['modify', 'create', 'delete']:
+            action = rg.pop(0)
+        if rg[0] in ['node', 'way', 'relation']:
+            elemtype = rg.pop(0)
+        logger.debug("Action: '{}', element type '{}'".format(action, elemtype))
+        for modif in self.changes:
+            if action and action!=modif['action']:
+                continue
+            if elemtype and elemtype!=modif['type']:
+                continue
+            data = modif['data']
+            logger.debug('Modif {}'.format(data))
+            field = '.'+'.'.join(rg)
+            e = self.get_elem_elem(data, field)
+            logger.debug("regex: field '{}'='{}', regex '{}'".format(field,e,v))
+            if e:
+                return re.match(v, e)
+        return False
+
+    def build_labels(self, label_rules):
+        '''Build list of labels based on regex and area check.  Note that both regex and
+           area check can be defined with and AND rule etween then, i.e. both
+           must match if both are defined.
+        '''
+        labels = []
+        for dd in label_rules:
+            if dd['label'] in labels:
+                logger.debug('Label already set: {}'.format(dd['label']))
+                continue # duplicate label
+            match = True
+            if 'regex' in dd:
+                logger.debug('regex test, rule={}'.format(dd))
+                if self.regex_test(dd['regex']):
+                    logger.debug('Regex test OK')
+                else:
+                    match = False
+            if 'area' in dd:
+                logger.debug('area test, rule={}'.format(dd))
+                area = poly.Poly()
+                area.load(dd['area'])
+                logger.debug("Loaded area polygon from '{}' with {} points".format(dd['area'], len(area)))
+                if ('area_check_type' not in dd or dd['area_check_type']=='bbox') and area.contains_chgset(self.meta):
+                    logger.debug('Area test OK')
+                else:
+                    match = False
+            if match:
+                logger.debug("Adding label '{}'".format(dd['label']))
+                labels.append(dd['label'])
+        return labels

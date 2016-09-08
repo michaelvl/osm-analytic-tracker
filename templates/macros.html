@@ -1,10 +1,10 @@
 {% macro cset_head_ts_li_start(meta,info) %}
   <!-- cset_head_ts -->
-{% if info.misc.state=='new' -%}
+{% if info.misc.state=='new' %}
 <li class="cset new" data-timestamp="{{info.misc.timestamp|js_datetime}}" data-timestamp_type="{{info.misc.timestamp_type_txt}}">
-{% else -%}
+{% else %}
 <li class="cset" data-timestamp="{{info.misc.timestamp|js_datetime}}" data-timestamp_type="{{info.misc.timestamp_type_txt}}">
-{% endif -%}
+{% endif %}
 {%- endmacro %}
 
 {% macro cset_head_basic_li(meta,info) %}
@@ -12,15 +12,15 @@
     <li>
       <div class="legend" style="background-color: #{{info.misc.user_colour}}">&#8203;</div>
       <div class="user"><div class="icon"><img src="/user_l.png"></div><a href="http://www.openstreetmap.org/user/{{meta.user}}">{{meta.user|e}}</a></div>
-      {% if 'comment' in meta.tag and meta.tag.comment|trim|length != 0 -%}
+      {% if 'comment' in meta.tag and meta.tag.comment|trim|length != 0 %}
       <div class="changeset"><a href="http://www.openstreetmap.org/changeset/{{meta.id}}">{{meta.tag.comment|e}}</a></div>
-      {% else -%}
+      {% else %}
       <div class="changeset"><a href="http://www.openstreetmap.org/changeset/{{meta.id}}">Changeset {{meta.id}}</a></div>
       <li><div class="warning"><div class="icon"><img src="/att_l.png"></div><a href="http://wiki.openstreetmap.org/wiki/Good_changeset_comments">No comment</a></div></li>
-      {% endif -%}
-      {% if 'source' in meta.tag -%}
+      {% endif %}
+      {% if 'source' in meta.tag %}
         <div class="changeset-source">{{meta.tag.source|e}}</div>
-      {% endif -%}
+      {% endif %}
     </li>
 {%- endmacro %}
 
@@ -33,34 +33,31 @@
     {% elif info.state.truncated %}
     <li><div class="warning truncated"><div class="icon"><img src="/att_l.png"></div>Truncated</div></li>
     {% elif not meta.open %}
-      {% if not (('source' in meta.tag) or ('imagery_used' in meta.tag)) -%}
+      {% if not (('source' in meta.tag) or ('imagery_used' in meta.tag)) %}
       <li><div class="warning"><div class="icon"><img src="/att_l.png"></div><a href="http://wiki.openstreetmap.org/wiki/Changeset">No source attribute</a></div></li>
-      {% endif -%}
+      {% endif %}
       {% if 'type = route' in info.summary.create.relation_tags or
             'type = route' in info.summary.modify.relation_tags or
-            'type = route' in info.summary.delete.relation_tags -%}
+            'type = route' in info.summary.delete.relation_tags %}
       <li><div class="warning"><div class="icon"><img src="/att_l.png"></div>Modifies route relation</div></li>
       {% endif%}
-
-      {% if info.misc.dk_address_node_changes>0 -%}
+      {% if 'address_node_change' in c.labels %}
       <li><div class="warning"><div class="icon"><img src="/att_l.png"></div>Modifies address node(s)</div></li>
       {%- endif %}
-    
-      {% if meta.comments_count>0 -%}
-        {% if meta.comments_count==1 -%}
+      {% if meta.comments_count>0 %}
+        {% if meta.comments_count==1 %}
         <li><div>1 note</div></li>
-        {% else -%}
+        {% else %}
         <li><div>{{meta.comments_count}} notes</div></li>
-        {% endif -%}
-      {% endif -%}
-    {% endif -%}
-	
-    {% if info.state.truncated -%}
+        {% endif %}
+      {% endif %}
+    {% endif %}
+    {% if info.state.truncated %}
     <li><div class="error"><div class="icon"><img src="/err_l.png"></div>Error occured while processing:{{info.state.truncated}}</div></li>
-    {% endif -%}
-    {% if  meta.open -%}
+    {% endif %}
+    {% if  meta.open %}
     <li><div class="trailer csetopen"><div class="icon"><img src="/csetopen_l.png"></div>Open</div></li>
-    {% elif c.state=="DONE" or c.state=="REANALYZING" -%}
+    {% elif c.state=="DONE" or c.state=="REANALYZING" %}
     <li><div><a href="/diffmap.html?cid={{meta.id}}">VisualDiff</a></div></li>
     {%- endif %}
   </ul>
@@ -68,54 +65,54 @@
 
 {% macro cset_tagdiff(meta,info) %}
   <!-- cset_tagdiff -->
-  {% for (k,v,a) in info.misc.processed_tagdiff_create -%}
+  {% for (k,v,a) in info.misc.processed_tagdiff_create %}
   <li class="action_{{a}}"><div>{{k|e}}</div><div>{{v|e}}</div></li>
-  {% endfor -%}
-  {% if info.misc.processed_tagdiff_create_trailer -%}
+  {% endfor %}
+  {% if info.misc.processed_tagdiff_create_trailer %}
   <li><div class="trailer">{{info.misc.processed_tagdiff_create_trailer}}</div></li>
-  {% endif -%}
-  {% for (k,v,a) in info.misc.processed_tagdiff_modify -%}
+  {% endif %}
+  {% for (k,v,a) in info.misc.processed_tagdiff_modify %}
   <li class="action_{{a}}"><div>{{k|e}}</div><div>{{v|e}}</div></li>
-  {% endfor -%}
-  {% if info.misc.processed_tagdiff_modify_trailer -%}
+  {% endfor %}
+  {% if info.misc.processed_tagdiff_modify_trailer %}
   <li><div class="trailer">{{info.misc.processed_tagdiff_modify_trailer}}</div></li>
-  {% endif -%}
-  {% for (k,v,a) in info.misc.processed_tagdiff_delete -%}
+  {% endif %}
+  {% for (k,v,a) in info.misc.processed_tagdiff_delete %}
   <li class="action_{{a}}"><div>{{k|e}}</div><div>{{v|e}}</div></li>
-  {% endfor -%}
-  {% if info.misc.processed_tagdiff_delete_trailer -%}
+  {% endfor %}
+  {% if info.misc.processed_tagdiff_delete_trailer %}
   <li><div class="trailer">{{info.misc.processed_tagdiff_delete_trailer}}</div></li>
-  {% endif -%}
+  {% endif %}
 {%- endmacro %}
 
 {% macro cset_tags(meta,info) %}
   <!-- cset_tags -->
-  {% for k,v in info.tags.iteritems() -%}
-  {% if loop.index<50 -%}
+  {% for k,v in info.tags.iteritems() %}
+  {% if loop.index<50 %}
   <li class="action_geomodif"><div>{{k|e}}</div><div>{{v|e}}</div></li>
-  {% elif loop.index==50 -%}
+  {% elif loop.index==50 %}
   <li><div class="trailer">{{info.tags.keys()|length-50}} tags left out</div></li>
-  {%- endif %}
-  {%- endfor -%}
-{%- endmacro %}
+  {% endif %}
+  {% endfor %}
+{% endmacro %}
 
 {% macro cset_change_summary(meta,info) %}
   <!-- cset_change_summary -->
-  {% if info.summary._create>0 -%}
+  {% if info.summary._create>0 %}
   <li class="action_create"><div>Added:</div><div class="node_create">{{info.summary.create.node}}</div><div class="way_create">{{info.summary.create.way}}</div><div class="relation_create">{{info.summary.create.relation}}</div></li>
-  {% endif -%}
-  {% if info.summary._modify>0 -%}
+  {% endif %}
+  {% if info.summary._modify>0 %}
   <li class="action_modify"><div>Modified:</div><div class="node_modify">{{info.summary.modify.node}}</div><div class="way_modify">{{info.summary.modify.way}}</div><div class="relation_modify">{{info.summary.modify.relation}}</div></li>
-  {% endif -%}
-  {% if info.summary._delete>0 -%}
+  {% endif %}
+  {% if info.summary._delete>0 %}
   <li class="action_delete"><div>Deleted:</div><div class="node_delete">{{info.summary.delete.node}}</div><div class="way_delete">{{info.summary.delete.way}}</div><div class="relation_delete">{{info.summary.delete.relation}}</div></li>
-  {% endif -%}
-  {% if info.simple_nodes.create>0 or info.simple_nodes.modify>0 or info.simple_nodes.delete>0 -%}
+  {% endif %}
+  {% if info.simple_nodes.create>0 or info.simple_nodes.modify>0 or info.simple_nodes.delete>0 %}
   <li><div>Simple nodes:</div><div class="simplenodes_create">{{info.simple_nodes.create}}</div><div class="simplenodes_modify">{{info.simple_nodes.modify}}</div><div class="simplenodes_delete">{{info.simple_nodes.delete}}</div></li>
-  {% endif -%}
-  {% if info.mileage_m._navigable_create>0 or info.mileage_m._navigable_delete>0 -%}
+  {% endif %}
+  {% if info.mileage_m._navigable_create>0 or info.mileage_m._navigable_delete>0 %}
   <li><div>Navigable meters:</div><div class="navigable_create">{{info.mileage_m._navigable_create|int}}</div><div class="navigable_delete">{{info.mileage_m._navigable_delete|int}}</div></li>
-  {% endif -%}
+  {% endif %}
 {%- endmacro %}
   
 {% macro cset_notes_li(meta,info) %}
@@ -127,25 +124,25 @@
 
 {% macro affected_users_li(meta,info) %}
   <!-- affected users -->
-  {% set ousr = info['other_users'] -%}
-  {% for k,v in ousr.iteritems() -%}
-    {% if loop.index < 10 -%}
-      {% if k==0 -%}
-        {% set user = '(Anonymous)' -%}
-        {% set url = '<a href="http://wiki.openstreetmap.org/wiki/Anonymous_edits">'+user+'</a>' -%}
+  {% set ousr = info['other_users'] %}
+  {% for k,v in ousr.iteritems() %}
+    {% if loop.index < 10 %}
+      {% if k==0 %}
+        {% set user = '(Anonymous)' %}
+        {% set url = '<a href="http://wiki.openstreetmap.org/wiki/Anonymous_edits">'+user+'</a>' %}
       {% else %}
-        {% set user = v['user'] -%}
-        {% set url = '<a href="http://www.openstreetmap.org/user/'+user+'">'+user+'</a>' -%}
+        {% set user = v['user'] %}
+        {% set url = '<a href="http://www.openstreetmap.org/user/'+user+'">'+user+'</a>' %}
       {%- endif %}
-      {% if loop.index0==0 -%}
+      {% if loop.index0==0 %}
         <li><div class="trailer">Affects edits by {{url}}{% if ousr|length>1 %},{%endif%}</div></li>
-      {% else -%}
+      {% else %}
         <li><div class="trailer">{{url}}{% if ousr|length >loop.index %},{%endif%}</div></li>
       {%- endif %}
-    {% elif loop.index==10 -%}
-      {% if ousr|length==10 -%}	
+    {% elif loop.index==10 %}
+      {% if ousr|length==10 %}	
       <li><div class="trailer">1 more user</div></li>
-      {% else -%}
+      {% else %}
       <li><div class="trailer">{{ ousr|length-10}} more users</div></li>
       {%- endif %}
     {%- endif %}
