@@ -2,3 +2,5 @@ osmapi
 tzlocal
 jinja2
 pymongo
+shapely
+requests
