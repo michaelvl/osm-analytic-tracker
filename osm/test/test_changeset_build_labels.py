@@ -14,6 +14,7 @@ class TestLabelFilter(unittest.TestCase):
     def setUp(self):
         #logging.basicConfig(level=logging.DEBUG)
         self.cset = changeset.Changeset(id=10)
+        self.cset.meta = {}
         self.osmapi = stubs.testOsmApi()
 
     @patch('poly.Poly')
@@ -27,6 +28,19 @@ class TestLabelFilter(unittest.TestCase):
         labels = self.cset.build_labels(labels)
         self.assertTrue('adjustment' in labels)
         self.assertTrue('inside-area' in labels)
+
+    @patch('poly.Poly')
+    def test_1_bbox_center(self, Poly):
+        self.cset.meta = {'user': 'useruser', 'tag': {'comment': 'Adjustments at somewhere'},
+                          'min_lat': '48.00', 'max_lat': '50.00', 'min_lon': '50.00', 'max_lon': '52.00'}
+        labels = [
+	    {"area": "region.poly", "area_check_type": "cset-center", "label": "cset-center-inside-area"},
+	]
+        Poly.return_value.contains_chgset.return_value = True
+        labels = self.cset.build_labels(labels)
+        self.assertTrue('cset-center-inside-area' in labels)
+        #print 'polymocks', Poly.mock_calls
+        Poly.return_value.contains.assert_called_once_with(51.0, 49.0)
 
     @patch('poly.Poly')
     #@patch('changeset.OsmApi')

@@ -4,7 +4,7 @@ import sys, getopt
 from osmapi import OsmApi
 import pprint
 import json
-import OsmChangeset
+import osm.changeset
 
 def main(argv):
     debug = False
@@ -47,25 +47,23 @@ def main(argv):
         if opt == '-b':
             bounds = arg
         if opt == '-i':
-            csetid = int(arg)
+            csetid = long(arg)
         if opt == '-T':
             tags = True
         if opt == '-M':
             mileage = True
 
     if apiurl:
-        cset = OsmChangeset.Changeset(csetid, api=apiurl)
+        cset = osm.changeset.Changeset(csetid, api=apiurl)
     else:
-        cset = OsmChangeset.Changeset(csetid)
+        cset = osm.changeset.Changeset(csetid)
     cset.apidebug = debug
 
     cset.downloadMeta()
 
     if changes or history or summary or geojson:
         cset.downloadData()
-        cset.downloadHistory()
-
-    #cset.getReferencedElements()
+        cset.downloadGeometry()
 
     if meta:
         if debug:

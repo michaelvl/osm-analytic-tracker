@@ -25,27 +25,6 @@ def fetch_and_process_diff(config, dapi, seqno, ctype):
     chgsets = dapi.get_diff_csets(seqno, ctype)
     return chgsets
 
-#NOTE: Checking bounds on an open changeset is problematic since additions added
-#later might change an otherwise failed bounds check. The way it works here is
-#that new additions will show up in a new diff and reschedule a bounds check.
-def cset_check_bounds(args, config, area, cid, debug=0, strict_inside_check=True):
-    # Read changeset meta and check if within area
-    c = osm.changeset.Changeset(cid, api=config.get('osm_api_url','tracker'))
-    c.apidebug = debug
-    c.datadebug = debug
-    c.downloadMeta()
-
-    # Check if node and thus changeset is within area (bbox check)
-    #pprint.pprint(c.meta)
-    if not area or area.contains_chgset(c.meta):
-        if strict_inside_check:
-            c.downloadData()
-            if c.isInside(area):
-                return c
-        else:
-            return c
-    return None
-
 # FIXME: Refactor to use db.find with timestamps
 def cset_refresh_meta(args, config, db, cset, no_delay=False):
     cid = cset['cid']
@@ -128,8 +107,8 @@ def cset_process_open(args, config, db, cset, debug=0):
 def cset_process(args, config, db, cset, debug=0):
     '''One-time processing of closed changesets'''
     cid = cset['cid']
-    geojson = config.get('path', 'tracker')+'/'+config.get('geojsondiff-filename', 'tracker')
-    bbox = config.get('path', 'tracker')+'/'+config.get('bounds-filename', 'tracker')
+    ######geojson = config.get('path', 'tracker')+'/'+config.get('geojsondiff-filename', 'tracker')
+    ####bbox = config.get('path', 'tracker')+'/'+config.get('bounds-filename', 'tracker')
     truncated = None
     diffs = None
     try:
@@ -140,34 +119,31 @@ def cset_process(args, config, db, cset, debug=0):
         c.downloadData()
         #c.downloadGeometry()
         maxtime = config.get('cset_processing_time_max_s', 'tracker')
-        c.downloadHistory(maxtime=maxtime)
+        c.downloadGeometry(maxtime=maxtime)
+        c.getGeoJsonDiff()
         #c.getReferencedElements()
         c.buildSummary(maxtime=maxtime)
-        diffs = c.buildDiffList(maxtime=maxtime)
+        c.buildDiffList(maxtime=maxtime)
     except osm.changeset.Timeout as e:
         truncated = 'Timeout'
 
-    info = {'state': {},
-            #'meta': c.meta,
-            'summary': c.summary,
-            'tags': c.tags, 'tagdiff': c.tagdiff,
-            'simple_nodes': c.simple_nodes, 'diffs': diffs,
-            'other_users': c.other_users, 'mileage_m': c.mileage}
+    info = c.data_export()
+
     if truncated:
         info['state']['truncated'] = truncated
         logger.error('Changeset {} not fully processed: {}'.format(c.id, truncated))
-    else:
-        if geojson:
-            fn = geojson.format(id=c.id)
-            with open(fn, 'w') as f:
-                json.dump(c.getGeoJsonDiff(), f)
+    # else:
+    #     if geojson:
+    #         fn = geojson.format(id=c.id)
+    #         with open(fn, 'w') as f:
+    #             json.dump(c.getGeoJsonDiff(), f)
 
-    if bbox:
-        b = '{},{},{},{}'.format(c.meta['min_lat'], c.meta['min_lon'],
-                                       c.meta['max_lat'], c.meta['max_lon'])
-        fn = bbox.format(id=c.id)
-        with open(fn, 'w') as f:
-            f.write(b)
+    # if bbox:
+    #     b = '{},{},{},{}'.format(c.meta['min_lat'], c.meta['min_lon'],
+    #                                    c.meta['max_lat'], c.meta['max_lon'])
+    #     fn = bbox.format(id=c.id)
+    #     with open(fn, 'w') as f:
+    #         f.write(b)
 
     cset_process_local2(args, config, db, cset, c.meta, info)
 

@@ -14,34 +14,14 @@ import pprint
 logger = logging.getLogger('')
 
 
-class BaseTest(unittest.TestCase):
+class BaseTest(unittest.TestCase, stubs.FileWriter_Mixin):
     def setUp(self):
         #logging.basicConfig(level=logging.DEBUG)
         self.db = stubs.testDB()
+        self.db.test_add_cid(10)
         self.cfg = stubs.testConfig()
-        self.osmapi = osm.test.stubs.testOsmApi()
-        self.files = {}
-        self.filemocks = []
-        self.curfile = None
-
-    def fstart(self, fname):
-        self.curfile = fname
-        self.files[self.curfile] = ''
-        mm = mock.MagicMock()
-        mm.__enter__.return_value.write.side_effect = self.fwrite
-        self.filemocks.append(mm)
-        return mm
-
-    def fwrite(self, txt):
-        #print 'zz fwrite', txt
-        self.files[self.curfile] += txt
-
-    def print_file(self, fname):
-        ff = self.files[fname].split('\n')
-        print '|----- {} -------------------'.format(fname)
-        for ln in ff:
-            print '|', ln
-        print '|--------------------------------'
+        self.osmapi = osm.test.stubs.testOsmApi(datapath='osm/test/data')
+        self.filewritersetup()
         
 class TestCsetFilter(BaseTest):
 
@@ -58,13 +38,16 @@ class TestCsetFilter(BaseTest):
         osmtracker.csets_analyze_initial(None, self.cfg, self.db)
         osmtracker.csets_analyze_on_close(None, self.cfg, self.db)
 
+        #print 'DB:{}'.format(pprint.pformat(self.db.csets))
+
         self.cfg.cfg['backends'][0]['labels'] = ['adjustments']
         osmtracker.run_backends(None, self.cfg, self.db)
+        #print 'files:', self.files.keys()
         #print 'xx', FileWriter.mock_calls
         #self.print_file('html/today.html')
         #self.print_file('html/dk_addresses.html')
         #self.print_file('html/today-summ.html')
-        #print 'tt', self.filemocks[0].mock_calls
+        #print 'filemocks', self.filemocks[0].mock_calls
         self.assertTrue('No changesets' not in self.files['html/today.html'])
         self.assertTrue('-- Changeset 10 source' in self.files['html/today.html'])
         self.assertTrue('Total navigable: 12,888 meters (6,444m/hour)' in self.files['html/today-summ.html'])
@@ -75,6 +58,13 @@ class TestCsetFilter(BaseTest):
         osmtracker.run_backends(None, self.cfg, self.db)
         #self.print_file('html/today.html')
         self.assertTrue('No changesets' in self.files['html/today.html'])
+
+        self.assertTrue('html/cset-10.json' in self.files)
+        #self.print_file('html/cset-10.json')
+        self.assertTrue('FeatureCollection' in self.files['html/cset-10.json'])
+        self.assertTrue('html/cset-10.bounds' in self.files)
+        #self.print_file('html/cset-10.bounds')
+        self.assertTrue('5,7,10,14' in self.files['html/cset-10.bounds'])
 
     @patch('osm.poly.Poly')
     @patch('osm.changeset.OsmApi')

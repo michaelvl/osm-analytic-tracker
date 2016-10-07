@@ -1,8 +1,8 @@
 import Backend
 import datetime, pytz
 import HumanTime
-import OsmDiff as osmdiff
-import OsmChangeset as oc
+import osm.diff as osmdiff
+import osm.changeset as oc
 
 class Backend(Backend.Backend):
     def __init__(self, config, subcfg):

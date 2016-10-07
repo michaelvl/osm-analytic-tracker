@@ -21,7 +21,10 @@ class Changeset(object):
     def __init__(self, id, api='https://api.openstreetmap.org'):
         self.id = id
         logger.debug('Using api={}'.format(api))
-        self.osmapi = OsmApi(api=api)
+        if api:
+            self.osmapi = OsmApi(api=api)
+        else:
+            self.osmapi = None
 
         self.meta = None
         self.changes = None
@@ -39,6 +42,8 @@ class Changeset(object):
         self.tagdiff = self.getEmptyDiffDict()
         # Tags unchanged, i.e. mostly ID if object geometrically changed
         self.tags = {}
+        # Textual diff description
+        self.diffs = {}
         # Simple (no tags) nodes
         self.simple_nodes = {'create':0, 'modify':0, 'delete':0}
 
@@ -182,7 +187,7 @@ class Changeset(object):
             if self.datadebug:
                 logger.debug(u'changes({})={}'.format(self.id, self.changes))
 
-    def downloadGeometry(self, overpass_api='https://overpass-api.de/api'):
+    def _downloadGeometry(self, overpass_api='https://overpass-api.de/api'):
         # https://overpass-api.de/api/interpreter?data=[adiff:"2016-07-02T22:23:17Z","2016-07-02T22:23:19Z"];(node(bbox)(changed);way(bbox)(changed););out meta geom(bbox);&bbox=11.4019207,55.8270254,11.4030363,55.8297091
         opened = self.get_timestamp(self.meta, 'created_at')[1] - datetime.timedelta(seconds=1)
         closed = self.get_timestamp(self.meta, 'closed_at')[1] + datetime.timedelta(seconds=1)
@@ -197,6 +202,24 @@ class Changeset(object):
             raise Exception('Overpass error:{}:{}:{}'.format(r.status_code,r.text,url))
         #r.raw.decode_content = True
 
+    def downloadGeometry(self, maxtime=None, way_nodes=True):
+        self.startProcessing(maxtime)
+        for mod in self.changes:
+            self.checkProcessingLimits()
+            etype = mod['type']
+            data = mod['data']
+            eid = data['id']
+            version = data['version']
+            action = mod['action']
+            if action == 'create':
+                self.hist[etype][eid] = {1: data}
+            else:
+                self.hist[etype][eid] = {version: data}
+                self.old(etype, eid, version-1)
+            if etype == 'way' and action != 'delete':
+                for nid in data['nd']:
+                    self.old('node', nid, data['timestamp'])
+
     def startProcessing(self, maxtime=None):
         self.max_processing_time = maxtime
         self.processing_start = time.time()
@@ -204,19 +227,10 @@ class Changeset(object):
     def checkProcessingLimits(self):
         if self.max_processing_time:
             used = time.time()-self.processing_start
-            logger.debug('Used {:.2}s of {}s to process history'.format(used, self.max_processing_time))
+            logger.debug('Used {:.2f}s of {}s to process history'.format(used, self.max_processing_time))
             if used > self.max_processing_time:
-                logger.warning('Timeout: Used {:.2}s of processing time'.format(used))
+                logger.warning('Timeout: Used {:.2f}s of processing time'.format(used))
                 raise Timeout
-
-    def downloadHistory(self, maxtime=None):
-        #pprint.pprint(self.changes)
-        self.startProcessing(maxtime)
-        for mod in self.changes:
-            self.checkProcessingLimits()
-            #print 'Modification:'
-            #pprint.pprint(mod)
-            self.getElement(mod)
 
     def unload(self):
         ch = self.changes
@@ -241,21 +255,21 @@ class Changeset(object):
             self.checkProcessingLimits()
             etype = modif['type']
             data = modif['data']
-            id = data['id']
+            eid = data['id']
             version = data['version']
             action = modif['action']
 
             self.summary['_'+action] += 1
             self.summary[action][etype] += 1
 
-            diff = self.getTagDiff(etype, id, version)
+            diff = self.getTagDiff(etype, eid, version)
             if diff:
                 self.addDiffDicts(self.tagdiff, diff)
 
-            self.tags = self.getTags(etype, id, version, self.tags)
+            self.tags = self.getTags(etype, eid, version, self.tags)
             if etype=='node':
                 if action == 'delete':
-                    old = self.old(etype,id,version-1)
+                    old = self.old(etype,eid,version-1)
                     if not diff and ('tag' not in old.keys() or not old['tag']):
                         self.simple_nodes[action] += 1
                 else:
@@ -264,7 +278,7 @@ class Changeset(object):
 
             # For modify and delete we summarize affected users
             if action != 'create':
-                old = self.old(etype,id,version-1)
+                old = self.old(etype,eid,version-1)
                 old_uid = old['uid']
                 if old_uid != data['uid']:
                     old_uid = str(old_uid)
@@ -279,10 +293,17 @@ class Changeset(object):
             # FIXME: Since we are only summing created/deleted ways, we ignore edited mileage
             if (action == 'create' or action == 'delete') and etype=='way':
                 if action == 'create':
-                    nv = -1 # If created, we take the latest node - in special cases where a node is edited multiple times in the same diff, this might not be correct
+                    # If created, we take the latest node version - in special
+                    # cases where a node is edited multiple times in the same
+                    # diff, this might not be correct
+                    nv = -1
+                    nd = data['nd']
+                    tags = data['tag']
                 else:
-                    nv = data['timestamp']
-                nd = data['nd']
+                    # For deleted ways, we take the previous version
+                    nv = old['timestamp']
+                    nd = old['nd']
+                    tags = old['tag']
                 d = 0
                 flon = flat = None
                 for nid in nd:
@@ -294,11 +315,11 @@ class Changeset(object):
                 if action == 'delete':
                     d = -d
                 self.mileage['_all_'+action] += d
-                navigable = self.wayIsNavigable(data['tag'])
+                navigable = self.wayIsNavigable(tags)
                 if navigable:
                     self.mileage['_navigable_'+action] += d
                     nav_cat = navigable.pop()
-                    nav_type = data['tag'][nav_cat]
+                    nav_type = tags[nav_cat]
                     if not nav_cat in self.mileage['by_type'].keys():
                         self.mileage['by_type'][nav_cat] = {}
                     if not nav_type in self.mileage['by_type'][nav_cat].keys():
@@ -306,7 +327,7 @@ class Changeset(object):
                     self.mileage['by_type'][nav_cat][nav_type] += d
                 #else:
                 #    # Buildings, natural objects etc
-                #    logger.debug('*** Not navigable way ({}) mileage: {} {} {}'.format(data['tag'], d, self.mileage, navigable))
+                #    logger.debug('*** Not navigable way ({}) mileage: {} {} {}'.format(tags, d, self.mileage, navigable))
 
 
     def getEmptyDiffDict(self):
@@ -320,13 +341,13 @@ class Changeset(object):
             for k,v in src[ac].iteritems():
                 into[ac][k] = into[ac].get(k, 0)+v
 
-    def getTagDiff(self, etype, id, version):
+    def getTagDiff(self, etype, eid, version):
         ''' Compute tag diffence between 'version' and previous version '''
         diff = self.getEmptyDiffDict()
-        curr = self.old(etype,id,version)
+        curr = self.old(etype,eid,version)
         ntags = curr['tag']
         if version > 1:
-            old = self.old(etype,id,version-1)
+            old = self.old(etype,eid,version-1)
             otags = old['tag']
         else:
             old = None
@@ -349,17 +370,17 @@ class Changeset(object):
             return None
         return diff
 
-    def getTags(self, etype, id, version, curr_tags=None):
+    def getTags(self, etype, eid, version, curr_tags=None):
         '''Compute unmodified tags, i.e. tags on objects changed geometrically, but
            where tags are identical between 'version' and previous version'''
         if not curr_tags:
             tags = {}
         else:
             tags = curr_tags
-        curr = self.old(etype,id,version)
+        curr = self.old(etype,eid,version)
         ntags = curr['tag']
         if version > 1:
-            old = self.old(etype,id,version-1)
+            old = self.old(etype,eid,version-1)
             otags = old['tag']
         else:
             old = None
@@ -373,66 +394,66 @@ class Changeset(object):
                     tags[k] = tags.get(k, 0)+1
         return tags
 
-    def getLabel(self, etype, id, version):
-        e = self.old(etype,id,version)
+    def getLabel(self, etype, eid, version):
+        e = self.old(etype,eid,version)
         if 'tag' in e.keys():
             tag = e['tag']
             if 'name' in tag.keys():
                 label = u'name={}'.format(tag['name'])
             else:
-                label = u'{}<{}>'.format(etype.capitalize(), id)
+                label = u'{}<{}>'.format(etype.capitalize(), eid)
             keytags = ['highway', 'amenity', 'man_made', 'leisure', 'historic', 'landuse', 'type']
             for kt in keytags:
                 if kt in tag.keys():
                     return u'{}={}, {}'.format(kt, tag[kt], label)
-        return u'{}<{}>'.format(etype, id)
+        return u'{}<{}>'.format(etype, eid)
 
     # Note: Deleted objects only have history
     def getElement(self, modif):
         etype = modif['type']
         data = modif['data']
-        id = data['id']
+        eid = data['id']
         version = data['version']
         action = modif['action']
         if action == 'create':
-            self.hist[etype][id] = {1: data}
+            self.hist[etype][eid] = {1: data}
         else:
-            e = self.old(etype, id, version-1)
+            e = self.old(etype, eid, version-1)
 
-    def getElementHistory(self, etype, id, version):
-        logger.debug('GetElementHistory({} id {} version {})'.format(etype, id, version));
+    def getElementHistory(self, etype, eid, version):
+        logger.debug('GetElementHistory({} idw {} version {})'.format(etype, eid, version));
         hv = None
         if self.history_one_version_back or version<4:
-            if not id in self.hist[etype].keys():
-                self.hist[etype][id] = {}
+            if not eid in self.hist[etype].keys():
+                self.hist[etype][eid] = {}
             if self.apidebug:
-                logger.debug('cset {} -> osmapi.{}Get({},ver={})'.format(self.id, etype.capitalize(), id, version))
+                logger.debug('cset {} -> osmapi.{}Get({},ver={})'.format(self.id, etype.capitalize(), eid, version))
             if etype == 'node':
-                hv = self.osmapi.NodeGet(id, NodeVersion=version)
+                hv = self.osmapi.NodeGet(eid, NodeVersion=version)
             elif etype == 'way':
-                hv = self.osmapi.WayGet(id, WayVersion=version)
+                hv = self.osmapi.WayGet(eid, WayVersion=version)
             elif etype == 'relation':
-                hv = self.osmapi.RelationGet(id, RelationVersion=version)
+                hv = self.osmapi.RelationGet(eid, RelationVersion=version)
             if hv:
-                self.hist[etype][id][version] = hv
+                self.hist[etype][eid][version] = hv
             else:
                 # Possibly deleted element, fall-through
-                logger.warning('Failed to get element history by version: {} id {} version {}'.format(etype, id, version))
+                logger.warning('Failed to get element history by version: {} id {} version {}'.format(etype, eid, version))
 
         if not hv:
             if self.apidebug:
-                logger.debug('cset {} -> osmapi.{}History({})'.format(self.id, etype.capitalize(), id))
+                logger.debug('cset {} -> osmapi.{}History({})'.format(self.id, etype.capitalize(), eid))
             if etype == 'node':
-                h = self.osmapi.NodeHistory(id)
+                h = self.osmapi.NodeHistory(eid)
             elif etype == 'way':
-                h = self.osmapi.WayHistory(id)
+                h = self.osmapi.WayHistory(eid)
             elif etype == 'relation':
-                h = self.osmapi.RelationHistory(id)
-            self.hist[etype][id] = h
-            logger.debug('{} id {} history: {}'.format(etype, id, h))
+                h = self.osmapi.RelationHistory(eid)
+            self.hist[etype][eid] = h
+            logger.debug('{} id {} history: {}'.format(etype, eid, h))
 
-    def old(self, etype, id, version, only_visible=True):
-        logger.debug('Get old {} id {} version {}'.format(etype, id, version))
+    def old(self, etype, eid, version, only_visible=True):
+        logger.debug('Get old {} id {} version {}'.format(etype, eid, version))
         if not isinstance(version, int):
             '''Support timestamp versioning. Ways and relations refer un-versioned
                nodes/ways/relations, i.e. the only way to find the relevant node
@@ -442,29 +463,36 @@ class Changeset(object):
             '''
             ts = diff.OsmDiffApi.timetxt2datetime(version)
             # First look if we have version very close in time
-            if id in self.hist[etype]:
-                for v in self.hist[etype][id].keys():
-                    e = self.hist[etype][id][v]
+            if eid in self.hist[etype]:
+                for v in self.hist[etype][eid].keys():
+                    e = self.hist[etype][eid][v]
                     diffsec = abs((ts-e['timestamp']).total_seconds())
                     # If timestamp difference is less than two seconds, return the element we have
-                    # This will cover e.g. newly created ways
+                    # This will cover e.g. newly created nodes+ways
                     if diffsec<2:
                         return e
+                if not self.osmapi:
+                    # If we have no api, return the newest version
+                    v = max(self.hist[etype][eid].keys())
+                    e = self.hist[etype][eid][v]
+                    if only_visible and not e['visible']:
+                        e = self.hist[etype][eid][v-1]
+                    return e
 
             # Lookup the old node
             if self.apidebug:
-                logger.debug('cset {} -> osmapi.{}History({})'.format(self.id, etype.capitalize(), id))
+                logger.debug('cset {} -> osmapi.{}History({})'.format(self.id, etype.capitalize(), eid))
             if etype == 'node':
-                self.hist[etype][id] = self.osmapi.NodeHistory(id)
+                self.hist[etype][eid] = self.osmapi.NodeHistory(eid)
             elif etype == 'way':
-                self.hist[etype][id] = self.osmapi.WayHistory(id)
+                self.hist[etype][eid] = self.osmapi.WayHistory(eid)
             elif etype == 'relation':
-                self.hist[etype][id] = self.osmapi.RelationHistory(id)
-            k = self.hist[etype][id].keys()
+                self.hist[etype][eid] = self.osmapi.RelationHistory(eid)
+            k = self.hist[etype][eid].keys()
             k.sort(reverse=True)
             version = 1 # Default, if timestamps does not work - should never be needed
             for v in k:
-                e = self.hist[etype][id][v]
+                e = self.hist[etype][eid][v]
                 ets = diff.OsmDiffApi.timetxt2datetime(e['timestamp'])
                 if ets<=ts:
                     version = e['version']
@@ -472,36 +500,41 @@ class Changeset(object):
 
         if version==-1:
             # Latest version we already have
-            if id in self.hist[etype].keys():
-                ks = self.hist[etype][id].keys()
+            if eid in self.hist[etype].keys():
+                ks = self.hist[etype][eid].keys()
                 ks.sort()
                 version = ks[-1]
                 logger.debug('version -1 changed to {} (ks={})'.format(version, ks))
                 for v in range(version, 1, -1):
-                    if not only_visible or self.hist[etype][id][version]['visible']:
-                        return self.hist[etype][id][version]
-            logger.debug('Did not find existing history on {} id {} version {}'.format(etype, id, version))
+                    if not only_visible or self.hist[etype][eid][version]['visible']:
+                        return self.hist[etype][eid][version]
+            logger.debug('Did not find existing history on {} id {} version {}'.format(etype, eid, version))
 
-        if (not id in self.hist[etype].keys()) or (not version in self.hist[etype][id].keys()):
-            self.getElementHistory(etype, id, version)
-            ks = self.hist[etype][id].keys()
+        if (not eid in self.hist[etype].keys()) or (not version in self.hist[etype][eid].keys()):
+            logger.debug('Do not have element {} id {} version {}'.format(etype, eid, version))
+            if not eid in self.hist[etype].keys():
+                logger.debug('Id {} not in {} keys'.format(eid, etype))
+            elif not version in self.hist[etype][eid].keys():
+                logger.debug('Version {} not in {}/{} keys'.format(version, etype, eid))
+            self.getElementHistory(etype, eid, version)
+            ks = self.hist[etype][eid].keys()
             ks.sort()
             version = ks[-1]
             logger.debug('version -1 changed to {} (ks={})'.format(version, ks))
 
-        logger.debug('{} id {} version {}: {}'.format(etype, id, version, self.hist[etype][id]))
-        elem = self.hist[etype][id][version]
+        logger.debug('{} id {} version {}: {}'.format(etype, eid, version, self.hist[etype][eid]))
+        elem = self.hist[etype][eid][version]
 
         if only_visible and not elem['visible']:
             if version > 1:
                 # Deleted and then reverted elements will not have lat/lons on the old version
-                logger.debug('Non-visible element found, trying {} id {} version {}'.format(etype, id, version-1))
-                elem = self.old(etype, id, version-1, only_visible)
+                logger.debug('Non-visible element found, trying {} id {} version {}'.format(etype, eid, version-1))
+                elem = self.old(etype, eid, version-1, only_visible)
             else:
-                logger.error('Non-visible element found: {} id {} version {}'.format(etype, id, version))
+                logger.error('Non-visible element found: {} id {} version {}'.format(etype, eid, version))
 
         if not ('uid' in elem.keys() and 'user' in elem.keys()):
-            logger.warning('*** Warning, old element type={} id={} v={} elem={}'.format(etype, id, version, elem))
+            logger.warning('*** Warning, old element type={} id={} v={} elem={}'.format(etype, eid, version, elem))
             # API-QUIRK (Anonymous edits, discontinued April 2009): Not all old
             # elements have uid. See
             # e.g. 'http://www.openstreetmap.org/api/0.6/way/8599635/history'
@@ -744,12 +777,12 @@ class Changeset(object):
         els = elem.split('.')[1:]
         try:
             for e in els:
-                logger.debug('get e={} obj={}'.format(e,obj))
+                logger.debug(u'get e={} obj={}'.format(e,obj))
                 if type(obj) is dict:
                     obj = obj[e]
                 else:
                     obj = getattr(obj, e)
-                logger.debug('new obj={}'.format(obj))
+                logger.debug(u'new obj={}'.format(obj))
             return obj
         except (AttributeError, KeyError):
             return None
@@ -765,23 +798,23 @@ class Changeset(object):
         for rf in regex_filter:
             matchcnt = 0
             for k,v in rf.iteritems():
-                logger.debug("Evaluating: '{}'='{}'".format(k,v))
+                logger.debug(u"Evaluating: '{}'='{}'".format(k,v))
                 if k.startswith('.changes'):
                     if self.regex_test_changes(k, v):
                         logger.debug("Match found")
                         matchcnt += 1
                 else:
                     e = self.get_elem_elem(self, k)
-                    logger.debug("regex: field '{}'='{}', regex '{}'".format(k,e,v))
+                    logger.debug(u"regex: field '{}'='{}', regex '{}'".format(k,e,v))
                     if e:
                         m = re.match(v, e)
                         if m:
-                            logger.debug("Match found on '{}'".format(e))
+                            logger.debug(u"Match found on '{}'".format(e))
                             matchcnt += 1
             if matchcnt == len(rf.keys()):
-                logger.debug("Found '{}' matches of: '{}'".format(matchcnt, rf))
+                logger.debug(u"Found '{}' matches of: '{}'".format(matchcnt, rf))
                 return True
-            logger.debug("No match: '{}' (found {} of {})".format(rf, matchcnt, len(rf.keys())))
+            logger.debug(u"No match: '{}' (found {} of {})".format(rf, matchcnt, len(rf.keys())))
         return False
 
     def regex_test_changes(self, k, v):
@@ -843,11 +876,44 @@ class Changeset(object):
                 area = poly.Poly()
                 area.load(dd['area'])
                 logger.debug("Loaded area polygon from '{}' with {} points".format(dd['area'], len(area)))
-                if ('area_check_type' not in dd or dd['area_check_type']=='bbox') and area.contains_chgset(self.meta):
-                    logger.debug('Area test OK')
+                if ('area_check_type' not in dd or dd['area_check_type']=='cset-bbox') and area.contains_chgset(self.meta):
+                    logger.debug('Area test OK, changeset bbox')
+                elif set(['min_lon', 'min_lat', 'max_lon', 'max_lat']).issubset(self.meta.keys()) and ('area_check_type' in dd and dd['area_check_type']=='cset-center') and area.contains((float(self.meta['min_lon'])+float(self.meta['max_lon']))/2,
+                                                                            (float(self.meta['min_lat'])+float(self.meta['max_lat']))/2):
+                    logger.debug('Area test OK, changeset center')
                 else:
                     match = False
             if match:
                 logger.debug("Adding label '{}'".format(dd['label']))
                 labels.append(dd['label'])
         return labels
+
+    def data_export(self):
+        return {'state': {},
+                'summary': self.summary,
+                'tags': self.tags,
+                'tagdiff': self.tagdiff,
+                'simple_nodes': self.simple_nodes,
+                'diffs': self.diffs,
+                'other_users': self.other_users,
+                'mileage_m': self.mileage,
+                'geometry': self.hist,
+                'changes': self.changes}
+
+    def data_import(self, data):
+        self.summary = data['summary']
+        self.tags = data['tags']
+        self.tagdiff = data['tagdiff']
+        self.simple_nodes = data['simple_nodes']
+        self.diffs = data['diffs']
+        self.other_users = data['other_users']
+        self.mileage = data['mileage_m']
+        self.changes = data['changes']
+        self.hist = {}
+        # Exporting to JSON causes int keys to be converted to strings
+        for etype in data['geometry'].keys():
+            self.hist[etype] = {}
+            for eid in data['geometry'][etype].keys():
+                self.hist[etype][long(eid)] = {}
+                for v in data['geometry'][etype][eid].keys():
+                    self.hist[etype][long(eid)][long(v)] = data['geometry'][etype][eid][v]

@@ -266,21 +266,22 @@ def drop(args, db):
 def show_brief(args, db):
     print 'CsetID   State          Queued          StateChanged    Updated         Refreshed       User :: Comment'
     for c in db.chgsets.find():
-        cid = c['cid']
-        def ts(dt):
-            now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
-            df = now-dt
-            return u'{:.2f}s ago'.format(df.total_seconds())
-        if c['state'] != 'NEW' and c['state'] != 'BOUNDS_CHECK' and c['state'] != 'ANALYZING1':
-            meta = db.chgset_get_meta(cid)
-            logger.debug('cset={}, meta: {}'.format(c, meta))
-            if 'comment' in meta['tag']:
-                comment = meta['tag']['comment']
+        if (not args.cid or args.cid==c['cid']) and (args.new or c['state']!=db.STATE_NEW):
+            cid = c['cid']
+            def ts(dt):
+                now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+                df = now-dt
+                return u'{:.2f}s ago'.format(df.total_seconds())
+            if c['state'] != 'NEW' and c['state'] != 'BOUNDS_CHECK' and c['state'] != 'ANALYZING1':
+                meta = db.chgset_get_meta(cid)
+                logger.debug('cset={}, meta: {}'.format(c, meta))
+                if 'comment' in meta['tag']:
+                    comment = meta['tag']['comment']
+                else:
+                    comment = '*no comment*'
+                print u'{:8} {:14} {:15} {:15} {:15} {:15} {} :: {}'.format(cid, c['state'], ts(c['queued']), ts(c['state_changed']), ts(c['updated']), ts(c['refreshed']), meta['user'], comment).encode('ascii', errors='backslashreplace')
             else:
-                comment = '*no comment*'
-            print u'{:8} {:14} {:15} {:15} {:15} {:15} {} :: {}'.format(cid, c['state'], ts(c['queued']), ts(c['state_changed']), ts(c['updated']), ts(c['refreshed']), meta['user'], comment).encode('ascii', errors='backslashreplace')
-        else:
-            print u'{:8} {:14} {:15} {:15}'.format(cid, c['state'], ts(c['queued']), ts(c['state_changed'])).encode('ascii', errors='backslashreplace')
+                print u'{:8} {:14} {:15} {:15}'.format(cid, c['state'], ts(c['queued']), ts(c['state_changed'])).encode('ascii', errors='backslashreplace')
 
 def show(args, db):
     print '-- Pointer: -----------'

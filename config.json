@@ -2,13 +2,12 @@
     "path": "html",
     "tracker": {
 	"osm_api_url": "https://api.openstreetmap.org",
-	"geojsondiff-filename": "cset-{id}.json",
-	"bounds-filename": "cset-{id}.bounds",
 	"pre_labels": [
-	    {"area": "region.poly", "area_check_type": "bbox", "label": "inside-area"},
+	    {"area": "region.poly", "area_check_type": "cset-bbox", "label": "inside-area"},
+	    {"area": "region.poly", "area_check_type": "cset-center", "label": "center-inside-area"},
 	    {"__unused_example_regex": [{".meta.comment": "^Adjustments"}], "label": "adjustment"}
 	],
-	"prefilter_labels": [["inside-area"]],
+	"prefilter_labels": [["inside-area", "center-inside-area"]],
 	"post_labels": [
 	    {"regex": [{".changes.tag.osak:identifier": ""}], "label": "address-node-change"}
 	],
@@ -39,18 +38,30 @@
         {
             "type": "BackendHtml",
             "path": "",
-	    "labels": "address-node-change",
+	    "labels": ["address-node-change"],
 	    "title": "Recent Changesets Which Modifies Address Nodes",
             "filename" : "dk_addresses.html",
             "template": "changeset.html"
         },
         {
             "type": "BackendHtmlSummary",
+            "path": "",
             "filename" : "today-summ.html",
             "template": "summary.html"
         },
         {
             "type": "BackendGeoJson",
+            "path": "",
+	    "exptype": "cset-bbox",
+            "filename" : "today.json",
+            "click_url": "http://osm.expandable.dk/diffmap.html?cid={cid}"
+        },
+        {
+            "type": "BackendGeoJson",
+            "path": "",
+	    "exptype": "cset-files",
+	    "geojsondiff-filename": "cset-{id}.json",
+	    "bounds-filename": "cset-{id}.bounds",
             "filename" : "today.json",
             "click_url": "http://osm.expandable.dk/diffmap.html?cid={cid}"
         }

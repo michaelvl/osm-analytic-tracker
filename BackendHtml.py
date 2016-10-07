@@ -63,12 +63,14 @@ class Backend(Backend.Backend):
                     'show_details': self.show_details,
                     'show_comments': self.show_comments }
             notes = 0
+            csets_total = 0
             csets_w_notes = 0
             csets_w_addr_changes = 0
             for c in db.chgsets_find(state=[db.STATE_CLOSED, db.STATE_OPEN, db.STATE_ANALYZING2,
                                             db.STATE_REANALYZING, db.STATE_DONE]):
                 logger.debug('Cset={}'.format(c))
                 logger.debug('Backend labels {}, cset labels {}'.format(self.labels, c['labels']))
+                csets_total += 1
                 if self.labels and not set(c['labels']).intersection(self.labels):
                     continue
                 cid = c['cid']
@@ -89,8 +91,9 @@ class Backend(Backend.Backend):
                 if c['state'] != db.STATE_DONE:
                     continue
 
-                if 'address_node_changes' in c['labels']:
+                if 'address-node-change' in c['labels']: #FIXME: does not belong here - this is configuration
                     csets_w_addr_changes += 1
+            ctx['csets_num_total'] = csets_total
             ctx['csets_with_notes'] = csets_w_notes
             ctx['csets_with_addr_changes'] = csets_w_addr_changes
             logger.debug('Data passed to template: {}'.format(ctx))

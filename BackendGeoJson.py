@@ -4,6 +4,7 @@ import json
 import datetime
 import logging
 import tempfilewriter
+import osm.changeset
 
 logger = logging.getLogger(__name__)
 
@@ -12,12 +13,22 @@ class Backend(Backend.Backend):
         super(Backend, self).__init__(globalconfig, subcfg)
         self.list_fname = globalconfig.getpath('path', 'tracker')+'/'+subcfg['filename']
         self.click_url = subcfg['click_url']
+        self.exptype = subcfg['exptype']
+        if self.exptype == 'cset-files':
+            self.geojson = globalconfig.getpath('path', 'tracker')+'/'+subcfg['geojsondiff-filename']
+            self.bbox = globalconfig.getpath('path', 'tracker')+'/'+subcfg['bounds-filename']
+        else:
+            self.geojson = None
+            self.bbox = None
 
     def print_state(self, db):
         if self.generation != db.generation:
             self.generation = db.generation
-            if db.chgsets_count() > 0:
-                self.print_chgsets(db)
+            #if db.chgsets_count() > 0:
+            if self.exptype == 'cset-bbox':
+                self.print_chgsets_bbox(db)
+            elif self.exptype == 'cset-files':
+                self.print_chgsets_files(db)
 
     def pprint(self, txt):
         #print(txt.encode('utf8'), file=self.f)
@@ -66,7 +77,8 @@ class Backend(Backend.Backend):
             }
             geoj['features'].append(feature)
 
-    def print_chgsets(self, db):
+    def print_chgsets_bbox(self, db):
+        '''Generate a single file with all bboxes of all changesets'''
         geoj = { "type": "FeatureCollection",
                  "features": [] }
         if db:
@@ -76,3 +88,24 @@ class Backend(Backend.Backend):
         logger.debug('Data sent to json file={}'.format(geoj))
         with tempfilewriter.TempFileWriter(self.list_fname) as f:
             f.write(json.dumps(geoj))
+
+    def print_chgsets_files(self, db):
+        '''Generate two files for each cset, a geojson file containing changets changes and one containing bbox of changeset'''
+        if db:
+            for c in db.chgsets_find(state=db.STATE_DONE):
+                fn = self.geojson.format(id=c['cid'])
+                logger.debug("Export cset {} diff to file '{}'".format(c['cid'], fn))
+                cset = osm.changeset.Changeset(id=c['cid'], api=None)
+                meta = db.chgset_get_meta(c['cid'])
+                cset.meta = meta
+                info = db.chgset_get_info(c['cid'])
+                cset.data_import(info)
+                with tempfilewriter.TempFileWriter(fn) as f:
+                    json.dump(cset.getGeoJsonDiff(), f)
+
+                b = '{},{},{},{}'.format(cset.meta['min_lat'], cset.meta['min_lon'],
+                                         cset.meta['max_lat'], cset.meta['max_lon'])
+                fn = self.bbox.format(id=c['cid'])
+                logger.debug("Export cset {} bounds to file '{}'".format(c['cid'], fn))
+                with tempfilewriter.TempFileWriter(fn) as f:
+                    f.write(b)

@@ -7,7 +7,7 @@ import osmtracker
 import config
 import sys
 import datetime, pytz
-import json
+from bson.json_util import dumps, loads
 
 logger = logging.getLogger('')
 
@@ -23,10 +23,8 @@ class testDB(object):
     STATE_DONE = 'DONE'                     # For now, all analysis completed
 
     def __init__(self):
-        self.csets = [{'cid' : 10, 'state': self.STATE_NEW, 'labels': [],
-                       'refreshed': datetime.datetime(2007, 7, 17, 0, 3, 4).replace(tzinfo=pytz.utc),
-                       'source': {'sequenceno': 123456,
-                                  'observed':datetime.datetime(2007, 7, 17, 8, 3, 4).replace(tzinfo=pytz.utc)}}]
+        self.csets = []
+        self.test_add_cid(10)
         self.url = 'TESTDATABASE'
         self.generation = 1
         self.pointer = {'stype': 'minute',
@@ -35,6 +33,12 @@ class testDB(object):
                         'first_pointer': {'stype': 'minute',
                                           'seqno': 12345670,
                                           'timestamp': datetime.datetime(2007, 7, 17, 8, 0, 0).replace(tzinfo=pytz.utc) }}
+
+    def test_add_cid(self, cid):
+        self.csets = [{'cid' : cid, 'state': self.STATE_NEW, 'labels': [],
+                       'refreshed': datetime.datetime(2007, 7, 17, 0, 3, 4).replace(tzinfo=pytz.utc),
+                       'source': {'sequenceno': 123456,
+                                  'observed':datetime.datetime(2007, 7, 17, 8, 3, 4).replace(tzinfo=pytz.utc)}}]
 
     def chgsets_count(self):
         return len(self.csets)
@@ -68,22 +72,23 @@ class testDB(object):
         for c in self.csets:
             if c['cid']==cid:
                 return c
-        
+
+    # Loads and dumps below are to simulate int->string dict-key conversion
     def chgset_set_meta(self, cid, meta):
         c = self.find_cset(cid)
-        c['meta'] = meta
+        c['meta'] = dumps(meta)
 
     def chgset_get_meta(self, cid):
         c = self.find_cset(cid)
-        return c['meta']
+        return loads(c['meta'])
 
     def chgset_set_info(self, cid, info):
         c = self.find_cset(cid)
-        c['info'] = info
+        c['info'] = dumps(info)
 
     def chgset_get_info(self, cid):
         c = self.find_cset(cid)
-        return c['info']
+        return loads(c['info'])
 
         
 class testConfig(config.Config):
@@ -95,7 +100,7 @@ class testConfig(config.Config):
 	        "geojsondiff-filename": "cset-{id}.json",
 	        "bounds-filename": "cset-{id}.bounds",
 	        "pre_labels": [
-	            {"area": "region.poly", "area_check_type": "bbox", "label": "inside-area"},
+	            {"area": "region.poly", "area_check_type": "cset-bbox", "label": "inside-area"},
 	            {"regex": [{".meta.tag.comment": "^Adjustments"}], "label": "adjustments"}
 	        ],
 	        "prefilter_labels": [["inside-area", "adjustments"]],
@@ -141,6 +146,17 @@ class testConfig(config.Config):
                 },
                 {
                     "type": "BackendGeoJson",
+                    "path": "",
+	            "exptype": "cset-bbox",
+                    "filename" : "today.json",
+                    "click_url": "http://osm.expandable.dk/diffmap.html?cid={cid}"
+                },
+                {
+                    "type": "BackendGeoJson",
+                    "path": "",
+	            "exptype": "cset-files",
+	            "geojsondiff-filename": "cset-{id}.json",
+	            "bounds-filename": "cset-{id}.bounds",
                     "filename" : "today.json",
                     "click_url": "http://osm.expandable.dk/diffmap.html?cid={cid}"
                 }
@@ -149,3 +165,29 @@ class testConfig(config.Config):
 
     def load(self, what, who=None, default=None):
         pass
+
+
+class FileWriter_Mixin():
+    def filewritersetup(self):
+        self.files = {}
+        self.filemocks = []
+        self.curfile = None
+
+    def fstart(self, fname):
+        self.curfile = fname
+        self.files[self.curfile] = ''
+        mm = mock.MagicMock()
+        mm.__enter__.return_value.write.side_effect = self.fwrite
+        self.filemocks.append(mm)
+        return mm
+
+    def fwrite(self, txt):
+        #print 'zz fwrite', txt
+        self.files[self.curfile] += txt
+
+    def print_file(self, fname):
+        ff = self.files[fname].split('\n')
+        print '|----- {} -------------------'.format(fname)
+        for ln in ff:
+            print '|', ln
+        print '|--------------------------------'
