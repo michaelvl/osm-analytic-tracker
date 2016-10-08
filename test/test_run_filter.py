@@ -2,7 +2,7 @@
 
 import unittest
 import mock
-from mock import patch
+from mock import patch, call
 import logging
 import osmtracker
 import db
@@ -22,13 +22,19 @@ class BaseTest(unittest.TestCase, stubs.FileWriter_Mixin):
         self.cfg = stubs.testConfig()
         self.osmapi = osm.test.stubs.testOsmApi(datapath='osm/test/data')
         self.filewritersetup()
+        self.listdir = ['today.html', 'cset-10.json', 'cset-10.bounds', 'cset-3.json', 'cset-3.bounds']
         
 class TestCsetFilter(BaseTest):
 
+    @patch('osmtracker.BackendGeoJson.remove')
+    @patch('osmtracker.BackendGeoJson.listdir')
+    @patch('osmtracker.BackendGeoJson.isfile')
     @patch('tempfilewriter.TempFileWriter')
     @patch('osm.poly.Poly')
     @patch('osm.changeset.OsmApi')
-    def test_cset_filter1_and_backend(self, OsmApi, Poly, FileWriter):
+    def test_cset_filter1_and_backend(self, OsmApi, Poly, FileWriter, IsFile, Listdir, Remove):
+        IsFile.return_value = True
+        Listdir.return_value = self.listdir
         OsmApi.return_value = self.osmapi
         Poly.return_value.contains_chgset.return_value = True
         FileWriter.side_effect = self.fstart
@@ -53,6 +59,10 @@ class TestCsetFilter(BaseTest):
         self.assertTrue('Total navigable: 12,888 meters (6,444m/hour)' in self.files['html/today-summ.html'])
         self.assertTrue('1 changesets by 1 user' in self.files['html/today-summ.html'])
 
+        #print 'Remove mock calls', Remove.mock_calls
+        Remove.assert_has_calls([call('html/cset-3.json'), call('html/cset-3.bounds')])
+        self.assertEqual(len(Remove.mock_calls), 2)
+        
         # Rerun with non-matching labels
         self.cfg.cfg['backends'][0]['labels'] = ['xxadjustments']
         osmtracker.run_backends(None, self.cfg, self.db)

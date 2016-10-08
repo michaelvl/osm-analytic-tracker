@@ -62,7 +62,6 @@
 	    "exptype": "cset-files",
 	    "geojsondiff-filename": "cset-{id}.json",
 	    "bounds-filename": "cset-{id}.bounds",
-            "filename" : "today.json",
             "click_url": "http://osm.expandable.dk/diffmap.html?cid={cid}"
         }
     ]

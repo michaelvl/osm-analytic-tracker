@@ -7,6 +7,7 @@ import operator
 import logging
 import jinja2
 import tempfilewriter
+from os.path import join
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +15,7 @@ class Backend(BackendHtml.Backend):
 
     def __init__(self, globalconfig, subcfg):
         super(Backend, self).__init__(globalconfig, subcfg)
-        self.list_fname = globalconfig.getpath('path', 'tracker')+'/'+subcfg['filename']
+        self.list_fname = join(globalconfig.getpath('path', 'tracker'), subcfg['filename'])
         self.template_name = subcfg['template']
         self.env = jinja2.Environment(loader=jinja2.FileSystemLoader(globalconfig.getpath('template_path', 'tracker')),
                                       trim_blocks=True, lstrip_blocks=True)

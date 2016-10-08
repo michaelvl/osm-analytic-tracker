@@ -9,6 +9,7 @@ import operator
 import logging
 import jinja2
 import tempfilewriter
+from os.path import join
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +17,7 @@ class Backend(Backend.Backend):
 
     def __init__(self, globalconfig, subcfg):
         super(Backend, self).__init__(globalconfig, subcfg)
-        self.list_fname = globalconfig.getpath('path', 'tracker')+'/'+subcfg['filename']
+        self.list_fname = join(globalconfig.getpath('path', 'tracker'), subcfg['filename'])
         self.template_name = subcfg['template']
         self.labels = subcfg.get('labels', None)
         self.title = subcfg.get('title', None)

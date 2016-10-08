@@ -18,6 +18,7 @@ import HumanTime
 import operator
 import urllib2, socket
 import traceback
+import BackendHtml, BackendHtmlSummary, BackendGeoJson
 
 logger = logging.getLogger('osmtracker')
 
@@ -347,9 +348,7 @@ def csets_analyze(args, config, db):
 
 def load_backend(backend, config):
     logger.debug("Loading backend {}".format(backend))
-    back = importlib.import_module(backend['type'])
-    back = reload(back) # In case it changed
-    return back.Backend(config, backend)
+    return globals()[backend['type']].Backend(config, backend)
 
 def run_backends(args, config, db):
     blist = config.get('backends')

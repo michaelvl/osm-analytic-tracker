@@ -5,30 +5,35 @@ import datetime
 import logging
 import tempfilewriter
 import osm.changeset
+from os import listdir, remove
+from os.path import isfile, join
+import re
 
 logger = logging.getLogger(__name__)
 
 class Backend(Backend.Backend):
     def __init__(self, globalconfig, subcfg):
         super(Backend, self).__init__(globalconfig, subcfg)
-        self.list_fname = globalconfig.getpath('path', 'tracker')+'/'+subcfg['filename']
         self.click_url = subcfg['click_url']
         self.exptype = subcfg['exptype']
+        self.path = globalconfig.getpath('path', 'tracker')
         if self.exptype == 'cset-files':
-            self.geojson = globalconfig.getpath('path', 'tracker')+'/'+subcfg['geojsondiff-filename']
-            self.bbox = globalconfig.getpath('path', 'tracker')+'/'+subcfg['bounds-filename']
+            self.geojson = subcfg['geojsondiff-filename']
+            self.bbox = subcfg['bounds-filename']
+            self.list_fname = None
         else:
+            self.list_fname = subcfg['filename']
             self.geojson = None
             self.bbox = None
 
     def print_state(self, db):
         if self.generation != db.generation:
             self.generation = db.generation
-            #if db.chgsets_count() > 0:
             if self.exptype == 'cset-bbox':
                 self.print_chgsets_bbox(db)
             elif self.exptype == 'cset-files':
-                self.print_chgsets_files(db)
+                files = self.print_chgsets_files(db)
+                self.cleanup_old_files(files)
 
     def pprint(self, txt):
         #print(txt.encode('utf8'), file=self.f)
@@ -86,26 +91,42 @@ class Backend(Backend.Backend):
                 self.add_cset_bbox(c, db, geoj)
 
         logger.debug('Data sent to json file={}'.format(geoj))
-        with tempfilewriter.TempFileWriter(self.list_fname) as f:
+        with tempfilewriter.TempFileWriter(join(self.path, self.list_fname)) as f:
             f.write(json.dumps(geoj))
 
     def print_chgsets_files(self, db):
-        '''Generate two files for each cset, a geojson file containing changets changes and one containing bbox of changeset'''
+        '''Generate two files for each cset, a geojson file containing changets changes
+           and one containing bbox of changeset'''
+        files = [] # List of files we generated
         if db:
             for c in db.chgsets_find(state=db.STATE_DONE):
                 fn = self.geojson.format(id=c['cid'])
-                logger.debug("Export cset {} diff to file '{}'".format(c['cid'], fn))
+                logger.info("Export cset {} diff to file '{}'".format(c['cid'], fn))
                 cset = osm.changeset.Changeset(id=c['cid'], api=None)
                 meta = db.chgset_get_meta(c['cid'])
                 cset.meta = meta
                 info = db.chgset_get_info(c['cid'])
                 cset.data_import(info)
-                with tempfilewriter.TempFileWriter(fn) as f:
+                with tempfilewriter.TempFileWriter(join(self.path, fn)) as f:
                     json.dump(cset.getGeoJsonDiff(), f)
+                    files.append(fn)
 
                 b = '{},{},{},{}'.format(cset.meta['min_lat'], cset.meta['min_lon'],
                                          cset.meta['max_lat'], cset.meta['max_lon'])
                 fn = self.bbox.format(id=c['cid'])
-                logger.debug("Export cset {} bounds to file '{}'".format(c['cid'], fn))
-                with tempfilewriter.TempFileWriter(fn) as f:
+                logger.info("Export cset {} bounds to file '{}'".format(c['cid'], fn))
+                with tempfilewriter.TempFileWriter(join(self.path, fn)) as f:
                     f.write(b)
+                    files.append(fn)
+        return files
+
+    def cleanup_old_files(self, files):
+        oldfiles = [f for f in listdir(self.path) if isfile(join(self.path, f)) and f not in files]
+        ptrn = '(^' +  re.escape(self.geojson) + '$)|(^' +  re.escape(self.bbox) + '$)'
+        ptrn = ptrn.replace('\{id\}', '\d+')
+        reptrn = re.compile(ptrn)
+        oldfiles = [f for f in oldfiles if reptrn.match(f)]
+        if oldfiles:
+            logger.info('Removing old files: {}'.format(oldfiles))
+            for f in oldfiles:
+                remove(join(self.path, f))
