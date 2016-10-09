@@ -1,0 +1,18 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: osmtracker-worker-deployment
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: osmtracker
+        role: worker
+    spec:
+      containers:
+      - name: osmtracker-worker
+        image: michaelvl/osmtracker
+        command: ["python", "/osmtracker/osm-analytic-tracker/osmtracker.py", "--db", "mongodb://osmtracker-database.default.svc.cluster.local", "--configdir", "/osmtracker-config"]
+        args: ["worker", "--track"]
+        imagePullPolicy: Always

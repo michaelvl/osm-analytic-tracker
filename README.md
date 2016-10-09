@@ -59,7 +59,9 @@ docker run -p 8080:80 michaelvl/osmtracker-all-in-one
 
 and point your browser to 127.0.0.1:8080. This docker image contain all
 necessary services to demonstrate the analytic tracker, including two worker
-instances. It is however not a good example of a 'production' deployment.
+instances. It is however not a good example of a 'production' deployment.  For
+production-class deployments take a look at the kubernetes folder for Kubernetes
+pod and service descriptions.
 
 ### Architecture
 

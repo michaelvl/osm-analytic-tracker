@@ -1,0 +1,16 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: osmtracker-database-deployment
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: osmtracker
+        role: database
+    spec:
+      containers:
+      - name: mongo
+        image: mongo:3.3
+        imagePullPolicy: IfNotPresent
