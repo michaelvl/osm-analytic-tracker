@@ -45,11 +45,13 @@
       <li><div class="warning"><div class="icon"><img src="/att_l.png"></div>Modifies address node(s)</div></li>
       {%- endif %}
       {% if meta.comments_count>0 %}
+        <li><img src="/note.png">
         {% if meta.comments_count==1 %}
-        <li><div>1 note</div></li>
+        <div>1 note</div>
         {% else %}
-        <li><div>{{meta.comments_count}} notes</div></li>
+        <div>{{meta.comments_count}} notes</div>
         {% endif %}
+        </li>
       {% endif %}
     {% endif %}
     {% if info.state.truncated %}
