@@ -295,27 +295,35 @@ def show(args, db):
             if (not args.cid or args.cid==c['cid']) and (args.new or c['state']!=db.STATE_NEW):
                 print '  cid={}: {}'.format(c['cid'], pprint.pformat(c))
 
-def reanalyze(args, db):
-    now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
-    newstate = db.STATE_BOUNDS_CHECKED
-    if args.new:
-        newstate = db.STATE_NEW
-    if args.timeout:
-        states = [db.STATE_BOUNDS_CHECK, db.STATE_ANALYZING1, db.STATE_ANALYZING2, db.STATE_REANALYZING]
-        dt = now-datetime.timedelta(seconds=1200)
-        selector = db.chgsets_find_selector(state=states, before=dt, after=None, timestamp='state_changed')
-    else:
-        states = [db.STATE_BOUNDS_CHECK, db.STATE_ANALYZING1, db.STATE_OPEN,
-                  db.STATE_CLOSED, db.STATE_ANALYZING2, db.STATE_REANALYZING, db.STATE_DONE]
-        selector = {'state': {'$in': states}}
-    if args.cid:
-        selector['cid'] = args.cid
-
+def do_reanalyze(db, now, selector, newstate):
     logger.debug('Reanalyze selector: {}'.format(selector))
     cnt = db.chgsets.update_many(selector,
                                  {'$set': {'state': newstate,
                                            'state_changed': now}}).modified_count
-    print 'Re-scheduled {} csets for analysis (state {})'.format(cnt, newstate)
+    print 'Re-scheduled {} csets for analysis (new state {})'.format(cnt, newstate)
+
+def reanalyze(args, db):
+    now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+    if args.timeout:
+        dt = now-datetime.timedelta(seconds=1200)
+        states = [db.STATE_ANALYZING1, db.STATE_ANALYZING2, db.STATE_REANALYZING]
+        selector = db.chgsets_find_selector(state=states, before=dt, after=None, timestamp='state_changed')
+        do_reanalyze(db, now, selector, db.STATE_BOUNDS_CHECKED)
+
+        states = [db.STATE_BOUNDS_CHECK]
+        selector = db.chgsets_find_selector(state=states, before=dt, after=None, timestamp='state_changed')
+        do_reanalyze(db, now, selector, db.STATE_NEW)
+    else:
+        newstate = db.STATE_BOUNDS_CHECKED
+        if args.new:
+            newstate = db.STATE_NEW
+        states = [db.STATE_BOUNDS_CHECK, db.STATE_ANALYZING1, db.STATE_OPEN,
+                  db.STATE_CLOSED, db.STATE_ANALYZING2, db.STATE_REANALYZING, db.STATE_DONE]
+        selector = {'state': {'$in': states}}
+        if args.cid:
+            selector['cid'] = args.cid
+
+        do_reanalyze(db, now, selector, newstate)
 
 def ptrset(args, db):
     db.pointer = args.seqno
