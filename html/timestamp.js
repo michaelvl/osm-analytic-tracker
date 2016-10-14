@@ -23,7 +23,7 @@ function htimestamp(ts, now_txt, ago_txt) {
         txt += " "+ago_txt;
       return txt;
     }
-  } else if (hrs<12) {
+  } else if (then.getDay()==now.getDay()) {
     var hrstxt, mintxt;
     if (hrs==1) {
       hrstxt = "hour";
