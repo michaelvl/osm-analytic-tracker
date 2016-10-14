@@ -16,7 +16,7 @@
 	"horizon_hours": 48,
 	"refresh_open_minutes": 5,
 	"refresh_meta_minutes": 15,
-	"cset_processing_time_max_s": 300,
+	"cset_processing_time_max_s": 400,
 	"template_path": "templates"
     },
     "backends": [
