@@ -217,15 +217,17 @@ def diff_fetch(args, config, db):
             time.sleep(60)
 
         if args.track:
+            if start:
+                end = time.time()
+                elapsed = end-start
+            else:
+                elapsed = 0
             if ptr >= head.sequenceno: # No more diffs to fetch
-                if start:
-                    end = time.time()
-                    elapsed = end-start
-                    delay = min(60, max(0, 60-elapsed))
-                    logger.debug('Processing seqno {} took {:.2f}s. Sleeping {:.2f}s'.format(ptr, elapsed, delay))
-                else:
-                    delay = 60
+                delay = min(60, max(0, 60-elapsed))
+                logger.info('Processing seqno {} took {:.2f}s. Sleeping {:.2f}s'.format(ptr, elapsed, delay))
                 time.sleep(delay)
+            else:
+                logger.info('Processing seqno {} took {:.2f}s. Head ptr is {}'.format(ptr, elapsed, head.sequenceno))
         else:
             break
     return 0
