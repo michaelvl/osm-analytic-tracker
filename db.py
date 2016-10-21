@@ -258,10 +258,23 @@ class DataBase(object):
         return False
 
 def drop(args, db):
-    if args.cid:
-        db.chgset_drop(args.cid)
+    if args.timeout:
+        now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+        dt = now-datetime.timedelta(seconds=1200)
+        states = [db.STATE_NEW, db.STATE_BOUNDS_CHECK, db.STATE_ANALYZING1,
+                  db.STATE_ANALYZING2, db.STATE_REANALYZING]
+        selector = db.chgsets_find_selector(state=states, before=dt, after=None,
+                                            timestamp='state_changed')
+        if args.cid:
+            selector['cid'] = args.cid
+        for c in db.chgsets.find(selector):
+            logger.info('Dropping cset {}'.format(c['cid']))
+            db.chgset_drop(c['cid'])
     else:
-        db.drop()
+        if args.cid:
+            db.chgset_drop(args.cid)
+        else:
+            db.drop()
 
 def show_brief(args, db):
     print 'CsetID   State          Queued          StateChanged    Updated         Refreshed       User :: Comment'
@@ -308,10 +321,14 @@ def reanalyze(args, db):
         dt = now-datetime.timedelta(seconds=1200)
         states = [db.STATE_ANALYZING1, db.STATE_ANALYZING2, db.STATE_REANALYZING]
         selector = db.chgsets_find_selector(state=states, before=dt, after=None, timestamp='state_changed')
+        if args.cid:
+            selector['cid'] = args.cid
         do_reanalyze(db, now, selector, db.STATE_BOUNDS_CHECKED)
 
         states = [db.STATE_BOUNDS_CHECK]
         selector = db.chgsets_find_selector(state=states, before=dt, after=None, timestamp='state_changed')
+        if args.cid:
+            selector['cid'] = args.cid
         do_reanalyze(db, now, selector, db.STATE_NEW)
     else:
         newstate = db.STATE_BOUNDS_CHECKED
@@ -339,6 +356,7 @@ def main(argv):
     parser_drop = subparsers.add_parser('drop')
     parser_drop.set_defaults(func=drop)
     parser_drop.add_argument('--cid', type=int, default=None, help='Changeset ID')
+    parser_drop.add_argument('--timeout', action='store_true', default=False, help='Drop timed-out csets only')
 
     parser_show = subparsers.add_parser('show')
     parser_show.set_defaults(func=show)
