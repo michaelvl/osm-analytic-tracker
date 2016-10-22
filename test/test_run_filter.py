@@ -16,7 +16,7 @@ logger = logging.getLogger('')
 
 class BaseTest(unittest.TestCase, stubs.FileWriter_Mixin):
     def setUp(self):
-        #logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(level=logging.DEBUG)
         self.db = stubs.testDB()
         self.db.test_add_cid(10)
         self.cfg = stubs.testConfig()
@@ -32,7 +32,7 @@ class TestCsetFilter(BaseTest):
     @patch('tempfilewriter.TempFileWriter')
     @patch('osm.poly.Poly')
     @patch('osm.changeset.OsmApi')
-    def test_cset_filter1_and_backend(self, OsmApi, Poly, FileWriter, IsFile, Listdir, Remove):
+    def xtest_cset_filter1_and_backend(self, OsmApi, Poly, FileWriter, IsFile, Listdir, Remove):
         IsFile.return_value = True
         Listdir.return_value = self.listdir
         OsmApi.return_value = self.osmapi
@@ -78,11 +78,39 @@ class TestCsetFilter(BaseTest):
 
     @patch('osm.poly.Poly')
     @patch('osm.changeset.OsmApi')
-    def test_cset_filter2(self, OsmApi, Poly):
+    def xtest_cset_filter2(self, OsmApi, Poly):
+        '''Cset has single label, filter list have two elements, test that cset is
+           dropped since it does not have both from filter list
+        '''
         OsmApi.return_value = self.osmapi
         Poly.return_value.contains_chgset.return_value = False
         osmtracker.csets_filter(None, self.cfg, self.db)
-        self.assertTrue(len(self.db.csets)==0)
+        self.assertTrue(len(self.db.csets)==0) # Filtered out since list is logical AND
+
+    @patch('osm.poly.Poly')
+    @patch('osm.changeset.OsmApi')
+    def xtest_cset_filter3(self, OsmApi, Poly):
+        '''Cset has single label, filter list have single element, test that cset is
+           kept.
+        '''
+        OsmApi.return_value = self.osmapi
+        Poly.return_value.contains_chgset.return_value = False
+        self.cfg.cfg['tracker']['prefilter_labels'] = [["adjustments"]]
+        osmtracker.csets_filter(None, self.cfg, self.db)
+        self.assertTrue(len(self.db.csets)==1)
+
+    @patch('osm.poly.Poly')
+    @patch('osm.changeset.OsmApi')
+    def test_cset_filter4(self, OsmApi, Poly):
+        '''Cset has single label, filter list have single elements, test that cset is
+           kept.
+        '''
+        OsmApi.return_value = self.osmapi
+        Poly.return_value.contains_chgset.return_value = False
+        self.cfg.cfg['tracker']['prefilter_labels'] = [["adjustmentsxx"], ['mapping-event']]
+        self.cfg.cfg['tracker']['pre_labels'].append({"regex": [{".meta.tag.comment": ".*#\\w+"}], "label": "mapping-event"})
+        osmtracker.csets_filter(None, self.cfg, self.db)
+        self.assertTrue(len(self.db.csets)==1)
 
 # class TestCsetFilter(BaseTest):
 
