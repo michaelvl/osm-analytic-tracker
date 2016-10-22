@@ -249,7 +249,7 @@ def csets_filter(args, config, db):
             cset['labels'] = clabels
         except osmapi.ApiError as e:
             logger.error('Failed reading changeset {}: {}'.format(cid, e))
-            db.chgset_processed(c, state=db.STATE_DONE, failed=True)
+            db.chgset_processed(cset, state=db.STATE_DONE, failed=True)
 
         # Check labels
         labelfilters = config.get('prefilter_labels','tracker')
