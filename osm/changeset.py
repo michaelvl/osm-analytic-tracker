@@ -856,7 +856,7 @@ class Changeset(object):
 
     def build_labels(self, label_rules):
         '''Build list of labels based on regex and area check.  Note that both regex and
-           area check can be defined with and AND rule etween then, i.e. both
+           area check can be defined with and AND rule between then, i.e. both
            must match if both are defined.
         '''
         labels = []
