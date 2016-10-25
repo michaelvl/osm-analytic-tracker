@@ -63,6 +63,71 @@ instances. It is however not a good example of a 'production' deployment.  For
 production-class deployments take a look at the kubernetes folder for Kubernetes
 pod and service descriptions.
 
+### Using an alternative config
+
+```
+curl -O https://raw.githubusercontent.com/MichaelVL/osm-analytic-tracker/master/config.json
+mkdir osmtracker-config
+mv config.json osmtracker-config/
+sed -i 's/"path": "html"/"path": "\/html\/dynamic"/' osmtracker-config/config.json
+docker run -p 8080:80 -v <path>/osmtracker-config:/osmtracker-config osmtracker-all-in-one
+```
+
+### Labels and filters
+
+Changesets are filtered using a labeling system and labels can also be used in
+backends for generating different views into the changesets.  The following
+excerpt from the config file illustrates some possibilities with labels.
+Initially the 'pre_labels' section is executed.  Currently two types are tests
+are implemented; An area-based test and a regular expression-based test (which
+can test on all fields of a changeset, including tags on changes).  If an area
+or regex test is found be succeed, the associated label is applied to the
+changeset.
+
+The config below specify to mark changesets inside 'region.poly' with labels
+'inside-area' and 'center-inside-area' (with a small difference in how 'inside'
+is defined). Also, if the changeset comment has a '#' followed by some text, it
+will be labeled with 'mapping-event'.
+
+The definition of 'prefilter_labels' below defines that all changesets which do
+not have the three labels are to be dropped. Generally the 'prefilter_labels'
+definition use an AND between the inner list and an OR on the outer list,
+i.e. '[['foo', 'bar'], ['baz']]' would mean that a changeset should have labels
+'foo' and 'bar' OR 'baz'.
+
+```
+	"pre_labels": [
+	    {"area": "region.poly", "area_check_type": "cset-bbox", "label": "inside-area"},
+	    {"area": "region.poly", "area_check_type": "cset-center", "label": "center-inside-area"},
+	    {"regex": [{".meta.tag.comment": ".*#\\w+"}], "label": "mapping-event"}
+	],
+	"prefilter_labels": [["inside-area", "center-inside-area", "mapping-event"]],
+```
+
+Note that 'prefilter_labels' regex can only operate on changeset
+metadata. Labeling on changeset content is done using 'post_labels' as seen from
+the following config except. This labels changesets which has changes with tag
+'osak:identifier' and any tag value (this indicates changes of imported Danish
+address nodes).
+
+```
+	"post_labels": [
+	    {"regex": [{".changes.tag.osak:identifier": ""}], "label": "address-node-change"}
+	],
+```
+
+Format of regex on changes are:
+
+```
+        .changes[.action][.element-type].elements
+```
+
+where optional '.action' is either '.modify', '.create' or '.delete' and
+optional '.element-type' is either '.node', '.way' or '.relation'.  The address
+change example above does not specify any action or element type i.e. any change
+of any element type will match.
+
+
 ### Architecture
 
 ![Image](doc/architecture.png?raw=true)
