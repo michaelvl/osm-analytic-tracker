@@ -60,8 +60,8 @@ docker run -p 8080:80 michaelvl/osmtracker-all-in-one
 and point your browser to 127.0.0.1:8080. This docker image contain all
 necessary services to demonstrate the analytic tracker, including two worker
 instances. It is however not a good example of a 'production' deployment.  For
-production-class deployments take a look at the kubernetes folder for Kubernetes
-pod and service descriptions.
+production-class deployments take a look at the [Kubernetes deployment](kubernetes/README.md)
+in the kubernetes folder.
 
 ### Using an alternative config
 
@@ -136,7 +136,7 @@ of any element type will match.
 
 - osmtracker.py  The main script with multiple roles depending on arguments.
 - db.py   MongoDB backend for storing changeset information
-- OsmChangeset.py  The class which contain the main analysis code.  Can be used from a command line through csetinfo.py
+- osm/changeset.py  The class which contain the main analysis code.  Can be used from a command line through csetinfo.py
 
 The osmtracker.py script tracks OpenStreetMap minutely diffs and optionally
 filters them through a bounding-box polygon (country-based polygons can be found
