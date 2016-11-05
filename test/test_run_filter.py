@@ -16,7 +16,7 @@ logger = logging.getLogger('')
 
 class BaseTest(unittest.TestCase, stubs.FileWriter_Mixin):
     def setUp(self):
-        logging.basicConfig(level=logging.DEBUG)
+        #logging.basicConfig(level=logging.DEBUG)
         self.db = stubs.testDB()
         self.db.test_add_cid(10)
         self.cfg = stubs.testConfig()
