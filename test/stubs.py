@@ -11,6 +11,36 @@ from bson.json_util import dumps, loads
 
 logger = logging.getLogger('')
 
+class DBcursor(object):
+    def __init__(self, clist):
+        self.clist = clist
+
+    def __iter__(self):
+        self.idx = 0
+        return self
+
+    def next(self):
+        return self.__next__()
+    def __next__(self):
+        if self.idx >= len(self.clist):
+            raise StopIteration
+        val = self.clist[self.idx]
+        self.idx += 1
+        return val
+
+    def __getitem__(self, key):
+        if len(self.clist)==0:
+            return None
+        return self.clist[key]
+
+    def __nonzero__(self):
+        return len(self.clist)!=0
+    def __bool__(self):
+        return len(self.clist)!=0
+
+    def explain(self):
+        return dict()
+
 class testDB(object):
     STATE_NEW = 'NEW'
     STATE_BOUNDS_CHECK = 'BOUNDS_CHECK'     # Used for combined bounds and regex filtering
@@ -44,14 +74,15 @@ class testDB(object):
         return len(self.csets)
     
     def chgsets_find(self, state=STATE_DONE, before=None, after=None, timestamp='updated', sort=True):
+        found = []
         for c in self.csets:
             if type(state) is list:
                 if c['state'] in state:
-                    return [c]
+                    found.append(c)
             else:
                 if c['state']==state:
-                    return [c]
-        return []
+                    found.append(c)
+        return DBcursor(found)
 
     def chgset_start_processing(self, istate, nstate, before=None, after=None, timestamp='state_changed'):
         c = self.chgsets_find(istate, before, after, timestamp)
@@ -89,6 +120,9 @@ class testDB(object):
     def chgset_get_info(self, cid):
         c = self.find_cset(cid)
         return loads(c['info'])
+
+    def show_brief(self, args, db, reltime=True):
+        pass
 
         
 class testConfig(config.Config):
@@ -157,7 +191,6 @@ class testConfig(config.Config):
 	            "exptype": "cset-files",
 	            "geojsondiff-filename": "cset-{id}.json",
 	            "bounds-filename": "cset-{id}.bounds",
-                    "filename" : "today.json",
                     "click_url": "http://osm.expandable.dk/diffmap.html?cid={cid}"
                 }
             ]

@@ -32,7 +32,7 @@ class TestCsetFilter(BaseTest):
     @patch('tempfilewriter.TempFileWriter')
     @patch('osm.poly.Poly')
     @patch('osm.changeset.OsmApi')
-    def xtest_cset_filter1_and_backend(self, OsmApi, Poly, FileWriter, IsFile, Listdir, Remove):
+    def test_cset_filter1_and_backend(self, OsmApi, Poly, FileWriter, IsFile, Listdir, Remove):
         IsFile.return_value = True
         Listdir.return_value = self.listdir
         OsmApi.return_value = self.osmapi
@@ -78,7 +78,7 @@ class TestCsetFilter(BaseTest):
 
     @patch('osm.poly.Poly')
     @patch('osm.changeset.OsmApi')
-    def xtest_cset_filter2(self, OsmApi, Poly):
+    def test_cset_filter2(self, OsmApi, Poly):
         '''Cset has single label, filter list have two elements, test that cset is
            dropped since it does not have both from filter list
         '''
@@ -89,7 +89,7 @@ class TestCsetFilter(BaseTest):
 
     @patch('osm.poly.Poly')
     @patch('osm.changeset.OsmApi')
-    def xtest_cset_filter3(self, OsmApi, Poly):
+    def test_cset_filter3(self, OsmApi, Poly):
         '''Cset has single label, filter list have single element, test that cset is
            kept.
         '''

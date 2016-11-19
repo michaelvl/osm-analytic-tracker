@@ -22,6 +22,7 @@ class DataBase(object):
     STATE_ANALYZING2 = 'ANALYZING2'         # Deeper analysis of closed csets
     STATE_REANALYZING = 'REANALYZING'       # Updates (notes etc)
     STATE_DONE = 'DONE'                     # For now, all analysis completed
+    STATE_QUARANTINED = 'QUARANTINED'       # Temporary error experienced
     
     def __init__(self, url='mongodb://localhost:27017/'):
         self.url = url
@@ -99,24 +100,35 @@ class DataBase(object):
         return self.csets.count()
 
     def chgsets_find_selector(self, state=STATE_DONE, before=None, after=None, timestamp='updated'):
-        if type(state) is list:
-            sel = {'state': {'$in': state}}
-        else:
-            sel = {'state': state}
+        sel = dict()
+        if state:
+            if type(state) is list:
+                sel['state'] = {'$in': state}
+            else:
+                sel['state'] = state
         if before or after:
             sel[timestamp] = {}
         if before:
             sel[timestamp]['$lt'] = before
         if after:
-            sel[timestamp]['$gt'] = after
+            sel[timestamp]['$gte'] = after
+            # Work-around for year entries in the future
+            # See https://jira.mongodb.org/browse/PYTHON-557
+            sel[timestamp]['$lte'] = datetime.datetime.max
         return sel
     
     def chgsets_find(self, state=STATE_DONE, before=None, after=None, timestamp='updated', sort=True):
         sel = self.chgsets_find_selector(state, before, after, timestamp)
         if sort:
-            return self.csets.find(sel).sort(timestamp, pymongo.DESCENDING)
+            cursor = self.csets.find(sel).sort(timestamp, pymongo.DESCENDING)
         else:
-            return self.csets.find(sel)
+            cursor = self.csets.find(sel)
+
+        expl = cursor.explain()
+        if expl['millis']>500:
+            logger.warn("DB selector {} find explain: {}".format(sel, expl))
+        logger.info("DB lookup took {}ms, scanned {} objects, selector={}".format(expl['millis'], expl['nscanned'], sel))
+        return cursor
 
     def chgset_append(self, cid, source=None):
         now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
@@ -212,7 +224,7 @@ class DataBase(object):
     # FIXME: Refactor and remove
     def chgset_get_meta(self, cid):
         cset = self.csets.find_one({'_id':cid})
-        if not 'meta' in cset:
+        if not cset or not 'meta' in cset:
             return None
         return loads(cset['meta'])
 
@@ -234,7 +246,7 @@ class DataBase(object):
     # FIXME: Refactor and remove
     def chgset_get_info(self, cid):
         cset = self.csets.find_one({'_id':cid})
-        if not 'info' in cset:
+        if not cset or not 'info' in cset:
             return None
         return loads(cset['info'])
 
@@ -276,15 +288,19 @@ def drop(args, db):
         else:
             db.drop()
 
-def show_brief(args, db):
+def show_brief(args, db, reltime=True):
     print 'CsetID   State          Queued          StateChanged    Updated         Refreshed       User :: Comment'
-    for c in db.chgsets.find():
-        if (not args.cid or args.cid==c['cid']) and (args.new or c['state']!=db.STATE_NEW):
+    for c in db.chgsets_find(state=None):
+        if not args or ((not args.cid or args.cid==c['cid']) and (args.new or c['state']!=db.STATE_NEW)):
             cid = c['cid']
-            def ts(dt):
-                now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
-                df = now-dt
-                return u'{:.2f}s ago'.format(df.total_seconds())
+            if reltime:
+                def ts(dt):
+                    now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+                    df = now-dt
+                    return u'{:.2f}s ago'.format(df.total_seconds())
+            else:
+                def ts(dt):
+                    return dt.strftime('%Y:%m:%d %H:%M:%S')
             if c['state'] != 'NEW' and c['state'] != 'BOUNDS_CHECK' and c['state'] != 'ANALYZING1':
                 meta = db.chgset_get_meta(cid)
                 logger.debug('cset={}, meta: {}'.format(c, meta))

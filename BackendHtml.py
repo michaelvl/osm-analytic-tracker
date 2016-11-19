@@ -82,7 +82,8 @@ class Backend(Backend.Backend):
                 if info:
                     ctx['csetinfo'][cid] = info
                 else:
-                    logger.warn('No info for cid {}: {}'.format(cid, c))
+                    logger.error('No info for cid {}: {}'.format(cid, c))
+                    continue
                 if meta['open'] or (info and 'truncated' in info['state']):
                     continue
                 notecnt = int(meta['comments_count'])  # FIXME: This is duplicate w. BackendHtmlSummary.py

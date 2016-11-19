@@ -1,7 +1,9 @@
 from __future__ import print_function
+import sys
+from db import show_brief as db_show_brief
 import Backend
 import json
-import datetime
+import datetime, pytz
 import logging
 import tempfilewriter
 import osm.changeset
@@ -21,6 +23,7 @@ class Backend(Backend.Backend):
             self.geojson = subcfg['geojsondiff-filename']
             self.bbox = subcfg['bounds-filename']
             self.list_fname = None
+            self.last_cleanup = None
         else:
             self.list_fname = subcfg['filename']
             self.geojson = None
@@ -32,20 +35,18 @@ class Backend(Backend.Backend):
             if self.exptype == 'cset-bbox':
                 self.print_chgsets_bbox(db)
             elif self.exptype == 'cset-files':
-                files = self.print_chgsets_files(db)
-                self.cleanup_old_files(files)
-
-    def pprint(self, txt):
-        #print(txt.encode('utf8'), file=self.f)
-        print(txt, file=self.f)
-        #print('*'+txt)
-
-    def start_file(self, fname):
-        self.f = open(fname, 'w')
-
-    def end_file(self):
-        self.f.close()
-        self.f = None
+                now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+                # TODO: Consider using a tailing cursor?
+                since = now-datetime.timedelta(minutes=10)
+                if self.last_cleanup:
+                    cleanup_age_s = (now-self.last_cleanup).total_seconds()
+                if not self.last_cleanup or cleanup_age_s>2*3600:
+                    logger.info('Doing full export and cleanup')
+                    since = None
+                files = self.print_chgsets_files(db, since)
+                if not since:
+                    self.cleanup_old_files(files)
+                    self.last_cleanup = now
 
     def add_cset_bbox(self, cset, db, geoj):
         cid = cset['cid']
@@ -87,37 +88,43 @@ class Backend(Backend.Backend):
         geoj = { "type": "FeatureCollection",
                  "features": [] }
         if db:
-            for c in db.chgsets_find(state=db.STATE_DONE):
+            for c in db.chgsets_find(state=db.STATE_DONE, sort=False):
                 self.add_cset_bbox(c, db, geoj)
 
         logger.debug('Data sent to json file={}'.format(geoj))
         with tempfilewriter.TempFileWriter(join(self.path, self.list_fname)) as f:
             f.write(json.dumps(geoj))
 
-    def print_chgsets_files(self, db):
+    def print_chgsets_files(self, db, last_update):
         '''Generate two files for each cset, a geojson file containing changets changes
            and one containing bbox of changeset'''
         files = [] # List of files we generated
         if db:
-            for c in db.chgsets_find(state=db.STATE_DONE):
-                fn = self.geojson.format(id=c['cid'])
-                logger.info("Export cset {} diff to file '{}'".format(c['cid'], fn))
-                cset = osm.changeset.Changeset(id=c['cid'], api=None)
-                meta = db.chgset_get_meta(c['cid'])
-                cset.meta = meta
-                info = db.chgset_get_info(c['cid'])
-                cset.data_import(info)
-                with tempfilewriter.TempFileWriter(join(self.path, fn)) as f:
-                    json.dump(cset.getGeoJsonDiff(), f)
-                    files.append(fn)
+            for c in db.chgsets_find(state=db.STATE_DONE, after=last_update, sort=False):
+                try:
+                    fn = self.geojson.format(id=c['cid'])
+                    logger.info("Export cset {} diff to file '{}', last update {}".format(c['cid'], fn, last_update))
+                    cset = osm.changeset.Changeset(id=c['cid'], api=None)
+                    meta = db.chgset_get_meta(c['cid'])
+                    cset.meta = meta
+                    info = db.chgset_get_info(c['cid'])
+                    cset.data_import(info)
+                    with tempfilewriter.TempFileWriter(join(self.path, fn)) as f:
+                        json.dump(cset.getGeoJsonDiff(), f)
+                        files.append(fn)
 
-                b = '{},{},{},{}'.format(cset.meta['min_lat'], cset.meta['min_lon'],
-                                         cset.meta['max_lat'], cset.meta['max_lon'])
-                fn = self.bbox.format(id=c['cid'])
-                logger.info("Export cset {} bounds to file '{}'".format(c['cid'], fn))
-                with tempfilewriter.TempFileWriter(join(self.path, fn)) as f:
-                    f.write(b)
-                    files.append(fn)
+                    b = '{},{},{},{}'.format(cset.meta['min_lat'], cset.meta['min_lon'],
+                                             cset.meta['max_lat'], cset.meta['max_lon'])
+                    fn = self.bbox.format(id=c['cid'])
+                    logger.info("Export cset {} bounds to file '{}'".format(c['cid'], fn))
+                    with tempfilewriter.TempFileWriter(join(self.path, fn)) as f:
+                        f.write(b)
+                        files.append(fn)
+                except Exception as e:
+                    exc_info = sys.exc_info()
+                    logger.error('Error exporting cid {}: {}'.format(c['cid'], c))
+                    raise exc_info[1], None, exc_info[2]
+            db_show_brief(None, db, False)
         return files
 
     def cleanup_old_files(self, files):

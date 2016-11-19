@@ -19,30 +19,6 @@ class Backend(object):
             self.print_chgsets(state.area_chgsets,
                                state.area_chgsets_info)
 
-    # FIXME:Delete
-    def xxprint_chgsets(self, csets, chginfo, print_tags=False):
-        for chgid in csets[::-1]:
-            meta = chginfo[chgid]['meta']
-            #print '>>cset=', pprint.pprint(meta)
-            #print '>>tagdiff=', pprint.pprint(chginfo[chgid]['tagdiff'])
-            #print '>>other_users=', pprint.pprint(chginfo[chgid]['other_users'])
-            if 'comment' in meta['tag'].keys():
-                comment = meta['tag']['comment']
-            else:
-                comment = '-no comment-'
-            if 'source' in meta['tag'].keys():
-                source = 'source=\''+meta['tag']['source']+'\''
-            else:
-                source = ''
-            (tstype, timestamp) = oc.Changeset.get_timestamp(meta)
-            htimestamp = HumanTime.date2human(timestamp)
-            print u'  {0} \'{1}\' {2} (\'{3}\') \'{4}\' {5}'.format(chgid, meta['user'], htimestamp, timestamp, comment, source)
-            if print_tags:
-                pprint.pprint(chginfo['other_users'])
-                pprint.pprint(chginfo['summary'])
-                pprint.pprint(chginfo['tagdiff'])
-                pprint.pprint(chginfo['source'])
-
     def _pluS(self, num):
         '''Return plural s'''
         if num==1:

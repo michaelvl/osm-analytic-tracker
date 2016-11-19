@@ -249,7 +249,7 @@ def csets_filter(args, config, db):
             cset['labels'] = clabels
         except osmapi.ApiError as e:
             logger.error('Failed reading changeset {}: {}'.format(cid, e))
-            db.chgset_processed(cset, state=db.STATE_DONE, failed=True)
+            db.chgset_processed(cset, state=db.STATE_QUARANTINED, failed=True)
 
         # Check labels
         labelfilters = config.get('prefilter_labels','tracker')
@@ -333,7 +333,7 @@ def csets_analyze_drop_old(args, config, db):
     horizon_s = config.get('horizon_hours','tracker')*3600
     dt = now-datetime.timedelta(seconds=horizon_s)
     while True:
-        cset = db.chgset_start_processing(db.STATE_DONE, db.STATE_REANALYZING, before=dt, timestamp='updated')
+        cset = db.chgset_start_processing([db.STATE_DONE, db.STATE_QUARANTINED], db.STATE_REANALYZING, before=dt, timestamp='updated')
         if not cset:
             break
         logger.info('Dropping cset {} due to age'.format(cset['cid']))
@@ -363,7 +363,9 @@ def run_backends(args, config, db):
     logger.debug('Loaded {} backends'.format(len(backends)))
     while True:
         for b in backends:
+            starttime = time.clock()
             b.print_state(db)
+            logger.info('Running backend {} took {:.2f}s'.format(b, time.clock()-starttime))
         if not (args and args.track):
             break
         time.sleep(60)
