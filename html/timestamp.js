@@ -23,7 +23,7 @@ function htimestamp(ts, now_txt, ago_txt) {
         txt += " "+ago_txt;
       return txt;
     }
-  } else if (then.getDay()==now.getDay()) {
+  } else if (then.getDate()==now.getDate()) {
     var hrstxt, mintxt;
     if (hrs==1) {
       hrstxt = "hour";
@@ -47,8 +47,8 @@ function htimestamp(ts, now_txt, ago_txt) {
         txt += " "+ago_txt;
       return txt;
     }
-  } else if (then.getDay()==now.getDay()-1 ||
-		     (now.getDay()==1 && (then.getDay()!=now.getDay()))) {
+  } else if (then.getDate()==now.getDate()-1 ||
+		     (now.getDate()==1 && (then.getDate()!=now.getDate()))) {
     return "Yesterday "+then.toLocaleTimeString();
   }
   return then.toLocaleString();
