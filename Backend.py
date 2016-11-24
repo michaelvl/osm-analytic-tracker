@@ -27,6 +27,10 @@ class Backend(object):
 
     def _i2s(self, num):
         '''Int to string using human rounding'''
+        sign = ''
+        if num < 0:
+            sign = '-'
+            num = -num
         ss = str(num)
         txt = None
         if len(ss) <=8:
@@ -36,9 +40,9 @@ class Backend(object):
                 else:
                     txt = ss[-3:]
                 ss = ss[:-3]
+            return sign+txt
         else:
-            txt = str(num) # TODO: Better rounding for large numbers
-        return txt
+            return sign+str(num) # TODO: Better rounding for large numbers
 
     def merge_int_dict(self, a, b):
         '''Recursively merge dictionaries where values are either numbers or other dicts'''
