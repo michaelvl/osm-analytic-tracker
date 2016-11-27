@@ -37,7 +37,7 @@ class Backend(Backend.Backend):
             elif self.exptype == 'cset-files':
                 now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
                 # TODO: Consider using a tailing cursor?
-                since = now-datetime.timedelta(minutes=10)
+                since = now-datetime.timedelta(minutes=30)
                 if self.last_cleanup:
                     cleanup_age_s = (now-self.last_cleanup).total_seconds()
                 if not self.last_cleanup or cleanup_age_s>2*3600:
