@@ -38,14 +38,27 @@
 <script type="text/javascript">
 var refresh = 60000;
 var age = 0;
+var view = 0; // Zero for default view, 1 for advanced view
 
 (function($)
 {
   $(document).ready(function()
   {
     $.ajaxSetup( { cache: false });
-    refresh = location.search.split('refresh=')[1];
-    if (refresh===undefined || refresh<30000) { refresh = 60000; }
+    var kv = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    for (var ii=0; ii<kv.length; ii++) {
+      var arg = kv[ii].split('=');
+      if (arg[0]=='view') {
+        view = parseInt(arg[1],10)
+        if (view===undefined || view<0 || view>2) { view = 0; }
+	console.log('view='+view);
+      }
+      if (arg[0]=='refresh') {
+        refresh = parseInt(arg[1],10)
+        if (refresh===undefined || refresh<30000) { refresh = 60000; }
+	console.log('refresh='+refresh);
+      }
+    }
     small_load();
   });
 })(jQuery);
@@ -101,6 +114,17 @@ function large_load_done() {
     $(".new").slideDown(1000);
     tstype("li.cset");
     tstype("li.comment");
+    if (view>=1) {
+      console.log('Enable view 1');
+      $(".changeset_tag-created_by").show();
+      console.log('Enable view 1 end');
+    }
+    if (view>=2) {
+      console.log('Enable view 2');
+      $(".changeset_tag-source").show();
+      $(".changeset_tag-imagery_used").show();
+      console.log('Enable view 2 end');
+    }
 }
 
 function compute_lag(ts_src, dest) {

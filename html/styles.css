@@ -251,7 +251,13 @@ font-style: oblique;
 #border: 2px solid rgb(255,100,100);
 }
 
-li div.changeset-source {
+li div.changeset_tag-created_by {
+display: none;
+}
+li div.changeset_tag-source {
+display: none;
+}
+li div.changeset_tag-imagery_used {
 display: none;
 }
 

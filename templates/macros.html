@@ -16,10 +16,26 @@
       <div class="changeset"><a href="http://www.openstreetmap.org/changeset/{{meta.id}}">{{meta.tag.comment|e}}</a></div>
       {% else %}
       <div class="changeset"><a href="http://www.openstreetmap.org/changeset/{{meta.id}}">Changeset {{meta.id}}</a></div>
-      <li><div class="warning"><div class="icon"><img src="/att_l.png"></div><a href="http://wiki.openstreetmap.org/wiki/Good_changeset_comments">No comment</a></div></li>
+      <div class="warning"><div class="icon"><img src="/att_l.png"></div><a href="http://wiki.openstreetmap.org/wiki/Good_changeset_comments">No comment</a></div>
       {% endif %}
+    </li>
+{%- endmacro %}
+
+{% macro cset_head_advanced_li(meta,info) %}
+  <!-- cset_head_advanced -->
+    <li>
+      {% if 'created_by' in meta.tag %}
+        <div class="changeset_tag-created_by">Editor:{{meta.tag.created_by|e}}</div>
+      {% endif %}
+    </li>
+    <li>
       {% if 'source' in meta.tag %}
-        <div class="changeset-source">{{meta.tag.source|e}}</div>
+        <div class="changeset_tag-source">Source:{{meta.tag.source|e}}</div>
+      {% endif %}
+    </li>
+    <li>
+      {% if 'imagery_used' in meta.tag %}
+        <div class="changeset_tag-imagery_used">Imagery:{{meta.tag.imagery_used|e}}</div>
       {% endif %}
     </li>
 {%- endmacro %}
@@ -28,6 +44,7 @@
   <!-- cset_head -->
   <ul class="csethead">
     {{ cset_head_basic_li(meta,info) }}
+    {{ cset_head_advanced_li(meta,info) }}
     {% if c.state!="DONE" and c.state!="REANALYZING" and not meta.open %}
     <li><div class="in_progress"><div class="icon"><img src="/gear_l.png"></div>Processing...</div></li>
     {% elif info.state.truncated %}
