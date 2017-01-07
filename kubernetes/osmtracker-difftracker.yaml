@@ -2,6 +2,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: osmtracker-difftracker-deployment
+  namespace: osmtracker
 spec:
   replicas: 1
   template:
@@ -13,6 +14,6 @@ spec:
       containers:
       - name: osmtracker-difftracker
         image: michaelvl/osmtracker
-        command: ["python", "/osmtracker/osm-analytic-tracker/osmtracker.py", "--db", "mongodb://osmtracker-database.default.svc.cluster.local", "--configdir", "/osmtracker-config"]
+        command: ["python", "/osmtracker/osm-analytic-tracker/osmtracker.py", "--db", "mongodb://osmtracker-database", "--configdir", "/osmtracker-config"]
         args: ["diff-fetch", "--track"]
         imagePullPolicy: Always

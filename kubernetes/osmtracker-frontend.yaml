@@ -2,6 +2,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: osmtracker-frontend-deployment
+  namespace: osmtracker
 spec:
   replicas: 1
   template:
@@ -13,7 +14,7 @@ spec:
       containers:
       - name: osmtracker-frontend
         image: michaelvl/osmtracker
-        command: ["python", "/osmtracker/osm-analytic-tracker/osmtracker.py", "--db", "mongodb://osmtracker-database.default.svc.cluster.local", "--configdir", "/osmtracker-config"]
+        command: ["python", "/osmtracker/osm-analytic-tracker/osmtracker.py", "--db", "mongodb://osmtracker-database", "--configdir", "/osmtracker-config"]
         args: ["run-backends", "--track"]
         imagePullPolicy: Always
         lifecycle:

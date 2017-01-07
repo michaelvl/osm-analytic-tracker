@@ -16,8 +16,45 @@ The Kubernetes deployment consists of the following resources
 The three osmtracker container types all use the [michaelvl/osmtracker](https://hub.docker.com/r/michaelvl/osmtracker/) Docker image.
 
 The Kubernetes deployment manifests can be found in the kubernetes folder.  Note
-that the PODs are defined using ReplicationControllers and images are
-un-versioned.  For newer Kubernetes versions you might want to use Deployments
-or ScheduledJob Kubernetes objects.
+that the PODs are using un-versioned images.
+
+The resources can be deployed as follows:
+
+```
+kubectl create -f osmtracker-namespace.yaml
+kubectl create -f osmtracker-database-service.yaml
+kubectl create -f osmtracker-frontend-service.yaml
+kubectl create -f osmtracker-database.yaml
+kubectl create -f osmtracker-frontend.yaml
+```
+
+At this state you can access the frontend service using a web-browser although
+no changesets will be shown and the status on the right side will show a
+'Loading...' message.
+
+To begin tracking minutely diffs and analyze them, you need to deploy the
+diff-tracker and worker pods as follows:
+
+```
+kubectl create -f osmtracker-difftracker.yaml
+kubectl create -f osmtracker-worker.yaml
+```
+
+After a little while, the status panel should show tracker status and new
+changesets should begin to appear.
+
+The default worker deployment use a single worker instance, however, it is
+recommended to use at least two, i.e. the deployment should be updated as
+follows:
+
+```
+kubectl -n osmtracker scale deployment osmtracker-worker-deployment --replicas=2
+```
+
+For debugging you can run the osmtracker image interactively as follows:
+
+```
+kubectl run -it test --image michaelvl/osmtracker --command /bin/bash
+```
 
 ![Image](architecture.png?raw=true)
