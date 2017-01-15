@@ -52,7 +52,7 @@ class testDB(object):
     STATE_REANALYZING = 'REANALYZING'       # Updates (notes etc)
     STATE_DONE = 'DONE'                     # For now, all analysis completed
 
-    def __init__(self):
+    def __init__(self, admin=False):
         self.csets = []
         self.test_add_cid(10)
         self.url = 'TESTDATABASE'

@@ -24,18 +24,17 @@ class DataBase(object):
     STATE_DONE = 'DONE'                     # For now, all analysis completed
     STATE_QUARANTINED = 'QUARANTINED'       # Temporary error experienced
     
-    def __init__(self, url='mongodb://localhost:27017/'):
+    def __init__(self, url='mongodb://localhost:27017/', admin=False):
         self.url = url
         self.client = pymongo.MongoClient(url)
-        #self.db = self.client.osmtracker
         self.db = pymongo.database.Database(self.client, 'osmtracker', codec_options=CodecOptions(tz_aware=True))
         self.ctx = self.db.context
         self.csets = self.db.chgsets
-        self.csets.create_index('state')
-        self.csets.create_index([('state', pymongo.ASCENDING),('state_changed', pymongo.DESCENDING)])
-        self.csets.create_index([('state', pymongo.ASCENDING),('updated', pymongo.DESCENDING)])
-        self.csets.create_index([('state', pymongo.ASCENDING),('refreshed', pymongo.DESCENDING)])
-        logger.debug(self.client.database_names())
+        if admin:
+            self.csets.create_index('state')
+            self.csets.create_index([('state', pymongo.ASCENDING),('state_changed', pymongo.DESCENDING)])
+            self.csets.create_index([('state', pymongo.ASCENDING),('updated', pymongo.DESCENDING)])
+            self.csets.create_index([('state', pymongo.ASCENDING),('refreshed', pymongo.DESCENDING)])
 
     def __str__(self):
         return self.url
@@ -124,10 +123,19 @@ class DataBase(object):
         else:
             cursor = self.csets.find(sel)
 
-        expl = cursor.explain()
-        if expl['millis']>500:
-            logger.warn("DB selector {} find explain: {}".format(sel, expl))
-        logger.info("DB lookup took {}ms, scanned {} objects, selector={}".format(expl['millis'], expl['nscanned'], sel))
+        # FIXME: Depends on mongodb version!
+        # expl = cursor.explain('executionStats')
+        # millis = None
+        # nscanned = None
+        # if 'executionStats' in expl:
+        #     millis = expl['executionStats']['executionTimeMillis']
+        #     nscanned = expl['executionStats']['totalKeysExamined']
+        # else:
+        #     millis = expl['millis']
+        #     nscanned = expl['nscanned']
+        # if millis and millis>500:
+        #     logger.warn("DB selector {} find explain: {}".format(sel, expl))
+        # logger.info("DB lookup took {}ms, scanned {} objects, selector={}".format(millis, nscanned, sel))
         return cursor
 
     def chgset_append(self, cid, source=None):

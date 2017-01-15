@@ -422,8 +422,12 @@ def main():
     config = configfile.Config()
     config.load(path=args.configdir)
 
-    db = database.DataBase(url=args.db_url)
-    logger.debug('Connected to db: {}'.format(db))
+    if args.func==diff_fetch:
+        dbadm=True
+    else:
+        dbadm=False
+    db = database.DataBase(url=args.db_url, admin=dbadm)
+    logger.debug('Connected to db: {} (RW={})'.format(db, dbadm))
 
     return args.func(args, config, db)
 
