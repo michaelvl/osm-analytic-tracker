@@ -13,5 +13,38 @@ spec:
     spec:
       containers:
       - name: mongo
-        image: mongo:3.3
+        image: michaelvl/mongo:3.4.1-1
         imagePullPolicy: IfNotPresent
+        env:
+        - name: MONGODB_ADMIN
+          valueFrom:
+            secretKeyRef:
+              name: osmtracker-secrets
+              key: dbadmin
+        - name: MONGODB_ADMIN_PASS
+          valueFrom:
+            secretKeyRef:
+              name: osmtracker-secrets
+              key: dbadmin_pass
+        - name: MONGODB_DBNAME
+          value: osmtracker
+        - name: MONGODB_RW_USER
+          valueFrom:
+            secretKeyRef:
+              name: osmtracker-secrets
+              key: dbuser_rw
+        - name: MONGODB_RW_PASS
+          valueFrom:
+            secretKeyRef:
+              name: osmtracker-secrets
+              key: dbuser_rw_pass
+        - name: MONGODB_RO_USER
+          valueFrom:
+            secretKeyRef:
+              name: osmtracker-secrets
+              key: dbuser_ro
+        - name: MONGODB_RO_PASS
+          valueFrom:
+            secretKeyRef:
+              name: osmtracker-secrets
+              key: dbuser_ro_pass

@@ -14,9 +14,20 @@ spec:
       containers:
       - name: osmtracker-frontend
         image: michaelvl/osmtracker
-        command: ["python", "/osmtracker/osm-analytic-tracker/osmtracker.py", "--db", "mongodb://osmtracker-database", "--configdir", "/osmtracker-config"]
+        command: ["python", "/osmtracker/osm-analytic-tracker/osmtracker.py", "--db", "mongodb://$(DBUSER):$(DBPASSWD)@osmtracker-database/osmtracker", "--configdir", "/osmtracker-config"]
         args: ["run-backends", "--track"]
-        imagePullPolicy: Always
+        imagePullPolicy: Always	
+        env:
+        - name: DBUSER
+          valueFrom:
+            secretKeyRef:
+              name: osmtracker-secrets
+              key: dbuser_ro
+        - name: DBPASSWD
+          valueFrom:
+            secretKeyRef:
+              name: osmtracker-secrets
+              key: dbuser_ro_pass
         lifecycle:
           postStart:
            exec:

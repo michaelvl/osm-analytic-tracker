@@ -22,6 +22,13 @@ The resources can be deployed as follows:
 
 ```
 kubectl create -f osmtracker-namespace.yaml
+kubectl create -f osmtracker-secrets.yaml
+```
+
+The secrets resource define database credentials - read-only for frontends and
+read/write for other services. You might want to change the default credentials.
+
+```
 kubectl create -f osmtracker-database-service.yaml
 kubectl create -f osmtracker-frontend-service.yaml
 kubectl create -f osmtracker-database.yaml

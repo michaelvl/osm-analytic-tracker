@@ -1,0 +1,7 @@
+FROM mongo:3.4.1
+
+ADD docker/mongosetup.sh /run.sh
+
+EXPOSE 27017 28017
+
+CMD ["/run.sh"]
