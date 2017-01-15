@@ -35,7 +35,7 @@ kubectl create -f osmtracker-database.yaml
 kubectl create -f osmtracker-frontend.yaml
 ```
 
-At this state you can access the frontend service using a web-browser although
+At this stage you can access the frontend service using a web-browser although
 no changesets will be shown and the status on the right side will show a
 'Loading...' message.
 
