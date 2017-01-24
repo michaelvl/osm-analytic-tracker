@@ -1,5 +1,10 @@
 language: python
 
+sudo: required
+
+services:
+- docker
+
 python:
 - '2.7'
 
@@ -11,3 +16,11 @@ script:
 - (cd osm && python -m unittest discover)
 - python -m unittest discover -s test/
 
+before_install:
+- docker build -t michaelvl/osmtracker --file docker/Dockerfile .
+
+after_success:
+- if [ "$TRAVIS_BRANCH" == "master" ]; then
+  docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
+  docker push michaelvl/osmtracker;
+  fi
