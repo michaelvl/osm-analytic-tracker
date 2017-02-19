@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: osmtracker-frontend
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: osmtracker
+    role: frontend-service
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+spec:
+  type: {{ .Values.frontend.service.type }}
+  ports:
+  - port: {{ .Values.frontend.service.externalPort }}
+    targetPort: {{ .Values.frontend.service.internalPort }}
+{{- if contains "NodePort" .Values.frontend.service.type }}
+    nodePort: {{ .Values.frontend.service.externalPort }}
+{{- end }}
+    protocol: TCP
+    name: {{ .Values.frontend.service.name }}
+  selector:
+    app: osmtracker
+    role: frontend

@@ -1,0 +1,66 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: osmtracker-frontend-deployment
+  namespace: {{ .Release.Namespace }}
+  labels:
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+spec:
+  replicas: {{ .Values.frontend.replicas }}
+  template:
+    metadata:
+      labels:
+        app: osmtracker
+        role: frontend
+      annotations:
+        checksum/config: {{ include (print $.Chart.Name "/templates/osmtracker-secret.yaml") . | sha256sum }}
+    spec:
+      containers:
+      - name: osmtracker-frontend
+        image: "{{ .Values.osmtracker.image.image }}:{{ .Values.osmtracker.image.tag }}"
+        command: ["python", "/osmtracker/osm-analytic-tracker/osmtracker.py", "--db", "mongodb://$(DBUSER):$(DBPASSWD)@osmtracker-database/osmtracker", "--configdir", "/osmtracker-config"]
+        args: ["run-backends", "--track"]
+        imagePullPolicy: {{ .Values.osmtracker.image.pullPolicy }}
+        livenessProbe:
+          httpGet:
+            path: /
+            port: {{ .Values.frontend.service.internalPort }}
+        readinessProbe:
+          httpGet:
+            path: /
+            port: {{ .Values.frontend.service.internalPort }}
+        env:
+        - name: DBUSER
+          valueFrom:
+            secretKeyRef:
+              name: osmtracker-secrets
+              key: dbuser_ro
+        - name: DBPASSWD
+          valueFrom:
+            secretKeyRef:
+              name: osmtracker-secrets
+              key: dbuser_ro_pass
+        lifecycle:
+          postStart:
+           exec:
+             command:
+             - "cp"
+             - "-rT"
+             - "/html-init"
+             - "/html"
+        volumeMounts:
+        - mountPath: /html
+          name: html-volume
+      - name: nginx
+        image: {{ .Values.web.image.image }}
+        imagePullPolicy: {{ .Values.web.image.pullPolicy }}
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - mountPath: /usr/share/nginx/html
+          name: html-volume
+          readOnly: true
+      volumes:
+      - name: html-volume
+        emptyDir:
+          medium: "Memory"
