@@ -18,7 +18,7 @@ class BaseTest(unittest.TestCase, stubs.FileWriter_Mixin):
     def setUp(self):
         #logging.basicConfig(level=logging.DEBUG)
         self.db = stubs.testDB()
-        self.db.test_add_cid(10)
+        self.db.test_add_cid(10, append=False)
         self.cfg = stubs.testConfig()
         self.osmapi = osm.test.stubs.testOsmApi(datapath='osm/test/data')
         self.filewritersetup()

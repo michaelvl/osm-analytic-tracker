@@ -6,6 +6,8 @@ import logging
 import osmtracker
 import config
 import sys
+import os
+import signal
 import datetime, pytz
 from bson.json_util import dumps, loads
 
@@ -51,8 +53,10 @@ class testDB(object):
     STATE_ANALYZING2 = 'ANALYZING2'         # Deeper analysis of closed csets
     STATE_REANALYZING = 'REANALYZING'       # Updates (notes etc)
     STATE_DONE = 'DONE'                     # For now, all analysis completed
+    STATE_QUARANTINED = 'QUARANTINED'       # Temporary error experienced
 
-    def __init__(self, admin=False):
+    def __init__(self, admin=False, sigint_on=[]):
+        self.sigint_on = sigint_on
         self.csets = []
         self.test_add_cid(10)
         self.url = 'TESTDATABASE'
@@ -64,11 +68,25 @@ class testDB(object):
                                           'seqno': 12345670,
                                           'timestamp': datetime.datetime(2007, 7, 17, 8, 0, 0).replace(tzinfo=pytz.utc) }}
 
-    def test_add_cid(self, cid):
-        self.csets = [{'cid' : cid, 'state': self.STATE_NEW, 'labels': [],
-                       'refreshed': datetime.datetime(2007, 7, 17, 0, 3, 4).replace(tzinfo=pytz.utc),
-                       'source': {'sequenceno': 123456,
-                                  'observed':datetime.datetime(2007, 7, 17, 8, 3, 4).replace(tzinfo=pytz.utc)}}]
+    def test_add_cid(self, cid, state=STATE_NEW, append=True):
+        cset = {'cid' : cid, 'state': state, 'labels': [],
+                'refreshed': datetime.datetime(2007, 7, 17, 0, 3, 4).replace(tzinfo=pytz.utc),
+                'source': {'sequenceno': 123456,
+                           'observed':datetime.datetime(2007, 7, 17, 8, 3, 4).replace(tzinfo=pytz.utc)}}
+        if not append:
+            self.csets = []
+        self.csets.append(cset)
+
+    def pointer_meta_update(self, upd):
+        for k,v in upd.iteritems():
+            self.pointer[k] = v
+
+    def pointer(self):
+        return self.pointer
+
+    def pointer_advance(self, offset=1):
+        old = self.pointer['seqno']
+        self.pointer['seqno'] = old+offset
 
     def chgsets_count(self):
         return len(self.csets)
@@ -97,6 +115,8 @@ class testDB(object):
         self.csets.remove(c)
 
     def chgset_processed(self, c, state, failed=False, refreshed=False):
+        if 'chgset_processed' in self.sigint_on:
+            os.kill(os.getpid(), signal.SIGINT)
         c['state'] = state
 
     def find_cset(self, cid):
@@ -110,6 +130,8 @@ class testDB(object):
         c['meta'] = dumps(meta)
 
     def chgset_get_meta(self, cid):
+        if 'chgset_get_meta' in self.sigint_on:
+            os.kill(os.getpid(), signal.SIGINT)
         c = self.find_cset(cid)
         return loads(c['meta'])
 

@@ -3,7 +3,6 @@ import datetime, pytz
 import urllib2
 import gzip
 from StringIO import StringIO
-from osmapi import OsmApi
 import xml.etree.ElementTree as etree
 import logging
 
@@ -24,7 +23,6 @@ class OsmDiffApi(object):
         
         # Non-simple below
         #self.update_head_state()
-        self.osmapi = OsmApi()
 
     def update_head_state(self, stype):
         state = self.get_state(stype, seqno=None)
@@ -55,14 +53,9 @@ class OsmDiffApi(object):
     def get_diff_from_state(self, state):
         return self.get_diff(state.sequenceno, state.type)
 
-    def get_diff(self, seqno, type):
-        diff = Diff(seqno, type)
-        diff.get(self.osmapi)
-        return diff
-
     def get_diff_csets(self, seqno, type):
         diff = Diff(seqno, type)
-        csets = diff.get_csets(self.osmapi)
+        csets = diff.get_csets()
         return csets
 
     def get_seqno_le_timestamp(self, type, timestamp, start, max_iter=None):
@@ -145,14 +138,7 @@ class Diff(Base):
     def _data_url(self):
         return self.repl_url+'/'+self.type+'/'+self._path_frag()+'.osc.gz'
 
-    def get(self, osmapi):
-        '''Fetch and parse complete diff into a dictionary'''
-        req = urllib2.Request(self._data_url())
-        resp = urllib2.urlopen(req)
-        data = gzip.GzipFile(fileobj=StringIO(resp.read())).read()
-        self.data = osmapi.ParseOsc(data)
-
-    def get_csets(self, osmapi):
+    def get_csets(self):
         '''Fetch and parse diff to fetch changeset IDs only. More memory efficient than get()'''
         csets = []
         url = self._data_url()

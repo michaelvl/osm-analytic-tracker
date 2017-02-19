@@ -4,14 +4,17 @@ import mock
 from mock import patch
 import logging
 import sys
+import os
+import signal
 import datetime, pytz
 import json
 
 logger = logging.getLogger('')
 
 class testOsmApi(object):
-    def __init__(self, datapath='test/data'):
+    def __init__(self, datapath='test/data', sigint_on=[]):
         self.datapath = datapath
+        self.sigint_on = sigint_on
 
     def _dateconv(self, txt):
         return datetime.datetime.strptime(txt, "%Y-%m-%dT%H:%M:%SZ")
@@ -23,6 +26,8 @@ class testOsmApi(object):
         return nw
 
     def ChangesetGet(self, id, include_discussion=True):
+        if 'ChangesetGet' in self.sigint_on:
+            os.kill(os.getpid(), signal.SIGINT)
         with open(self.datapath+'/cset{}.meta.json'.format(id)) as f:
             data =json.load(f)
         for ts in ['created_at', 'closed_at']:
@@ -66,3 +71,28 @@ class testOsmApi(object):
             w['timestamp'] = self._dateconv(w['timestamp'])
             return w
         return None
+
+class testUrlToBeRead(object):
+    def __init__(self, parent, url):
+        self.parent = parent
+        self.url = url
+
+    def getcode(self):
+        return 200
+
+    def read(self):
+        with open(self.parent.datapath+'/urls/{}'.format(self.url)) as f:
+            return f.read()
+
+class testUrllib2(object):
+    def __init__(self, datapath='test/data', sigint_on=[]):
+        self.datapath = datapath
+        self.sigint_on = sigint_on
+
+    def request(self, url):
+        return url
+
+    def urlopen(self, url):
+        if 'urlopen' in self.sigint_on:
+            os.kill(os.getpid(), signal.SIGINT)
+        return testUrlToBeRead(self, url)

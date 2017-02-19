@@ -176,21 +176,22 @@ def diff_fetch(args, config, db):
         return
 
     dapi = osmdiff.OsmDiffApi()
-    if args.log_level == 'DEBUG':
-        dapi.debug = True
-
     ptr = db.pointer
 
-    if args.history:
-        history = HumanTime.human2date(args.history)
-        head = dapi.get_state('minute')
-        pointer = dapi.get_seqno_le_timestamp('minute', history, head)
-        db.pointer = pointer
-    elif args.initptr or not ptr:
-        head = dapi.get_state('minute', seqno=None)
-        head.sequenceno_advance(offset=-1)
-        db.pointer = head
-        logger.debug('Initialized pointer to:{}'.format(db.pointer))
+    if args:
+        if args.log_level == 'DEBUG':
+            dapi.debug = True
+
+        if args.history:
+            history = HumanTime.human2date(args.history)
+            head = dapi.get_state('minute')
+            pointer = dapi.get_seqno_le_timestamp('minute', history, head)
+            db.pointer = pointer
+        elif args.initptr or not ptr:
+            head = dapi.get_state('minute', seqno=None)
+            head.sequenceno_advance(offset=-1)
+            db.pointer = head
+            logger.debug('Initialized pointer to:{}'.format(db.pointer))
 
     while True:
         try:
@@ -211,12 +212,15 @@ def diff_fetch(args, config, db):
                 nptr = dapi.get_state('minute', seqno=db.pointer['seqno'])
                 db.pointer_meta_update({'timestamp': nptr.timestamp()})
                 db.pointer_advance()
+        except KeyboardInterrupt as e:
+            logger.warn('Processing interrupted, exiting...')
+            raise e
         except (urllib2.HTTPError, urllib2.URLError, socket.error, socket.timeout) as e:
             logger.error('Error retrieving OSM data: '.format(e))
             logger.error(traceback.format_exc())
             time.sleep(60)
 
-        if args.track:
+        if args and args.track:
             if start:
                 end = time.time()
                 elapsed = end-start
@@ -237,36 +241,42 @@ def csets_filter(args, config, db):
         cset = db.chgset_start_processing(db.STATE_NEW, db.STATE_BOUNDS_CHECK)
         if not cset:
             break
-        cid = cset['cid']
 
-        # Apply labels
-        labelrules = config.get('pre_labels','tracker')
         try:
-            c = osm.changeset.Changeset(cid, api=config.get('osm_api_url','tracker'))
-            c.downloadMeta()
-            clabels = c.build_labels(labelrules)
-            logger.debug('Added labels to cid {}: {}'.format(cid, clabels))
-            cset['labels'] = clabels
-        except osmapi.ApiError as e:
-            logger.error('Failed reading changeset {}: {}'.format(cid, e))
-            db.chgset_processed(cset, state=db.STATE_QUARANTINED, failed=True)
+            cid = cset['cid']
 
-        # Check labels
-        labelfilters = config.get('prefilter_labels','tracker')
-        passed_filters = False
-        for lf in labelfilters:
-            logger.debug('lf={}'.format(lf))
-            if set(lf).issubset(set(clabels)):
-                logger.debug("Cset labels '{}' is subset of '{}'".format(clabels, lf))
-                passed_filters = True
-        
-        if not passed_filters:
-            logger.debug('Cset {} not within area'.format(cid))
-            db.chgset_drop(cid)
-        else:
-            logger.debug('Cset {} passed filters'.format(cid))
-            db.chgset_set_meta(cid, c.meta)
-            db.chgset_processed(cset, state=db.STATE_BOUNDS_CHECKED)
+            # Apply labels
+            labelrules = config.get('pre_labels','tracker')
+            try:
+                c = osm.changeset.Changeset(cid, api=config.get('osm_api_url','tracker'))
+                c.downloadMeta()
+                clabels = c.build_labels(labelrules)
+                logger.debug('Added labels to cid {}: {}'.format(cid, clabels))
+                cset['labels'] = clabels
+            except osmapi.ApiError as e:
+                logger.error('Failed reading changeset {}: {}'.format(cid, e))
+                db.chgset_processed(cset, state=db.STATE_QUARANTINED, failed=True)
+
+            # Check labels
+            labelfilters = config.get('prefilter_labels','tracker')
+            passed_filters = False
+            for lf in labelfilters:
+                logger.debug('lf={}'.format(lf))
+                if set(lf).issubset(set(clabels)):
+                    logger.debug("Cset labels '{}' is subset of '{}'".format(clabels, lf))
+                    passed_filters = True
+
+            if not passed_filters:
+                logger.debug('Cset {} not within area'.format(cid))
+                db.chgset_drop(cid)
+            else:
+                logger.debug('Cset {} passed filters'.format(cid))
+                db.chgset_set_meta(cid, c.meta)
+                db.chgset_processed(cset, state=db.STATE_BOUNDS_CHECKED)
+        except KeyboardInterrupt as e:
+            logging.warn('Processing interrupted, restoring cid {} state to NEW...'.format(cid))
+            db.chgset_processed(cset, state=db.STATE_NEW)
+            raise e
     return 0
 
 def csets_analyze_initial(args, config, db):
@@ -275,14 +285,19 @@ def csets_analyze_initial(args, config, db):
         cset = db.chgset_start_processing(db.STATE_BOUNDS_CHECKED, db.STATE_ANALYZING1)
         if not cset:
             break
-        logger.debug('Cset {} analysis step 1'.format(cset['cid']))
-        info = cset_process_open(args, config, db, cset)
-        db.chgset_set_info(cset['cid'], info)
-        meta = db.chgset_get_meta(cset['cid'])
-        if meta['open']:
-            db.chgset_processed(cset, state=db.STATE_OPEN, refreshed=True)
-        else:
-            db.chgset_processed(cset, state=db.STATE_CLOSED, refreshed=True)
+        try:
+            logger.debug('Cset {} analysis step 1'.format(cset['cid']))
+            info = cset_process_open(args, config, db, cset)
+            db.chgset_set_info(cset['cid'], info)
+            meta = db.chgset_get_meta(cset['cid'])
+            if meta['open']:
+                db.chgset_processed(cset, state=db.STATE_OPEN, refreshed=True)
+            else:
+                db.chgset_processed(cset, state=db.STATE_CLOSED, refreshed=True)
+        except KeyboardInterrupt as e:
+            logging.warn('Processing interrupted, restoring cid {} state to BOUNDS_CHECKED...'.format(cset['cid']))
+            db.chgset_processed(cset, state=db.STATE_BOUNDS_CHECKED)
+            raise e
 
 def csets_analyze_on_close(args, config, db):
     # One-time processing when changesets are closed
@@ -290,11 +305,16 @@ def csets_analyze_on_close(args, config, db):
         cset = db.chgset_start_processing(db.STATE_CLOSED, db.STATE_ANALYZING2)
         if not cset:
             break
-        logger.debug('Cset {} analysis step 2'.format(cset['cid']))
-        info = cset_process(args, config, db, cset)
-        db.chgset_set_info(cset['cid'], info)
-        meta = db.chgset_get_meta(cset['cid'])
-        db.chgset_processed(cset, state=db.STATE_DONE, refreshed=True)
+        try:
+            logger.debug('Cset {} analysis step 2'.format(cset['cid']))
+            info = cset_process(args, config, db, cset)
+            db.chgset_set_info(cset['cid'], info)
+            meta = db.chgset_get_meta(cset['cid'])
+            db.chgset_processed(cset, state=db.STATE_DONE, refreshed=True)
+        except KeyboardInterrupt as e:
+            logging.warn('Processing interrupted, restoring cid {} state to CLOSED...'.format(cset['cid']))
+            db.chgset_processed(cset, state=db.STATE_CLOSED)
+            raise e
 
 def csets_analyze_periodic_reprocess_open(args, config, db):
     # Peridic reprocessing of open changesets
@@ -304,14 +324,19 @@ def csets_analyze_periodic_reprocess_open(args, config, db):
         cset = db.chgset_start_processing(db.STATE_OPEN, db.STATE_ANALYZING1, before=dt, timestamp='refreshed')
         if not cset:
             break
-        logger.info('Reprocess OPEN changeset, cid={}'.format(cset['cid']))
-        info = cset_process_open(args, config, db, cset)
-        db.chgset_set_info(cset['cid'], info)
-        meta = db.chgset_get_meta(cset['cid'])
-        if meta['open']:
-            db.chgset_processed(cset, state=db.STATE_OPEN, refreshed=True)
-        else:
-            db.chgset_processed(cset, state=db.STATE_CLOSED, refreshed=True)
+        try:
+            logger.info('Reprocess OPEN changeset, cid={}'.format(cset['cid']))
+            info = cset_process_open(args, config, db, cset)
+            db.chgset_set_info(cset['cid'], info)
+            meta = db.chgset_get_meta(cset['cid'])
+            if meta['open']:
+                db.chgset_processed(cset, state=db.STATE_OPEN, refreshed=True)
+            else:
+                db.chgset_processed(cset, state=db.STATE_CLOSED, refreshed=True)
+        except KeyboardInterrupt as e:
+            logging.warn('Processing interrupted, restoring cid {} state to OPEN...'.format(cset['cid']))
+            db.chgset_processed(cset, state=db.STATE_OPEN)
+            raise e
 
 def csets_analyze_periodic_reprocess_closed(args, config, db):
     # Peridic reprocessing of finished changesets
@@ -322,10 +347,15 @@ def csets_analyze_periodic_reprocess_closed(args, config, db):
         cset = db.chgset_start_processing(db.STATE_DONE, db.STATE_REANALYZING, before=dt, timestamp='refreshed')
         if not cset:
             break
-        info = cset_reprocess(args, config, db, cset)
-        db.chgset_set_info(cset['cid'], info)
-        meta = db.chgset_get_meta(cset['cid'])
-        db.chgset_processed(cset, state=db.STATE_DONE, refreshed=True)
+        try:
+            info = cset_reprocess(args, config, db, cset)
+            db.chgset_set_info(cset['cid'], info)
+            meta = db.chgset_get_meta(cset['cid'])
+            db.chgset_processed(cset, state=db.STATE_DONE, refreshed=True)
+        except KeyboardInterrupt as e:
+            logging.warn('Processing interrupted, restoring cid {} state to DONE...'.format(cset['cid']))
+            db.chgset_processed(cset, state=db.STATE_DONE)
+            raise e
 
 def csets_analyze_drop_old(args, config, db):
     # Drop old changesets
@@ -375,7 +405,7 @@ def worker(args, config, db):
     while True:
         csets_filter(args, config, db)
         csets_analyze(args, config, db)
-        if not (args and args.track):
+        if not args or not args.track:
             break
         time.sleep(15)
 
