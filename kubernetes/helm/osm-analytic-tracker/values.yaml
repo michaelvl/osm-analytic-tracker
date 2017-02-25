@@ -6,20 +6,20 @@ difftracker:
   replicas: 1
   resources:
     limits:
-      cpu: 1
+      cpu: 500m
       memory: 1Gi
     requests:
-      cpu: 0.25
+      cpu: 100m
       memory: 512Mi
 
 worker:
   replicas: 2
   resources:
     limits:
-      cpu: 1
+      cpu: 500m
       memory: 1Gi
     requests:
-      cpu: 0.25
+      cpu: 50m
       memory: 512Mi
 
 frontend:
@@ -47,6 +47,10 @@ web:
     pullPolicy: IfNotPresent
 
 db:
+  persistence:
+    enabled: false
+    accessMode: ReadWriteOnce
+    size: 8Gi
   dbadmin: adm.user
   dbadmin_pass: adm.secret
   dbuser_rw: rw.user

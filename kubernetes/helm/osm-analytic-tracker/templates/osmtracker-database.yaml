@@ -52,3 +52,14 @@ spec:
             secretKeyRef:
               name: osmtracker-secrets
               key: dbuser_ro_pass
+        volumeMounts:
+        - name: data
+          mountPath: /data/db
+      volumes:
+      - name: data
+      {{- if .Values.db.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: {{ template "fullname" . }}
+      {{- else }}
+        emptyDir: {}
+{{- end -}}
