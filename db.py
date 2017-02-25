@@ -32,6 +32,7 @@ class DataBase(object):
         self.csets = self.db.chgsets
         if admin:
             self.csets.create_index('state')
+            self.csets.create_index([('updated', pymongo.DESCENDING)])
             self.csets.create_index([('state', pymongo.ASCENDING),('state_changed', pymongo.DESCENDING)])
             self.csets.create_index([('state', pymongo.ASCENDING),('updated', pymongo.DESCENDING)])
             self.csets.create_index([('state', pymongo.ASCENDING),('refreshed', pymongo.DESCENDING)])
