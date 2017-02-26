@@ -5,6 +5,11 @@ sudo: required
 services:
 - docker
 
+env:
+  global:
+    - REPO=michaelvl/osmtracker
+    - GITCOMMIT=${TRAVIS_COMMIT::8}
+
 python:
 - '2.7'
 
@@ -16,11 +21,11 @@ script:
 - (cd osm && python -m unittest discover)
 - python -m unittest discover -s test/
 
-before_install:
-- docker build -t michaelvl/osmtracker --file docker/Dockerfile .
 
 after_success:
-- if [ "$TRAVIS_BRANCH" == "master" ]; then
-  docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
-  docker push michaelvl/osmtracker;
-  fi
+- export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
+- docker build -t $REPO:$COMMIT --file docker/Dockerfile .
+- docker tag $REPO:$COMMIT $REPO:$TAG
+- docker tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER
+- docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
+- docker push $REPO
