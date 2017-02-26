@@ -15,6 +15,8 @@ spec:
       annotations:
         checksum/config: {{ include (print $.Chart.Name "/templates/osmtracker-secret.yaml") . | sha256sum }}
     spec:
+      strategy:
+      - type: Recreate
       containers:
       - name: osmtracker-difftracker
         image: "{{ .Values.osmtracker.image.image }}:{{ .Values.osmtracker.image.tag }}"
