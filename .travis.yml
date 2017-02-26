@@ -8,7 +8,7 @@ services:
 env:
   global:
     - REPO=michaelvl/osmtracker
-    - GITCOMMIT=${TRAVIS_COMMIT::8}
+    - GITCOMMIT=${TRAVIS_COMMIT::7}
 
 python:
 - '2.7'
@@ -24,8 +24,8 @@ script:
 
 after_success:
 - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
-- docker build -t $REPO:$COMMIT --file docker/Dockerfile .
-- docker tag $REPO:$COMMIT $REPO:$TAG
-- docker tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER
+- docker build -t $REPO:$GITCOMMIT --file docker/Dockerfile .
+- docker tag $REPO:$GITCOMMIT $REPO:$TAG
+- docker tag $REPO:$GITCOMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER
 - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
 - docker push $REPO
