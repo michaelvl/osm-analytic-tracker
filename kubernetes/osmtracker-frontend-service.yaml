@@ -7,11 +7,11 @@ metadata:
     app: osmtracker
     role: frontend-service
 spec:
-  type: NodePort
+  type: {{ .Values.frontend.service.type }}
   ports:
   - port: 80
     targetPort: 80
-    nodePort: 30000
+    nodePort: {{ .Values.frontend.service.externalPort }}
   selector:
     app: osmtracker
     role: frontend
