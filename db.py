@@ -312,12 +312,15 @@ def show_brief(args, db, reltime=True):
                     return dt.strftime('%Y:%m:%d %H:%M:%S')
             if c['state'] != 'NEW' and c['state'] != 'BOUNDS_CHECK' and c['state'] != 'ANALYZING1':
                 meta = db.chgset_get_meta(cid)
-                logger.debug('cset={}, meta: {}'.format(c, meta))
-                if 'comment' in meta['tag']:
-                    comment = meta['tag']['comment']
+                if not meta:
+                    logger.error('No meta found for cid {}: {}'.format(cid, c))
                 else:
-                    comment = '*no comment*'
-                print u'{:8} {:14} {:15} {:15} {:15} {:15} {} :: {}'.format(cid, c['state'], ts(c['queued']), ts(c['state_changed']), ts(c['updated']), ts(c['refreshed']), meta['user'], comment).encode('ascii', errors='backslashreplace')
+                    logger.debug('cset={}, meta: {}'.format(c, meta))
+                    if 'comment' in meta['tag']:
+                        comment = meta['tag']['comment']
+                    else:
+                        comment = '*no comment*'
+                    print u'{:8} {:14} {:15} {:15} {:15} {:15} {} :: {}'.format(cid, c['state'], ts(c['queued']), ts(c['state_changed']), ts(c['updated']), ts(c['refreshed']), meta['user'], comment).encode('ascii', errors='backslashreplace')
             else:
                 print u'{:8} {:14} {:15} {:15}'.format(cid, c['state'], ts(c['queued']), ts(c['state_changed'])).encode('ascii', errors='backslashreplace')
 
