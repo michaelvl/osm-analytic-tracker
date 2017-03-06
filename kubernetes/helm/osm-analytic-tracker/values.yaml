@@ -23,7 +23,7 @@ worker:
       memory: 512Mi
 
 frontend:
-  replicas: 1
+  replicas: 2
   service:
     name: osmtracker-frontend
     type: NodePort
