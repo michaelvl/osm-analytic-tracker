@@ -121,14 +121,10 @@ class Backend(Backend.Backend):
                         f.write(b)
                         files.append(fn)
                 except Exception as e:
-                    #exc_info = sys.exc_info()
-                    logger.error('Error exporting cid {}: {}'.format(c['cid'], c))
+                    exc_info = sys.exc_info()
+                    logger.error('Error exporting cid {}: {}'.format(c['cid'], exc_info))
+                    logger.error('Cset data: {}'.format(c))
                     #raise exc_info[1], None, exc_info[2]
-                    now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
-                    cnt = db.chgsets.update_many({'cid': c['cid']},
-                                                 {'$set': {'state': db.STATE_NEW,
-                                                           'state_changed': now}}).modified_count
-                    logger.info('Re-scheduled cset {} for re-analysis'.format(c['cid']))
 
             db_show_brief(None, db, False)
         return files
