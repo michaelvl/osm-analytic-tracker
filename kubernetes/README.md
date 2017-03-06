@@ -15,8 +15,16 @@ The Kubernetes deployment consists of the following resources
 
 The three osmtracker container types all use the [michaelvl/osmtracker](https://hub.docker.com/r/michaelvl/osmtracker/) Docker image.
 
-The Kubernetes deployment manifests can be found in the kubernetes folder.  Note
-that the PODs are using un-versioned images.
+An actual deployment can be created either using the Helm charts or stand-alone
+yaml resource definitions.  A Helm based deployment is created as follows:
+
+```
+kubectl create namespace osmtracker
+helm install --namespace osmtracker kubernetes/helm/osm-analytic-tracker
+```
+
+The stand-alone Kubernetes deployment manifests can be found in the kubernetes
+folder.  Note that the PODs are using un-versioned images.
 
 The resources can be deployed as follows:
 
