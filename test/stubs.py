@@ -88,6 +88,9 @@ class testDB(object):
         old = self.pointer['seqno']
         self.pointer['seqno'] = old+offset
 
+    def generation_advance(self, offset=1):
+        self.generation += offset
+
     def chgsets_count(self):
         return len(self.csets)
     

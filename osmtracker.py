@@ -70,6 +70,8 @@ def cset_process_local1(args, config, db, cset, info):
         misc['timestamp_type'] = tstype
         misc['timestamp_type_txt'] = ts_type2txt[tstype]
         misc['timestamp'] = timestamp
+        # Update generation, notes etc might have changed
+        db.generation_advance()
 
     now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
     observed_s = (now-cset['source']['observed']).total_seconds()

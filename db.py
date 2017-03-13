@@ -227,7 +227,6 @@ class DataBase(object):
         self.csets.update_one({'_id':cid}, {'$set':
                                             {'meta': _meta,
                                              'updated': now}}, upsert=True)
-        self.generation_advance()
         return True
 
     # FIXME: Refactor and remove
@@ -249,13 +248,16 @@ class DataBase(object):
         self.csets.update_one({'_id':cid}, {'$set':
                                             {'info': _info,
                                              'updated': now}}, upsert=True)
-        self.generation_advance()
         return True
 
     # FIXME: Refactor and remove
     def chgset_get_info(self, cid):
         cset = self.csets.find_one({'_id':cid})
         if not cset or not 'info' in cset:
+            if not cset:
+                logger.warn('Cset cid={} not found'.format(cid))
+            else:
+                logger.warn('Cset has no info, keys: {}'.format(cset.keys()))
             return None
         return loads(cset['info'])
 
