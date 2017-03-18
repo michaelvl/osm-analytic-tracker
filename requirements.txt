@@ -4,3 +4,4 @@ jinja2==2.9.5
 pymongo==3.4.0
 shapely==1.5.17
 requests==2.13.0
+prometheus_client==0.0.19

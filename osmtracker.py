@@ -19,6 +19,7 @@ import operator
 import urllib2, socket
 import traceback
 import BackendHtml, BackendHtmlSummary, BackendGeoJson
+import prometheus_client
 
 logger = logging.getLogger('osmtracker')
 
@@ -176,6 +177,19 @@ def diff_fetch(args, config, db):
                   'observed': datetime.datetime.utcnow().replace(tzinfo=pytz.utc)}
         db.chgset_append(cid, source)
         return
+    if args.metrics:
+        m_pt = prometheus_client.Histogram('osmtracker_minutely_diff_processing_time_seconds',
+                                           'Processing time for latest minutely diff (seconds)')
+        m_diff_ts = prometheus_client.Gauge('osmtracker_minutely_diff_timestamp',
+                                            'Timestamp of recently processed minutely diff')
+        m_diff_proc_ts = prometheus_client.Gauge(osmtracker_'minutely_diff_processing_timestamp',
+                                                 'Timestamp of when recently processed minutely diff was processed')
+        m_seqno = prometheus_client.Gauge('osmtracker_minutely_diff_latest_seqno',
+                                          'Sequence number of recently processed minutely diff')
+        m_head_seqno = prometheus_client.Gauge('osmtracker_minutely_diff_head_seqno',
+                                          'Head sequence number of minutely diff replication')
+        m_csets = prometheus_client.Gauge('osmtracker_minutely_diff_csets_observed',
+                                          'Number of changesets observed in recently processed minutely diff')
 
     dapi = osmdiff.OsmDiffApi()
     ptr = db.pointer
@@ -200,6 +214,7 @@ def diff_fetch(args, config, db):
             ptr = db.pointer['seqno']
             head = dapi.get_state('minute', seqno=None)
             start = None
+            now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
             if ptr <= head.sequenceno:
                 logger.debug('Fetching diff, ptr={}, head={}'.format(ptr, head.sequenceno))
                 start = time.time()
@@ -208,12 +223,18 @@ def diff_fetch(args, config, db):
                 for cid in chgsets:
                     source = {'type': 'minute',
                               'sequenceno': ptr,
-                              'observed': datetime.datetime.utcnow().replace(tzinfo=pytz.utc)}
+                              'observed': now}
                     db.chgset_append(cid, source)
                 # Set timestamp from old seqno as new seqno might not yet exist
-                nptr = dapi.get_state('minute', seqno=db.pointer['seqno'])
+                seqno = db.pointer['seqno']
+                nptr = dapi.get_state('minute', seqno=seqno)
                 db.pointer_meta_update({'timestamp': nptr.timestamp()})
                 db.pointer_advance()
+                m_diff_ts.set(time.mktime(nptr.timestamp().timetuple())+nptr.timestamp().microsecond/1E6)
+                m_diff_proc_ts.set_to_current_time()
+                m_seqno.set(seqno)
+                m_head_seqno.set(head.sequenceno)
+                m_csets.set(len(chgsets))
         except KeyboardInterrupt as e:
             logger.warn('Processing interrupted, exiting...')
             raise e
@@ -228,6 +249,8 @@ def diff_fetch(args, config, db):
                 elapsed = end-start
             else:
                 elapsed = 0
+            if args.metrics:
+                m_pt.observe(elapsed)
             if ptr >= head.sequenceno: # No more diffs to fetch
                 delay = min(60, max(0, 60-elapsed))
                 logger.info('Processing seqno {} took {:.2f}s. Sleeping {:.2f}s'.format(ptr, elapsed, delay))
@@ -421,6 +444,10 @@ def main():
                         help='Set path to config file')
     parser.add_argument('--db', dest='db_url', default='mongodb://localhost:27017/',
                         help='Set url for database')
+    parser.add_argument('--metrics', dest='metrics', action='store_true', default=False,
+                        help='Enable metrics through Prometheus client API')
+    parser.add_argument('--metricsport', dest='metricsport', default=8000,
+                        help='Port through which to serve metrics')
     subparsers = parser.add_subparsers()
 
     parser_diff_fetch = subparsers.add_parser('diff-fetch')
@@ -453,6 +480,9 @@ def main():
 
     config = configfile.Config()
     config.load(path=args.configdir)
+
+    if args.metrics:
+        prometheus_client.start_http_server(args.metricsport)
 
     if args.func==diff_fetch:
         dbadm=True

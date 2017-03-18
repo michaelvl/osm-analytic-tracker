@@ -11,6 +11,8 @@ difftracker:
     requests:
       cpu: 100m
       memory: 512Mi
+  metrics:
+    enabled: True
 
 worker:
   replicas: 2
