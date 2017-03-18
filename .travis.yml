@@ -26,6 +26,5 @@ after_success:
 - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
 - docker build -t $REPO:$GITCOMMIT --file docker/Dockerfile .
 - docker tag $REPO:$GITCOMMIT $REPO:$TAG
-- docker tag $REPO:$GITCOMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER
 - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
 - docker push $REPO
