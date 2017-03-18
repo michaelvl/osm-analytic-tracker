@@ -177,12 +177,12 @@ def diff_fetch(args, config, db):
                   'observed': datetime.datetime.utcnow().replace(tzinfo=pytz.utc)}
         db.chgset_append(cid, source)
         return
-    if args.metrics:
+    if args and args.metrics:
         m_pt = prometheus_client.Histogram('osmtracker_minutely_diff_processing_time_seconds',
                                            'Processing time for latest minutely diff (seconds)')
         m_diff_ts = prometheus_client.Gauge('osmtracker_minutely_diff_timestamp',
                                             'Timestamp of recently processed minutely diff')
-        m_diff_proc_ts = prometheus_client.Gauge(osmtracker_'minutely_diff_processing_timestamp',
+        m_diff_proc_ts = prometheus_client.Gauge('osmtracker_minutely_diff_processing_timestamp',
                                                  'Timestamp of when recently processed minutely diff was processed')
         m_seqno = prometheus_client.Gauge('osmtracker_minutely_diff_latest_seqno',
                                           'Sequence number of recently processed minutely diff')
