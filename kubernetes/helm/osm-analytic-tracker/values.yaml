@@ -53,12 +53,13 @@ db:
     enabled: false
     accessMode: ReadWriteOnce
     size: 8Gi
-  dbadmin: adm.user
-  dbadmin_pass: adm.secret
-  dbuser_rw: rw.user
-  dbuser_rw_pass: rw.user.secret
-  dbuser_ro: ro.user
-  dbuser_ro_pass: ro.user.secret
+  users:
+    admin: adm.user
+    admin_pass: adm.secret
+    user_rw: rw.user
+    user_rw_pass: rw.user.secret
+    user_ro: ro.user
+    user_ro_pass: ro.user.secret
   image:
     image: michaelvl/mongo
     tag: 3.4.1-1

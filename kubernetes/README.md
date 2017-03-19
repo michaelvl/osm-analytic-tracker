@@ -1,4 +1,4 @@
-## Deployment using Kubernetes
+# Deployment using Kubernetes
 
 The 'all-in-one' container image
 ([michaelvl/osmtracker-all-in-one](https://hub.docker.com/r/michaelvl/osmtracker-all-in-one/))
@@ -13,18 +13,20 @@ The Kubernetes deployment consists of the following resources
 0. One or more stateless worker PODs for analyzing changesets.
 0. One or more stateless frontend PODs which use a POD volume for sharing data between the osmtracker backend and the Nginx web server.
 
+![Image](architecture.png?raw=true)
+
 The three osmtracker container types all use the [michaelvl/osmtracker](https://hub.docker.com/r/michaelvl/osmtracker/) Docker image.
 
 An actual deployment can be created either using the Helm charts or stand-alone
-yaml resource definitions.  A Helm based deployment is created as follows:
+yaml resource definitions.  See the Helm chart
+[README](kubernetes/helm/osm-analytic-tracker/README.md) for description of a
+Helm-based deployment.
 
-```
-kubectl create namespace osmtracker
-helm install --namespace osmtracker kubernetes/helm/osm-analytic-tracker
-```
+## Deployment from resource manifests
 
 The stand-alone Kubernetes deployment manifests can be found in the kubernetes
-folder.  Note that the PODs are using un-versioned images.
+folder. Generally the Helm-based deployment is recommeded and the stand-alone
+manifests will have fewer features.
 
 The resources can be deployed as follows:
 
@@ -72,4 +74,8 @@ For debugging you can run the osmtracker image interactively as follows:
 kubectl run -it test --image michaelvl/osmtracker --command /bin/bash
 ```
 
-![Image](architecture.png?raw=true)
+## Metrics
+
+The Helm-based deployment enable Prometheus-style metrics and a Grafana dashboard are available [here](osmtracker-grafana-dashboard.json?raw=true). The dashboard is shown below:
+
+![Image](grafana-dashboard.png?raw=true)
