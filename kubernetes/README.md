@@ -19,7 +19,7 @@ The three osmtracker container types all use the [michaelvl/osmtracker](https://
 
 An actual deployment can be created either using the Helm charts or stand-alone
 yaml resource definitions.  See the Helm chart
-[README](kubernetes/helm/osm-analytic-tracker/README.md) for description of a
+[README](helm/osm-analytic-tracker/README.md) for description of a
 Helm-based deployment.
 
 ## Deployment from resource manifests
