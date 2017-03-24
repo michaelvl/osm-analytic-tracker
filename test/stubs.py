@@ -61,6 +61,10 @@ class testDB(object):
         self.test_add_cid(10)
         self.url = 'TESTDATABASE'
         self.generation = 1
+        self.all_states = [self.STATE_NEW, self.STATE_BOUNDS_CHECK, self.STATE_BOUNDS_CHECKED,
+                           self.STATE_ANALYZING1, self.STATE_OPEN,self. STATE_CLOSED,
+                           self.STATE_ANALYZING2, self.STATE_REANALYZING,
+                           self.STATE_DONE, self.STATE_QUARANTINED]
         self.pointer = {'stype': 'minute',
                         'seqno': 12345678,
                         'timestamp': datetime.datetime(2007, 7, 17, 10, 0, 0).replace(tzinfo=pytz.utc),
@@ -149,6 +153,8 @@ class testDB(object):
     def show_brief(self, args, db, reltime=True):
         pass
 
+    def reanalyze(args, db):
+        pass
         
 class testConfig(config.Config):
     def __init__(self):

@@ -30,6 +30,9 @@ class DataBase(object):
         self.db = pymongo.database.Database(self.client, 'osmtracker', codec_options=CodecOptions(tz_aware=True))
         self.ctx = self.db.context
         self.csets = self.db.chgsets
+        self.all_states = [STATE_NEW, STATE_BOUNDS_CHECK, STATE_BOUNDS_CHECKED,
+                           STATE_ANALYZING1, STATE_OPEN, STATE_CLOSED,STATE_ANALYZING2,
+                           STATE_REANALYZING, STATE_DONE, STATE_QUARANTINED]
         if admin:
             self.csets.create_index('state')
             self.csets.create_index([('updated', pymongo.DESCENDING)])
@@ -343,7 +346,7 @@ def do_reanalyze(db, now, selector, newstate):
     cnt = db.chgsets.update_many(selector,
                                  {'$set': {'state': newstate,
                                            'state_changed': now}}).modified_count
-    print 'Re-scheduled {} csets for analysis (new state {})'.format(cnt, newstate)
+    logger.warn('Re-scheduled {} csets for analysis (new state {})'.format(cnt, newstate))
 
 def reanalyze(args, db):
     now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)

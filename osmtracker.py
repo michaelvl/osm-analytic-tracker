@@ -434,6 +434,28 @@ def worker(args, config, db):
             break
         time.sleep(15)
 
+def supervisor(args, config, db):
+    if args and args.metrics:
+        m_changesets = prometheus_client.Gauge('osmtracker_changeset_cnt',
+                                               'Number of changesets in database',
+                                               ['state'])
+    while True:
+        if args and args.metrics:
+            cset_cnt = dict()
+            for state in db.all_states:
+                cset_cnt[state] = 0
+            for c in db.chgsets_find():
+                cid = c['cid']
+                info = db.chgset_get_info(cid)
+                cset_cnt[info['state']] += 1
+            for state in db.all_states:
+                m_changesets.labels(state=state).set(cset_cnt[state])
+            if args:
+                db.reanalyze(args)
+        if not args or not args.track:
+            break
+        time.sleep(60)
+
 def main():
     logging.config.fileConfig('logging.conf')
     parser = argparse.ArgumentParser(description='OSM Changeset diff filter')
@@ -468,12 +490,17 @@ def main():
     parser_run_backends = subparsers.add_parser('run-backends')
     parser_run_backends.set_defaults(func=run_backends)
     parser_run_backends.add_argument('--track', action='store_true', default=False,
-                                   help='Track changes and re-run backends peridically')
+                                   help='Track changes and re-run backends periodically')
 
     parser_worker = subparsers.add_parser('worker')
     parser_worker.set_defaults(func=worker)
     parser_worker.add_argument('--track', action='store_true', default=False,
-                               help='Track changes and re-run worker tasks peridically')
+                               help='Track changes and re-run worker tasks periodically')
+
+    parser_supervisor = subparsers.add_parser('supervisor')
+    parser_supervisor.set_defaults(func=supervisor)
+    parser_supervisor.add_argument('--track', action='store_true', default=False,
+                                   help='Track changes and re-run supervisor tasks periodically')
 
     args = parser.parse_args()
     logging.getLogger('').setLevel(getattr(logging, args.log_level))
