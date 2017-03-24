@@ -445,9 +445,7 @@ def supervisor(args, config, db):
             for state in db.all_states:
                 cset_cnt[state] = 0
             for c in db.chgsets_find():
-                cid = c['cid']
-                info = db.chgset_get_info(cid)
-                cset_cnt[info['state']] += 1
+                cset_cnt[c['state']] += 1
             for state in db.all_states:
                 m_changesets.labels(state=state).set(cset_cnt[state])
             if args:
