@@ -30,9 +30,10 @@ class DataBase(object):
         self.db = pymongo.database.Database(self.client, 'osmtracker', codec_options=CodecOptions(tz_aware=True))
         self.ctx = self.db.context
         self.csets = self.db.chgsets
-        self.all_states = [STATE_NEW, STATE_BOUNDS_CHECK, STATE_BOUNDS_CHECKED,
-                           STATE_ANALYZING1, STATE_OPEN, STATE_CLOSED,STATE_ANALYZING2,
-                           STATE_REANALYZING, STATE_DONE, STATE_QUARANTINED]
+        self.all_states = [self.STATE_NEW, self.STATE_BOUNDS_CHECK, self.STATE_BOUNDS_CHECKED,
+                           self.STATE_ANALYZING1, self.STATE_OPEN, self.STATE_CLOSED,
+                           self.STATE_ANALYZING2, self.STATE_REANALYZING, self.STATE_DONE,
+                           self.STATE_QUARANTINED]
         if admin:
             self.csets.create_index('state')
             self.csets.create_index([('updated', pymongo.DESCENDING)])
