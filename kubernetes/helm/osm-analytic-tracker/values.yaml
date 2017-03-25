@@ -24,6 +24,16 @@ worker:
       cpu: 50m
       memory: 512Mi
 
+supervisor:
+  replicas: 1
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 50m
+      memory: 512Mi
+
 frontend:
   replicas: 2
   service:

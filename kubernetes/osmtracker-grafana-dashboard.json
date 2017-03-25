@@ -38,7 +38,7 @@
           "points": false,
           "renderer": "flot",
           "seriesOverrides": [],
-          "span": 12,
+          "span": 6,
           "stack": false,
           "steppedLine": false,
           "targets": [
@@ -47,7 +47,7 @@
               "intervalFactor": 2,
               "legendFormat": "Diff tracker service lag",
               "refId": "A",
-              "step": 4
+              "step": 10
             },
             {
               "expr": "time()-osmtracker_minutely_diff_timestamp",
@@ -55,7 +55,7 @@
               "intervalFactor": 2,
               "legendFormat": "Total database lag",
               "refId": "B",
-              "step": 4
+              "step": 10
             }
           ],
           "thresholds": [],
@@ -78,6 +78,87 @@
             {
               "format": "short",
               "label": "Seconds",
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ]
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": null,
+          "fill": 1,
+          "id": 5,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "span": 6,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "osmtracker_minutely_diff_head_seqno",
+              "hide": false,
+              "intervalFactor": 2,
+              "legendFormat": "Head seqno",
+              "metric": "osmtracker_minutely_diff_head_seqno",
+              "refId": "A",
+              "step": 10
+            },
+            {
+              "expr": "osmtracker_minutely_diff_latest_seqno",
+              "intervalFactor": 2,
+              "legendFormat": "Latest processed seqno",
+              "metric": "osmtracker_minutely_diff_latest_seqno",
+              "refId": "B",
+              "step": 10
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Replication sequence numbers",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
               "logBase": 1,
               "max": null,
               "min": null,
@@ -129,7 +210,7 @@
           "points": false,
           "renderer": "flot",
           "seriesOverrides": [],
-          "span": 6,
+          "span": 4,
           "stack": false,
           "steppedLine": true,
           "targets": [
@@ -205,7 +286,7 @@
           "points": false,
           "renderer": "flot",
           "seriesOverrides": [],
-          "span": 6,
+          "span": 4,
           "stack": false,
           "steppedLine": true,
           "targets": [
@@ -267,6 +348,78 @@
               "show": true
             }
           ]
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": null,
+          "fill": 1,
+          "id": 4,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "span": 4,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "osmtracker_changeset_cnt",
+              "hide": false,
+              "intervalFactor": 2,
+              "legendFormat": "{{state}}",
+              "refId": "A",
+              "step": 10
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Changesets in database",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ]
         }
       ],
       "repeat": null,
@@ -314,5 +467,5 @@
   },
   "timezone": "browser",
   "title": "OSMTracker",
-  "version": 4
+  "version": 3
 }

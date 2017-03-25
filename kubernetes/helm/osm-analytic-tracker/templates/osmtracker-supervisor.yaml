@@ -1,32 +1,30 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: osmtracker-difftracker-deployment
+  name: osmtracker-supervisor-deployment
   namespace: {{ .Release.Namespace }}
   labels:
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
 spec:
-  replicas: {{ .Values.difftracker.replicas }}
-  strategy:
-    type: Recreate
+  replicas: {{ .Values.supervisor.replicas }}
   template:
     metadata:
       labels:
         app: osmtracker
-        role: difftracker
+        role: supervisor
         metrics: 'true'
       annotations:
         checksum/config: {{ include (print $.Chart.Name "/templates/osmtracker-secret.yaml") . | sha256sum }}
     spec:
       containers:
-      - name: osmtracker-difftracker
+      - name: osmtracker-supervisor
         image: "{{ .Values.osmtracker.image.image }}:{{ .Values.osmtracker.image.tag }}"
         command: ["python", "/osmtracker/osm-analytic-tracker/osmtracker.py", "--db", "mongodb://$(DBUSER):$(DBPASSWD)@osmtracker-database/osmtracker",
           {{- if .Values.difftracker.metrics.enabled }}
 	         "--metrics",
           {{- end }}
-		 "--configdir", "/osmtracker-config"]
-        args: ["diff-fetch", "--track"]
+	  	"--configdir", "/osmtracker-config"]
+        args: ["supervisor", "--track"]
         imagePullPolicy: {{ .Values.osmtracker.image.pullPolicy }}
         env:
         - name: DBUSER
@@ -40,4 +38,4 @@ spec:
               name: osmtracker-secrets
               key: dbuser_rw_pass
         resources:
-{{ toYaml .Values.difftracker.resources | indent 10 }}
+{{ toYaml .Values.supervisor.resources | indent 10 }}

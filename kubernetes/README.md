@@ -79,3 +79,34 @@ kubectl run -it test --image michaelvl/osmtracker --command /bin/bash
 The Helm-based deployment enable Prometheus-style metrics and a Grafana dashboard are available [here](osmtracker-grafana-dashboard.json?raw=true). The dashboard is shown below:
 
 ![Image](grafana-dashboard.png?raw=true)
+
+The metrics exported are:
+
+- *osmtracker_changeset_cnt* - the number of changesets currently in the
+   database. Labelled with changeset state. If changesets in e.g. state NEW or
+   ANALYZING states it could mean the number of worker tasks cannot cope with
+   the influx of new changesets.
+
+- *osmtracker_minutely_diff_processing_time_seconds* - histogram with processing
+   time for individual minutely diffs. Since the minutely diffs are parsed by a
+   single entity this processing time should be less than one minute. Experience
+   show this to be on the order of a few seconds on typical HW.
+
+- *osmtracker_minutely_diff_timestamp* - currently observed timestamp from
+   minutely diff. If this timestamp stops progressing it could mean a problem
+   with OpenStreetMap replication, not the tracker service.
+
+- *osmtracker_minutely_diff_processing_timestamp* - timestamp of latest minutely
+   diff processing. This timestamp should typically be less than a minute plus a
+   little allowance for processing the minutely diff, e.g. less than 70s.  If
+   not, the tracker service might have an internal problem.
+
+- *osmtracker_minutely_diff_head_seqno* - latest head sequence number observed from OpenStreetMap replication service.
+
+- *osmtracker_minutely_diff_latest_seqno* - latest sequence number
+   processed. Should be identical or very close to
+   *osmtracker_minutely_diff_head_seqno*.
+
+- *osmtracker_minutely_diff_csets_observed* - number of chagesets observed in
+   the recent minutely diff. A very large influx of changesets might cause small
+   increased delays in the tracker.
