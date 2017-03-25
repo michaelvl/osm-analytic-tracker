@@ -435,10 +435,13 @@ def worker(args, config, db):
         time.sleep(15)
 
 def supervisor(args, config, db):
-    if args and args.metrics:
-        m_changesets = prometheus_client.Gauge('osmtracker_changeset_cnt',
-                                               'Number of changesets in database',
-                                               ['state'])
+    if args:
+        setattr(args, 'timeout', True)
+        setattr(args, 'cid', None)
+        if args.metrics:
+            m_changesets = prometheus_client.Gauge('osmtracker_changeset_cnt',
+                                                   'Number of changesets in database',
+                                                   ['state'])
     while True:
         if args and args.metrics:
             cset_cnt = dict()
@@ -449,7 +452,7 @@ def supervisor(args, config, db):
             for state in db.all_states:
                 m_changesets.labels(state=state).set(cset_cnt[state])
             if args:
-                db.reanalyze(args)
+                database.reanalyze(args, db)
         if not args or not args.track:
             break
         time.sleep(60)
@@ -466,7 +469,7 @@ def main():
                         help='Set url for database')
     parser.add_argument('--metrics', dest='metrics', action='store_true', default=False,
                         help='Enable metrics through Prometheus client API')
-    parser.add_argument('--metricsport', dest='metricsport', default=8000,
+    parser.add_argument('--metricsport', dest='metricsport', type=int, default=8000,
                         help='Port through which to serve metrics')
     subparsers = parser.add_subparsers()
 

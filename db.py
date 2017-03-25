@@ -347,7 +347,8 @@ def do_reanalyze(db, now, selector, newstate):
     cnt = db.chgsets.update_many(selector,
                                  {'$set': {'state': newstate,
                                            'state_changed': now}}).modified_count
-    logger.warn('Re-scheduled {} csets for analysis (new state {})'.format(cnt, newstate))
+    if cnt>0:
+        logger.warn('Re-scheduled {} csets for analysis (new state {})'.format(cnt, newstate))
 
 def reanalyze(args, db):
     now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)

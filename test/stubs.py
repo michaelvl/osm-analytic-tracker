@@ -98,6 +98,24 @@ class testDB(object):
     def chgsets_count(self):
         return len(self.csets)
     
+    def chgsets_find_selector(self, state=STATE_DONE, before=None, after=None, timestamp='updated'):
+        sel = dict()
+        if state:
+            if type(state) is list:
+                sel['state'] = {'$in': state}
+            else:
+                sel['state'] = state
+        if before or after:
+            sel[timestamp] = {}
+        if before:
+            sel[timestamp]['$lt'] = before
+        if after:
+            sel[timestamp]['$gte'] = after
+            # Work-around for year entries in the future
+            # See https://jira.mongodb.org/browse/PYTHON-557
+            sel[timestamp]['$lte'] = datetime.datetime.max
+        return sel
+
     def chgsets_find(self, state=STATE_DONE, before=None, after=None, timestamp='updated', sort=True):
         found = []
         for c in self.csets:
@@ -151,9 +169,6 @@ class testDB(object):
         return loads(c['info'])
 
     def show_brief(self, args, db, reltime=True):
-        pass
-
-    def reanalyze(args, db):
         pass
         
 class testConfig(config.Config):
