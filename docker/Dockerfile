@@ -23,8 +23,6 @@ ADD requirements.txt /osmtracker/
 RUN pip install -r /osmtracker/requirements.txt
 
 WORKDIR /osmtracker/osm-analytic-tracker
-# Override requirements.txt for osmapi
-RUN git clone https://github.com/MichaelVL/osmapi.git
 ADD http://download.geofabrik.de/europe/denmark.poly region.poly
 
 RUN mkdir /osmtracker-config
