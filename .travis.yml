@@ -33,5 +33,6 @@ after_success:
 
 - docker build -t $REPO_COMB:git-$GITCOMMIT --file docker/Dockerfile-all-in-one .
 - docker tag $REPO_COMB:git-$GITCOMMIT $REPO_COMB:$TAG
+- docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
 - docker push $REPO_COMB:git-$GITCOMMIT
 - docker push $REPO_COMB:$TAG
