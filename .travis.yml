@@ -28,8 +28,10 @@ after_success:
 - docker build -t $REPO:git-$GITCOMMIT --file docker/Dockerfile .
 - docker tag $REPO:git-$GITCOMMIT $REPO:$TAG
 - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
-- docker push $REPO
+- docker push $REPO:git-$GITCOMMIT
+- docker push $REPO:$TAG
 
 - docker build -t $REPO_COMB:git-$GITCOMMIT --file docker/Dockerfile-all-in-one .
 - docker tag $REPO_COMB:git-$GITCOMMIT $REPO_COMB:$TAG
-- docker push $REPO_COMB
+- docker push $REPO_COMB:git-$GITCOMMIT
+- docker push $REPO_COMB:$TAG
