@@ -8,6 +8,7 @@ services:
 env:
   global:
     - REPO=michaelvl/osmtracker
+    - REPO_COMB=michaelvl/osmtracker-all-in-one
     - GITCOMMIT=${TRAVIS_COMMIT::7}
 
 python:
@@ -28,3 +29,7 @@ after_success:
 - docker tag $REPO:git-$GITCOMMIT $REPO:$TAG
 - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
 - docker push $REPO
+
+- docker build -t $REPO_COMB:git-$GITCOMMIT --file docker/Dockerfile-all-in-one .
+- docker tag $REPO_COMB:git-$GITCOMMIT $REPO_COMB:$TAG
+- docker push $REPO_COMB
