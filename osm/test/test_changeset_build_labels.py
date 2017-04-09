@@ -21,7 +21,7 @@ class TestLabelFilter(unittest.TestCase):
     def test_1(self, Poly):
         self.cset.meta = {'user': 'useruser', 'tag': {'comment': 'Adjustments at somewhere'}}
         labels = [
-	    {"area": "region.poly", "label": "inside-area"},
+	    {"area_file": "region.poly", "label": "inside-area"},
 	    {"regex": [{".meta.tag.comment": "^Adjustments"}], "label": "adjustment"}
 	]
         Poly.return_value.contains_chgset.return_value = True
@@ -34,7 +34,7 @@ class TestLabelFilter(unittest.TestCase):
         self.cset.meta = {'user': 'useruser', 'tag': {'comment': 'Adjustments at somewhere'},
                           'min_lat': '48.00', 'max_lat': '50.00', 'min_lon': '50.00', 'max_lon': '52.00'}
         labels = [
-	    {"area": "region.poly", "area_check_type": "cset-center", "label": "cset-center-inside-area"},
+	    {"area_file": "region.poly", "area_check_type": "cset-center", "label": "cset-center-inside-area"},
 	]
         Poly.return_value.contains_chgset.return_value = True
         labels = self.cset.build_labels(labels)
@@ -105,7 +105,7 @@ class TestLabelFilter(unittest.TestCase):
     @patch('poly.Poly')
     def test_1_area_fail(self, Poly):
         labels = [
-	    {"area": "region.poly", "label": "inside-area"},
+	    {"area_file": "region.poly", "label": "inside-area"},
 	]
         Poly.return_value.contains_chgset.return_value = False
         labels = self.cset.build_labels(labels)

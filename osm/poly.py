@@ -35,5 +35,12 @@ class Poly:
                 return self.poly.intersects(geometry.Point(x1, y1))
         return None
 
+    def bbox(self):
+        return self.poly.bounds
+
+    def center(self):
+        bbox = self.bbox()
+        return ((bbox[2]+bbox[0])/2, (bbox[3]+bbox[1])/2)
+
     def __len__(self):
         return len(self.poly.exterior.xy[0])

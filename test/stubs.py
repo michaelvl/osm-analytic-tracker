@@ -180,7 +180,7 @@ class testConfig(config.Config):
 	        "geojsondiff-filename": "cset-{id}.json",
 	        "bounds-filename": "cset-{id}.bounds",
 	        "pre_labels": [
-	            {"area": "region.poly", "area_check_type": "cset-bbox", "label": "inside-area"},
+	            {"area_file": "region.poly", "area_check_type": "cset-bbox", "label": "inside-area"},
 	            {"regex": [{".meta.tag.comment": "^Adjustments"}], "label": "adjustments"}
 	        ],
 	        "prefilter_labels": [["inside-area", "adjustments"]],
@@ -200,20 +200,20 @@ class testConfig(config.Config):
 	            "type": "BackendHtml",
 	            "show_details": True,
 	            "show_comments": True,
-	            "path": "",
+	            "path": "dynamic",
 	            "title": "Recent Changesets",
 	            "filename" : "today.html",
 	            "template": "changeset.html"
 	        },
                 {
                     "type": "BackendHtml",
-                    "path": "",
+                    "path": "dynamic",
                     "filename" : "notes.html",
                     "template": "notes.html"
                 },
                 {
                     "type": "BackendHtml",
-                    "path": "",
+                    "path": "dynamic",
 	            "labels": ["address-node-change"],
 	            "title": "Recent Changesets Which Modifies Address Nodes",
                     "filename" : "dk_addresses.html",
@@ -221,23 +221,33 @@ class testConfig(config.Config):
                 },
                 {
                     "type": "BackendHtmlSummary",
+                    "path": "dynamic",
                     "filename" : "today-summ.html",
                     "template": "summary.html"
                 },
                 {
                     "type": "BackendGeoJson",
-                    "path": "",
+                    "path": "dynamic",
 	            "exptype": "cset-bbox",
                     "filename" : "today.json",
                     "click_url": "http://osm.expandable.dk/diffmap.html?cid={cid}"
                 },
                 {
                     "type": "BackendGeoJson",
-                    "path": "",
+                    "path": "dynamic",
 	            "exptype": "cset-files",
 	            "geojsondiff-filename": "cset-{id}.json",
 	            "bounds-filename": "cset-{id}.bounds",
                     "click_url": "http://osm.expandable.dk/diffmap.html?cid={cid}"
+                },
+                {
+                    "type": "BackendHtml",
+	            "init_only": True,
+                    "map_center": "56.0, 11.4",
+                    "map_scale": "6",
+                    "path": "",
+                    "filename" : "index.html",
+                    "template": "index.html"
                 }
             ]
         }

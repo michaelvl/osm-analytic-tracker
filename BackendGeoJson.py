@@ -16,9 +16,10 @@ logger = logging.getLogger(__name__)
 class Backend(Backend.Backend):
     def __init__(self, globalconfig, subcfg):
         super(Backend, self).__init__(globalconfig, subcfg)
+        self.cfg = subcfg
         self.click_url = subcfg['click_url']
         self.exptype = subcfg['exptype']
-        self.path = globalconfig.getpath('path', 'tracker')
+        self.path = self.build_filename(globalconfig, subcfg, filename_key=None)
         if self.exptype == 'cset-files':
             self.geojson = subcfg['geojsondiff-filename']
             self.bbox = subcfg['bounds-filename']

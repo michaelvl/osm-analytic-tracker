@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
+import os, sys, time
 from osmapi import OsmApi
 import diff
 import pprint
 import geojson as gj
-import sys, time
 import geotools
 import poly
 import logging
@@ -871,11 +871,15 @@ class Changeset(object):
                     logger.debug('Regex test OK')
                 else:
                     match = False
-            if 'area' in dd:
+            if 'area_file' in dd:
                 logger.debug('area test, rule={}'.format(dd))
                 area = poly.Poly()
-                area.load(dd['area'])
-                logger.debug("Loaded area polygon from '{}' with {} points".format(dd['area'], len(area)))
+                if 'OSMTRACKER_REGION' in os.environ:
+                    area_file = os.environ['OSMTRACKER_REGION']
+                else:
+                    area_file = dd['area_file']
+                area.load(area_file)
+                logger.debug("Loaded area polygon from '{}' with {} points".format(area_file, len(area)))
                 if ('area_check_type' not in dd or dd['area_check_type']=='cset-bbox') and area.contains_chgset(self.meta):
                     logger.debug('Area test OK, changeset bbox')
                 elif set(['min_lon', 'min_lat', 'max_lon', 'max_lat']).issubset(self.meta.keys()) and ('area_check_type' in dd and dd['area_check_type']=='cset-center') and area.contains((float(self.meta['min_lon'])+float(self.meta['max_lon']))/2,

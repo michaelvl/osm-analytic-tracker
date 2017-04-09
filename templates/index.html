@@ -155,11 +155,11 @@ var tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 var tileUrlBw = 'https://{s}.tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png'
 var osmAttrib='&copy <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
 
-var map = new L.Map('map', {'dragging' : true, 'zoomControl': false, 'doubleClickZoom': false,}).setView(new L.LatLng(56.0, 11.4),6);
+var map = new L.Map('map', {'dragging' : true, 'zoomControl': false, 'doubleClickZoom': false,}).setView(new L.LatLng({{cfg_map_center}}),{{cfg_map_scale}});
 //var osm = new L.TileLayer(tileUrlBw,
 //  {minZoom: 6, maxZoom: 18, subdomains: ['a','b','c'], attribution: osmAttrib});
 var osm = new L.TileLayer(tileUrl,
-  {minZoom: 6, maxZoom: 18, subdomains: ['a','b','c'], attribution: osmAttrib, opacity:0.4});
+  {minZoom: 1, maxZoom: 20, subdomains: ['a','b','c'], attribution: osmAttrib, opacity:0.4});
 map.addLayer(osm);
 map.attributionControl.setPrefix(''); // Dont show 'powered by..'
 

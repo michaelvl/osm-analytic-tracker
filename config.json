@@ -3,8 +3,8 @@
     "tracker": {
 	"osm_api_url": "https://api.openstreetmap.org",
 	"pre_labels": [
-	    {"area": "region.poly", "area_check_type": "cset-bbox", "label": "inside-area"},
-	    {"area": "region.poly", "area_check_type": "cset-center", "label": "center-inside-area"},
+	    {"area_file": "/osm-regions/denmark.poly", "area_check_type": "cset-bbox", "label": "inside-area"},
+	    {"area_file": "/osm-regions/denmark.poly", "area_check_type": "cset-center", "label": "center-inside-area"},
 	    {"__unused_example_regex": [{".meta.comment": "^Adjustments"}], "label": "adjustment"}
 	],
 	"prefilter_labels": [["inside-area", "center-inside-area"]],
@@ -20,49 +20,61 @@
 	"template_path": "templates"
     },
     "backends": [
+        {
+            "type": "BackendHtml",
+	    "init_only": true,
+            "map_center": {"area_file_conversion_type": "area_center",
+                           "area_file": "/osm-regions/denmark.poly"},
+            "map_scale": "6",
+            "path": "",
+            "filename" : "index.html",
+            "template": "index.html"
+        },
 	{
 	    "type": "BackendHtml",
 	    "show_details": true,
 	    "show_comments": true,
-	    "path": "",
-	    "title": "Recent Changesets",
+	    "path": "dynamic",
+	    "page_title": "Recent Changesets",
 	    "filename" : "today.html",
 	    "template": "changeset.html"
 	},
         {
             "type": "BackendHtml",
-            "path": "",
+            "path": "dynamic",
             "filename" : "notes.html",
             "template": "notes.html"
         },
         {
             "type": "BackendHtml",
-            "path": "",
+            "path": "dynamic",
 	    "labels": ["address-node-change"],
-	    "title": "Recent Changesets Which Modifies Address Nodes",
+	    "page_title": "Recent Changesets Which Modifies Address Nodes",
             "filename" : "dk_addresses.html",
             "template": "changeset.html"
         },
         {
             "type": "BackendHtmlSummary",
-            "path": "",
+            "path": "dynamic",
             "filename" : "today-summ.html",
             "template": "summary.html"
         },
         {
             "type": "BackendGeoJson",
-            "path": "",
+            "path": "dynamic",
 	    "exptype": "cset-bbox",
             "filename" : "today.json",
-            "click_url": "http://osm.expandable.dk/diffmap.html?cid={cid}"
+            "xclick_url": "http://osm.expandable.dk/diffmap.html?cid={cid}",
+            "click_url": "diffmap.html?cid={cid}"
         },
         {
             "type": "BackendGeoJson",
-            "path": "",
+            "path": "dynamic",
 	    "exptype": "cset-files",
 	    "geojsondiff-filename": "cset-{id}.json",
 	    "bounds-filename": "cset-{id}.bounds",
-            "click_url": "http://osm.expandable.dk/diffmap.html?cid={cid}"
+            "xclick_url": "http://osm.expandable.dk/diffmap.html?cid={cid}",
+            "click_url": "diffmap.html?cid={cid}"
         }
     ]
 }

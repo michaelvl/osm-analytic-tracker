@@ -1,3 +1,4 @@
+import os
 import datetime, pytz
 import HumanTime
 import osm.changeset as oc
@@ -9,6 +10,15 @@ class Backend(object):
         self.generation = -1 # DB might start out with 'None'
         self.config = config
         self.subcfg = subcfg
+
+    def build_filename(self, globalconfig, subcfg, filename_key='filename'):
+        if filename_key:
+            filename = subcfg[filename_key]
+        else:
+            filename = ''
+        if 'path' in subcfg:
+            filename = os.path.join(subcfg['path'], filename)
+        return os.path.join(globalconfig.getpath('path', 'tracker'), filename)
 
     def print_state(self, state):
         time = state.generation_timestamp.strftime('%Y:%m:%d %H:%M:%S')

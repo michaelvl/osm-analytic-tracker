@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 
+import os
 import Backend
 import datetime, pytz
 import HumanTime
 import osm.diff as osmdiff
 import osm.changeset as oc
+import osm.poly as poly
 import operator
 import logging
 import jinja2
 import tempfilewriter
-from os.path import join
 
 logger = logging.getLogger(__name__)
 
@@ -17,10 +18,25 @@ class Backend(Backend.Backend):
 
     def __init__(self, globalconfig, subcfg):
         super(Backend, self).__init__(globalconfig, subcfg)
-        self.list_fname = join(globalconfig.getpath('path', 'tracker'), subcfg['filename'])
+        self.list_fname = self.build_filename(globalconfig, subcfg)
         self.template_name = subcfg['template']
+        self.cfg = subcfg
+        # Interpret special keys
+        if 'map_center' in self.cfg and type(self.cfg['map_center']) is dict:
+            if self.cfg['map_center']['area_file_conversion_type'] == 'area_center':
+                area = poly.Poly()
+                if 'OSMTRACKER_REGION' in os.environ:
+                    area_file = os.environ['OSMTRACKER_REGION']
+                else:
+                    area_file = self.cfg['map_center']['area_file']
+                area.load(area_file)
+                c = area.center()
+                logger.debug("Loaded area polygon from '{}' with {} points, center {}".format(area_file, len(area), c))
+                self.cfg['map_center'] = '{},{}'.format(c[1], c[0])
+        if 'OSMTRACKER_MAP_SCALE' in os.environ:
+            self.cfg['map_scale'] = os.environ['OSMTRACKER_MAP_SCALE']
+
         self.labels = subcfg.get('labels', None)
-        self.title = subcfg.get('title', None)
 
         self.show_details = subcfg.get('show_details', True)
         self.show_comments = subcfg.get('show_comments', True)
@@ -60,9 +76,11 @@ class Backend(Backend.Backend):
                     'csets_err': [],
                     'csetmeta': {},
                     'csetinfo': {},
-                    'page_title': self.title,
                     'show_details': self.show_details,
                     'show_comments': self.show_comments }
+            # All Backend config with 'cfg_' prefix
+            for k,v in self.cfg.iteritems():
+                ctx['cfg_'+k] = v
             notes = 0
             csets_total = 0
             csets_w_notes = 0

@@ -416,14 +416,18 @@ def run_backends(args, config, db):
     for backend in blist:
         backends.append(load_backend(backend, config))
     logger.debug('Loaded {} backends'.format(len(backends)))
+    initial = True
     while True:
         for b in backends:
+            if not initial and 'init_only' in b.cfg and b.cfg['init_only']:
+                continue
             starttime = time.clock()
             b.print_state(db)
             logger.info('Running backend {} took {:.2f}s'.format(b, time.clock()-starttime))
         if not (args and args.track):
             break
         time.sleep(60)
+        initial = False
     return 0
 
 def worker(args, config, db):

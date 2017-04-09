@@ -56,7 +56,7 @@ TL;DR:
 Run it using Docker:
 
 ```
-docker run -p 8080:80 michaelvl/osmtracker-all-in-one
+docker run -p 8080:80 -e OSMTRACKER_REGION="/osm-regions/denmark.poly" -e OSMTRACKER_MAP_SCALE="6" michaelvl/osmtracker-all-in-one
 ```
 
 and point your browser to 127.0.0.1:8080. This docker image contain all
@@ -66,6 +66,14 @@ production-class deployments take a look at the [Kubernetes deployment](kubernet
 in the kubernetes folder.
 
 ### Using an alternative config
+
+The multi-dimensional labeling system described below allows for quite advanced
+configurations, however, the most typical configuration is to change the focus
+region and the scale of the default map. This can be done by setting the
+environment variables OSMTRACKER_REGION and OSMTRACKER_MAP_SCALE.  See the
+[regions.txt](docker/regions.txt) for available regions in the pre-build images.
+
+Using a full custom config file can be done as follows:
 
 ```
 curl -O https://raw.githubusercontent.com/MichaelVL/osm-analytic-tracker/master/config.json
@@ -99,8 +107,8 @@ i.e. '[['foo', 'bar'], ['baz']]' would mean that a changeset should have labels
 
 ```
 	"pre_labels": [
-	    {"area": "region.poly", "area_check_type": "cset-bbox", "label": "inside-area"},
-	    {"area": "region.poly", "area_check_type": "cset-center", "label": "center-inside-area"},
+	    {"area_file": "region.poly", "area_check_type": "cset-bbox", "label": "inside-area"},
+	    {"area_file": "region.poly", "area_check_type": "cset-center", "label": "center-inside-area"},
 	    {"regex": [{".meta.tag.comment": ".*#\\w+"}], "label": "mapping-event"}
 	],
 	"prefilter_labels": [["inside-area", "center-inside-area", "mapping-event"]],
@@ -154,7 +162,7 @@ for the backends should be configured.
 
 ### Dependencies
 
-See Dockerfile.
+See requirements.txt and Dockerfiles.
 
 ### Links
 
