@@ -13,6 +13,14 @@ cd osm-analytic-tracker
 helm install --name osmtracker --namespace osmtracker kubernetes/helm/osm-analytic-tracker
 ```
 
+The typical customization is to specify a different region than denmark and
+possibly also a different initial zoom value for the overview map. This can be
+done by passing alternative values to helm:
+
+```
+helm install --name osmtracker --namespace osmtracker kubernetes/helm/osm-analytic-tracker --set osmtracker.region=/osm-regions/sweden.poly,osmtracker.map_scale=4
+```
+
 Note that you need to have helm initialized in your Kubernetes cluster before deploying.
 
 ## Configuration
@@ -21,6 +29,11 @@ The following table lists the configurable parameters of OpenStreetMap Analytic 
 
 | Parameter | Description | Default |
 | --------- | ----------- | ------- |
+| `osmtracker.image.region` | Area to use for filtering changesets | /osm-regions/denmark.poly |
+| `osmtracker.image.map_scale` | Initial zoom for overview map | 6 |
+| `osmtracker.image.image` | Image name for OpenStreetMap Analytic tracker services | michaelvl/osmtracker |
+| `osmtracker.image.tag` | Image tag. See [here](https://hub.docker.com/r/michaelvl/osmtracker/tags/) | latest |
+| `osmtracker.image.pullPolicy` | Image pull policy | IfNotPresent |
 | `difftracker.replicas` | Number of minutely diff trackers. Should generally not be changed! | 1 |
 | `difftracker.resources.limits` | Service resource limits | `{cpu: 500m, memory: 1Gi}` |
 | `difftracker.resources.requests` | Service resource requests | `{cpu: 100m,  memory: 512Mi}` |
@@ -33,9 +46,6 @@ The following table lists the configurable parameters of OpenStreetMap Analytic 
 | `frontend.service.type` | Frontend service type | NodePort |
 | `frontend.service.externalPort` | If frontend service type is NodePort, this port is used | 30000 |
 | `frontend.service.internalPort` | Internal port number. Points to internal web server | 80 |
-| `osmtracker.image.image` | Image name for OpenStreetMap Analytic tracker services | michaelvl/osmtracker |
-| `osmtracker.image.tag` | Image tag. See [here](https://hub.docker.com/r/michaelvl/osmtracker/tags/) | latest |
-| `osmtracker.image.pullPolicy` | Image pull policy | IfNotPresent |
 | `web.image.image` | Web server image | nginx |
 | `web.image.tag` | Web server image tag | 1.11-alpine |
 | `web.image.pullPolicy` | Web server image pull policy | IfNotPresent |
@@ -58,3 +68,5 @@ install`. For example,
 ```
 helm install --name osmtracker --namespace osmtracker osm-analytic-tracker/kubernetes/helm/osm-analytic-tracker --set osmtracker.image.tag=66fc207
 ```
+
+For the most recent images, see [here](https://hub.docker.com/r/michaelvl/osmtracker/tags/)

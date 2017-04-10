@@ -22,6 +22,8 @@ spec:
         args: ["worker", "--track"]
         imagePullPolicy: {{ .Values.osmtracker.image.pullPolicy }}
         env:
+        - name: OSMTRACKER_REGION
+          value: "{{ .Values.osmtracker.region }}"
         - name: DBUSER
           valueFrom:
             secretKeyRef:

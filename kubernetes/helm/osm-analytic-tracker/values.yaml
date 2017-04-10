@@ -45,6 +45,8 @@ frontend:
 # shared between multiple osm-analytic-tracker pods
 
 osmtracker:
+  region: /osm-regions/denmark.poly
+  map_scale: 6
   image:
     image: michaelvl/osmtracker
     tag: latest

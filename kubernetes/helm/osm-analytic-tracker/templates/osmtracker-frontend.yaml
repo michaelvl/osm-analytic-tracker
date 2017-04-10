@@ -30,6 +30,10 @@ spec:
             path: /
             port: {{ .Values.frontend.service.internalPort }}
         env:
+        - name: OSMTRACKER_REGION
+          value: "{{ .Values.osmtracker.region }}"
+        - name: OSMTRACKER_MAP_SCALE
+          value: "{{ .Values.osmtracker.map_scale }}"
         - name: DBUSER
           valueFrom:
             secretKeyRef:

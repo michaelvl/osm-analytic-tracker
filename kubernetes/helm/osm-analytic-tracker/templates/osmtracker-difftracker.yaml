@@ -29,6 +29,8 @@ spec:
         args: ["diff-fetch", "--track"]
         imagePullPolicy: {{ .Values.osmtracker.image.pullPolicy }}
         env:
+        - name: OSMTRACKER_REGION
+          value: "{{ .Values.osmtracker.region }}"
         - name: DBUSER
           valueFrom:
             secretKeyRef:
