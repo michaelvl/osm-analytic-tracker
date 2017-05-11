@@ -455,8 +455,8 @@ def supervisor(args, config, db):
                 cset_cnt[c['state']] += 1
             for state in db.all_states:
                 m_changesets.labels(state=state).set(cset_cnt[state])
-            if args:
-                database.reanalyze(args, db)
+        if args:
+            database.reanalyze(args, db)
         if not args or not args.track:
             break
         time.sleep(60)
