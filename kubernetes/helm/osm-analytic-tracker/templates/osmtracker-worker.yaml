@@ -13,7 +13,7 @@ spec:
         app: osmtracker
         role: worker
       annotations:
-        checksum/config: {{ include (print $.Chart.Name "/templates/osmtracker-secret.yaml") . | sha256sum }}
+        checksum/config: {{ include (print $.Chart.Name "/templates/osmtracker-secrets.yaml") . | sha256sum }}
     spec:
       containers:
       - name: osmtracker-worker
@@ -21,6 +21,9 @@ spec:
         command: ["python", "/osmtracker/osm-analytic-tracker/osmtracker.py", "--db", "mongodb://$(DBUSER):$(DBPASSWD)@osmtracker-database/osmtracker", "--configdir", "/osmtracker-config"]
         args: ["worker", "--track"]
         imagePullPolicy: {{ .Values.osmtracker.image.pullPolicy }}
+        securityContext:
+          runAsNonRoot: true
+          readOnlyRootFilesystem: true
         env:
         - name: OSMTRACKER_REGION
           value: "{{ .Values.osmtracker.region }}"

@@ -33,9 +33,14 @@ RUN mkdir /osmtracker-config
 ADD config.json /osmtracker-config/
 RUN sed -i 's/"path": "html"/"path": "\/html"/' /osmtracker-config/config.json
 
-ADD *.py logging.conf ./
+ADD *.py docker/logging.conf ./
 ADD osm ./osm
 RUN mkdir /osmtracker/templates
 ADD templates templates/
+
+RUN groupadd -g 945 osmtracker
+RUN useradd -r -u 945 -g osmtracker osmtracker
+RUN chown -R osmtracker:osmtracker /osmtracker
+USER osmtracker
 
 ENTRYPOINT ["python", "/osmtracker/osm-analytic-tracker/osmtracker.py", "--configdir", "/osmtracker-config"]

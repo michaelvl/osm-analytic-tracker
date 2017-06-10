@@ -35,7 +35,7 @@ supervisor:
       memory: 512Mi
 
 frontend:
-  replicas: 2
+  replicas: 1
   service:
     name: osmtracker-frontend
     type: NodePort

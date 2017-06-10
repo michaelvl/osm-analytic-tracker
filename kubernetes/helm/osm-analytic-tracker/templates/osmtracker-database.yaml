@@ -13,7 +13,7 @@ spec:
         app: osmtracker
         role: database
       annotations:
-        checksum/config: {{ include (print $.Chart.Name "/templates/osmtracker-secret.yaml") . | sha256sum }}
+        checksum/config: {{ include (print $.Chart.Name "/templates/osmtracker-secrets.yaml") . | sha256sum }}
     spec:
       containers:
       - name: mongo

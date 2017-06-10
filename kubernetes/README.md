@@ -15,7 +15,7 @@ The Kubernetes deployment consists of the following resources
 
 ![Image](architecture.png?raw=true)
 
-The three osmtracker container types all use the [michaelvl/osmtracker](https://hub.docker.com/r/michaelvl/osmtracker/) Docker image.
+The three osmtracker container types all use the [michaelvl/osmtracker](https://hub.docker.com/r/michaelvl/osmtracker/) Docker image. Note that this image is using a non-root user with UID and GID of 945 and the helm charts enforce a non-root user together with a read-only filesystem.
 
 An actual deployment can be created either using the Helm charts or stand-alone
 yaml resource definitions.  See the Helm chart

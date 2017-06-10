@@ -16,7 +16,7 @@ spec:
         role: difftracker
         metrics: 'true'
       annotations:
-        checksum/config: {{ include (print $.Chart.Name "/templates/osmtracker-secret.yaml") . | sha256sum }}
+        checksum/config: {{ include (print $.Chart.Name "/templates/osmtracker-secrets.yaml") . | sha256sum }}
     spec:
       containers:
       - name: osmtracker-difftracker
@@ -28,6 +28,9 @@ spec:
 		 "--configdir", "/osmtracker-config"]
         args: ["diff-fetch", "--track"]
         imagePullPolicy: {{ .Values.osmtracker.image.pullPolicy }}
+        securityContext:
+          runAsNonRoot: true
+          readOnlyRootFilesystem: true
         env:
         - name: OSMTRACKER_REGION
           value: "{{ .Values.osmtracker.region }}"

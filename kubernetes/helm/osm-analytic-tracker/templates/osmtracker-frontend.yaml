@@ -13,7 +13,7 @@ spec:
         app: osmtracker
         role: frontend
       annotations:
-        checksum/config: {{ include (print $.Chart.Name "/templates/osmtracker-secret.yaml") . | sha256sum }}
+        checksum/config: {{ include (print $.Chart.Name "/templates/osmtracker-secrets.yaml") . | sha256sum }}
     spec:
       containers:
       - name: osmtracker-frontend
@@ -21,6 +21,9 @@ spec:
         command: ["python", "/osmtracker/osm-analytic-tracker/osmtracker.py", "--db", "mongodb://$(DBUSER):$(DBPASSWD)@osmtracker-database/osmtracker", "--configdir", "/osmtracker-config"]
         args: ["run-backends", "--track"]
         imagePullPolicy: {{ .Values.osmtracker.image.pullPolicy }}
+        securityContext:
+          runAsNonRoot: true
+          readOnlyRootFilesystem: true
         livenessProbe:
           httpGet:
             path: /
