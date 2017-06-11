@@ -1,5 +1,4 @@
-FROM python:2
-#FROM debian:jessie
+FROM python:2-slim
 #FROM resin/rpi-raspbian
 
 # Debian/python base image
