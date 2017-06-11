@@ -22,8 +22,7 @@ spec:
         args: ["run-backends", "--track"]
         imagePullPolicy: {{ .Values.osmtracker.image.pullPolicy }}
         securityContext:
-          runAsNonRoot: true
-          readOnlyRootFilesystem: true
+{{ toYaml .Values.osmtracker.securityContext | indent 10 }}
         livenessProbe:
           httpGet:
             path: /

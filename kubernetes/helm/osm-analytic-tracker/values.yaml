@@ -51,6 +51,9 @@ osmtracker:
     image: michaelvl/osmtracker
     tag: latest
     pullPolicy: IfNotPresent
+  securityContext:
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
 
 # supporting services
 

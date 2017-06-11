@@ -27,8 +27,7 @@ spec:
         args: ["supervisor", "--track"]
         imagePullPolicy: {{ .Values.osmtracker.image.pullPolicy }}
         securityContext:
-          runAsNonRoot: true
-          readOnlyRootFilesystem: true
+{{ toYaml .Values.osmtracker.securityContext | indent 10 }}
         env:
         - name: DBUSER
           valueFrom:

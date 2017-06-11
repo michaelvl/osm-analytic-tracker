@@ -29,8 +29,7 @@ spec:
         args: ["diff-fetch", "--track"]
         imagePullPolicy: {{ .Values.osmtracker.image.pullPolicy }}
         securityContext:
-          runAsNonRoot: true
-          readOnlyRootFilesystem: true
+{{ toYaml .Values.osmtracker.securityContext | indent 10 }}
         env:
         - name: OSMTRACKER_REGION
           value: "{{ .Values.osmtracker.region }}"
