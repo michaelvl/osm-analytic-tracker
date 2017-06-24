@@ -103,8 +103,10 @@ class DataBase(object):
     def chgsets_count(self):
         return self.csets.count()
 
-    def chgsets_find_selector(self, state=STATE_DONE, before=None, after=None, timestamp='updated'):
+    def chgsets_find_selector(self, state=STATE_DONE, before=None, after=None, timestamp='updated', cid=None):
         sel = dict()
+        if cid:
+            sel['cid'] = cid
         if state:
             if type(state) is list:
                 sel['state'] = {'$in': state}
@@ -121,8 +123,8 @@ class DataBase(object):
             sel[timestamp]['$lte'] = datetime.datetime.max
         return sel
     
-    def chgsets_find(self, state=STATE_DONE, before=None, after=None, timestamp='updated', sort=True):
-        sel = self.chgsets_find_selector(state, before, after, timestamp)
+    def chgsets_find(self, state=STATE_DONE, before=None, after=None, timestamp='updated', sort=True, cid=None):
+        sel = self.chgsets_find_selector(state, before, after, timestamp, cid)
         if sort:
             cursor = self.csets.find(sel).sort(timestamp, pymongo.DESCENDING)
         else:

@@ -75,6 +75,9 @@ class testDB(object):
     def test_add_cid(self, cid, state=STATE_NEW, append=True):
         cset = {'cid' : cid, 'state': state, 'labels': [],
                 'refreshed': datetime.datetime(2007, 7, 17, 0, 3, 4).replace(tzinfo=pytz.utc),
+                'updated': datetime.datetime(2007, 7, 17, 0, 3, 4).replace(tzinfo=pytz.utc),
+                'state_changed': datetime.datetime(2007, 7, 17, 0, 3, 4).replace(tzinfo=pytz.utc),
+                'queued': datetime.datetime(2007, 7, 17, 0, 3, 4).replace(tzinfo=pytz.utc),
                 'source': {'sequenceno': 123456,
                            'observed':datetime.datetime(2007, 7, 17, 8, 3, 4).replace(tzinfo=pytz.utc)}}
         if not append:
@@ -98,8 +101,10 @@ class testDB(object):
     def chgsets_count(self):
         return len(self.csets)
     
-    def chgsets_find_selector(self, state=STATE_DONE, before=None, after=None, timestamp='updated'):
+    def chgsets_find_selector(self, state=STATE_DONE, before=None, after=None, timestamp='updated', cid=None):
         sel = dict()
+        if cid:
+            sel['cid'] = cid
         if state:
             if type(state) is list:
                 sel['state'] = {'$in': state}
@@ -116,14 +121,16 @@ class testDB(object):
             sel[timestamp]['$lte'] = datetime.datetime.max
         return sel
 
-    def chgsets_find(self, state=STATE_DONE, before=None, after=None, timestamp='updated', sort=True):
+    def chgsets_find(self, state=STATE_DONE, before=None, after=None, timestamp='updated', sort=True, cid=None):
         found = []
         for c in self.csets:
+            if cid and cid!=c['cid']:
+                continue
             if type(state) is list:
                 if c['state'] in state:
                     found.append(c)
             else:
-                if c['state']==state:
+                if c['state']==state or not state:
                     found.append(c)
         return DBcursor(found)
 

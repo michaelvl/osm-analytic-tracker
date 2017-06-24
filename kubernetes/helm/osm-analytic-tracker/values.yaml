@@ -42,6 +42,21 @@ frontend:
     externalPort: 30000
     internalPort: 80
 
+apiserver:
+  enabled: false
+  replicas: 1
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 50m
+      memory: 512Mi
+  service:
+    name: osmtracker-apiserver
+    type: NodePort
+    externalPort: 30001
+
 # shared between multiple osm-analytic-tracker pods
 
 osmtracker:

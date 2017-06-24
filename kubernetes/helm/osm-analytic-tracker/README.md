@@ -41,11 +41,16 @@ The following table lists the configurable parameters of OpenStreetMap Analytic 
 | `worker.replicas` | Number of agents analysing changesets. More than one is generally recommended. | 2 |
 | `worker.resources.limits` | Worker resource limits | `{cpu: 500m, memory: 1Gi}` |
 | `worker.resources.requests` | Worker resource requests | `{cpu: 50m, memory: 512Mi}` |
-| `frontend.replicas` | Number of web frontends. Two recommended for HA during upgrade. | 2 |
+| `frontend.replicas` | Number of web frontends. Two recommended for HA during upgrade. | 1 |
 | `frontend.service.name` | Name of frontend Kubernetes service | osmtracker-frontend |
 | `frontend.service.type` | Frontend service type | NodePort |
 | `frontend.service.externalPort` | If frontend service type is NodePort, this port is used | 30000 |
 | `frontend.service.internalPort` | Internal port number. Points to internal web server | 80 |
+| `apiserver.enabled` | API server enable. | false |
+| `apiserver.replicas` | Number of API server instances. Two recommended for HA during upgrade. | 1 |
+| `apiserver.service.name` | Name of API server Kubernetes service | osmtracker-apiserver |
+| `apiserver.service.type` | API server service type | NodePort |
+| `apiserver.service.externalPort` | If API server service type is NodePort, this port is used | 30001 |
 | `web.image.image` | Web server image | nginx |
 | `web.image.tag` | Web server image tag | 1.11-alpine |
 | `web.image.pullPolicy` | Web server image pull policy | IfNotPresent |
@@ -57,7 +62,7 @@ The following table lists the configurable parameters of OpenStreetMap Analytic 
 | `db.users.user_rw` | Database read-write user name. Used for worker access to database | rw.user |
 | `db.users.user_rw_pass` | Database read-write user password. Used for worker access to database. It is highly recommended to change this from the default | rw.user.secret |
 | `db.users.user_ro` | Database read-only user name. Used for web-frontend access to database | ro.user |
-| `db.users.user_ro_pass` | Database read-only user password. Used for web-frontend access to database. It is highly recommended to change this from the default | ro.user.secret |
+| `db.users.user_ro_pass` | Database read-only user password. Used for web-frontend and API server access to database. It is highly recommended to change this from the default | ro.user.secret |
 | `db.image.image` | Database image name | michaelvl/mongo |
 | `db.image.tag` | Database image tag | 3.4.1-1 |
 | `db.image.pullPolicy` | Database image pull policy | IfNotPresent |

@@ -1,0 +1,24 @@
+{{ if .Values.apiserver.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: osmtracker-apiserver
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: osmtracker
+    role: apiserver-service
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+spec:
+  type: {{ .Values.apiserver.service.type }}
+  ports:
+  - port: {{ .Values.apiserver.service.externalPort }}
+    targetPort: 5000
+{{- if contains "NodePort" .Values.apiserver.service.type }}
+    nodePort: {{ .Values.apiserver.service.externalPort }}
+{{- end }}
+    protocol: TCP
+    name: {{ .Values.apiserver.service.name }}
+  selector:
+    app: osmtracker
+    role: apiserver
+{{ end }}

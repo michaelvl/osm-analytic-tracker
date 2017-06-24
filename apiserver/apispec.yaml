@@ -1,0 +1,93 @@
+swagger: '2.0'
+info:
+  title: OpenStreetMap Analytic Tracker API
+  version: '0.1'
+basePath: /api/v0.1
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /changesets:
+    get:
+      operationId: apiserver.api.get_changesets
+      summary: Get list of changesets
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of changesets to get
+          type: integer
+          minimum: 0
+          default: 0
+        - name: state
+          in: query
+          description: Filter changesets on state
+          type: string
+      responses:
+        '200':
+          description: List of changesets
+          schema:
+            type: object
+            properties:
+              changeset:
+                type: array
+                items:
+                  $ref: '#/definitions/Changeset'
+              timestamp:
+                $ref: '#/definitions/Timestamp'
+  '/changeset/{cset_id}':
+    get:
+      operationId: apiserver.api.get_changeset
+      summary: Get changeset
+      parameters:
+        - $ref: '#/parameters/cset_id'
+      responses:
+        '200':
+          description: Changeset data
+          schema:
+            $ref: '#/definitions/Changeset'
+  /replication:
+    get:
+      operationId: apiserver.api.get_pointer
+      summary: Get current replication pointer
+      responses:
+        '200':
+          description: Current pointer data
+          schema:
+            #$ref: '#/definitions/ReplicationPointer'
+            $ref: '#/definitions/Changeset'
+parameters:
+  cset_id:
+    name: cset_id
+    description: Changeset ID
+    type: integer
+    in: path
+    required: true
+definitions:
+  ChangesetID:
+    description: Changeset ID
+    type: integer
+    minimum: 1
+    example: 42
+  Changeset:
+    properties:
+      cid:
+        $ref: '#/definitions/ChangesetID'
+      updated:
+        $ref: '#/definitions/Timestamp'
+  Timestamp:
+    description: Timestamp
+    type: string
+    format: date-time
+    example: '2017-04-27T13:28:05.509194+00:00'
+  ReplicationPointer:
+    description: OSM replication pointer
+    properties:
+      difftype:
+        description: Replication pointer type
+        type: string
+      seqno:
+        description: Sequence number
+        type: integer
+      timestamp:
+        $ref: '#/definitions/Timestamp'

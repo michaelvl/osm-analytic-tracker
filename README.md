@@ -145,8 +145,11 @@ of any element type will match.
 ### Components
 
 - osmtracker.py  The main script with multiple roles depending on arguments.
+- apiserver.py  An API server providing access to the database. The
+  OpenAPI/Swagger API specicication is in [apispec.yaml](apiserver/apispec.yaml).
 - db.py   MongoDB backend for storing changeset information
-- osm/changeset.py  The class which contain the main analysis code.  Can be used from a command line through csetinfo.py
+- osm/changeset.py  The class which contain the main analysis code.  Can be used
+  from a command line through csetinfo.py
 
 The osmtracker.py script tracks OpenStreetMap minutely diffs and optionally
 filters them through a bounding-box polygon (country-based polygons can be found
@@ -157,8 +160,7 @@ client-side parts include a javascript-based poll feature that will update the
 changeset list whenever it changes (special care has been taken to minimize
 network load).
 
-Configuration is provided through the config.json file -- especially the paths
-for the backends should be configured.
+Configuration is provided through the config.json file.
 
 ### Dependencies
 
@@ -166,7 +168,7 @@ See requirements.txt and Dockerfiles.
 
 ### Links
 
-* [Danish edits as seen through OSM Analytic Difference Engine](http://osm.expandable.dk)
+* [Danish edits as seen through OSM Analytic Difference Engine](https://osm.expandable.dk)
 
 * [Achavi diff viewer using overpass API](http://wiki.openstreetmap.org/wiki/Achavi)
 

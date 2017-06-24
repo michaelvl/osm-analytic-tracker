@@ -34,6 +34,7 @@ RUN sed -i 's/"path": "html"/"path": "\/html"/' /osmtracker-config/config.json
 
 ADD *.py docker/logging.conf ./
 ADD osm ./osm
+ADD apiserver ./apiserver
 RUN mkdir /osmtracker/templates
 ADD templates templates/
 
