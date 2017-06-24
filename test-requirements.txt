@@ -1,1 +1,2 @@
 mock==2.0.0
+flask_testing==0.6.2
