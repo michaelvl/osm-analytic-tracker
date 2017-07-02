@@ -69,6 +69,8 @@ osmtracker:
   securityContext:
     runAsNonRoot: true
     readOnlyRootFilesystem: true
+  networkpolicy:
+    enabled: true
 
 # supporting services
 

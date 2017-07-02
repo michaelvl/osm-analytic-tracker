@@ -34,6 +34,7 @@ The following table lists the configurable parameters of OpenStreetMap Analytic 
 | `osmtracker.image.image` | Image name for OpenStreetMap Analytic tracker services | michaelvl/osmtracker |
 | `osmtracker.image.tag` | Image tag. See [here](https://hub.docker.com/r/michaelvl/osmtracker/tags/) | latest |
 | `osmtracker.image.pullPolicy` | Image pull policy | IfNotPresent |
+| `osmtracker.networkpolicy.enabled` | Selects deployment of Kubernetes network policies | true |
 | `difftracker.replicas` | Number of minutely diff trackers. Should generally not be changed! | 1 |
 | `difftracker.resources.limits` | Service resource limits | `{cpu: 500m, memory: 1Gi}` |
 | `difftracker.resources.requests` | Service resource requests | `{cpu: 100m,  memory: 512Mi}` |

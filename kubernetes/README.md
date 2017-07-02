@@ -110,3 +110,13 @@ The metrics exported are:
 - *osmtracker_minutely_diff_csets_observed* - number of chagesets observed in
    the recent minutely diff. A very large influx of changesets might cause small
    increased delays in the tracker.
+
+## Kubernetes Network Policies
+
+The Helm-based deployment supports deploying Kubernetes network policies to
+allow for fine-grained control of network access between pods. You need a
+Kubernetes network plugin that supports network policies for this to have any
+effect.
+
+If you are using a Kubernetes ingress/ingress-controller, you could refine the
+osmtracker-frontend network policy selectors to match the labels of the ingress.

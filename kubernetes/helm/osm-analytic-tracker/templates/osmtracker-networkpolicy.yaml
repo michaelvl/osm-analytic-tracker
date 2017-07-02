@@ -1,0 +1,34 @@
+{{ if .Values.osmtracker.networkpolicy.enabled }}
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: access-db
+spec:
+  podSelector:
+    matchLabels:
+      app: osmtracker
+      role: database
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: osmtracker
+    ports:
+    - protocol: TCP
+      port: 27017
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: access-frontend
+spec:
+  podSelector:
+    matchLabels:
+      app: osmtracker
+      role: frontend
+  ingress:
+  - from:
+    ports:
+    - protocol: TCP
+      port: 80
+{{ end }}
