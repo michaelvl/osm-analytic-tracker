@@ -7,6 +7,7 @@ import logging
 import pymongo
 from bson.json_util import dumps, loads
 from bson.codec_options import CodecOptions
+import time
 import datetime, pytz
 import osm.diff
 
@@ -24,9 +25,22 @@ class DataBase(object):
     STATE_DONE = 'DONE'                     # For now, all analysis completed
     STATE_QUARANTINED = 'QUARANTINED'       # Temporary error experienced
     
-    def __init__(self, url='mongodb://localhost:27017/', admin=False):
+    def __init__(self, url='mongodb://localhost:27017/', admin=False, timeout=360):
         self.url = url
         self.client = pymongo.MongoClient(url)
+        start = time.time()
+        while True:
+            try:
+                self.client.admin.command('ismaster')
+                break
+            except pymongo.errors.ConnectionFailure as e:
+                now = time.time()
+                waited = now-start
+                logger.warning('Database not available after {:.1f}s'.format(waited))
+                if waited >= timeout:
+                    raise e
+                time.sleep(5)
+
         self.db = pymongo.database.Database(self.client, 'osmtracker', codec_options=CodecOptions(tz_aware=True))
         self.ctx = self.db.context
         self.csets = self.db.chgsets
