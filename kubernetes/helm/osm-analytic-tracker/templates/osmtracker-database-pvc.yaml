@@ -4,16 +4,13 @@ apiVersion: v1
 metadata:
   name: {{ template "fullname" . }}
   namespace: {{ .Release.Namespace }}
-  annotations:
-  {{- if .Values.server.persistentVolume.storageClass }}
-    volume.beta.kubernetes.io/storage-class: {{ .Values.server.persistentVolume.storageClass | quote }}
-  {{- else }}
-    volume.alpha.kubernetes.io/storage-class: default
-  {{- end }}
 spec:
+  {{- if .Values.db.persistence.volume.storageClass }}
+  storageClassName: {{ .Values.db.persistence.volume.storageClass | quote }}
+  {{- end }}
   accessModes:
-    - {{ .Values.db.persistence.accessMode | quote }}
+    - {{ .Values.db.persistence.volume.accessMode | quote }}
   resources:
     requests:
-      storage: {{ .Values.db.persistence.size | quote }}
+      storage: {{ .Values.db.persistence.volume.size | quote }}
 {{- end }}

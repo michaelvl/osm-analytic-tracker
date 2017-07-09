@@ -56,8 +56,9 @@ The following table lists the configurable parameters of OpenStreetMap Analytic 
 | `web.image.tag` | Web server image tag | 1.11-alpine |
 | `web.image.pullPolicy` | Web server image pull policy | IfNotPresent |
 | `db.persistence.enabled` | Database persistence. Defaults to image ephemeral storage | false |
-| `db.persistence.accessMode` | If storage enabled, this is the PVC access mode requested | ReadWriteOnce |
-| `db.persistence.size` | If storage enabled, this is the PVC storage size requested| 8Gi |
+| `db.persistence.volume.storageClass` | PVC storage class | local-storage |
+| `db.persistence.volume.accessMode` | PVC access mode | ReadWriteOnce |
+| `db.persistence.volume.size` | PVC storage size request| 8Gi |
 | `db.users.admin` | Database admin user name | adm.user |
 | `db.users.admin_pass` | Database admin password. It is highly recommended to change this from the default | adm.secret |
 | `db.users.user_rw` | Database read-write user name. Used for worker access to database | rw.user |

@@ -83,8 +83,10 @@ web:
 db:
   persistence:
     enabled: false
-    accessMode: ReadWriteOnce
-    size: 8Gi
+    volume:
+      accessMode: ReadWriteOnce
+      storageClass: local-storage
+      size: 8Gi
   users:
     admin: adm.user
     admin_pass: adm.secret
