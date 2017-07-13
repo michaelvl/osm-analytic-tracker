@@ -148,8 +148,7 @@ of any element type will match.
 - apiserver.py  An API server providing access to the database. The
   OpenAPI/Swagger API specicication is in [apispec.yaml](apiserver/apispec.yaml).
 - db.py   MongoDB backend for storing changeset information
-- osm/changeset.py  The class which contain the main analysis code.  Can be used
-  from a command line through csetinfo.py
+- osm/changeset.py  The class which contain the main analysis code.
 
 The osmtracker.py script tracks OpenStreetMap minutely diffs and optionally
 filters them through a bounding-box polygon (country-based polygons can be found
