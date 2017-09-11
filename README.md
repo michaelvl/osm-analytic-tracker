@@ -16,17 +16,17 @@ A running demo can be seen on https://osm.expandable.dk
 
 The purpose of this tool is:
 
-0. Prof-of-concept for an improved changeset-info service (improved compared to looking up changeset details on http://openstreetmap.org)
-0. Provide insight into changes in your area of interest
-0. Improve team spirit of a regional OSM team/task-force.
-0. Quality ensurance through peer review
-0. Learning by seeing how other make edits to your region of interest.
+1. Prof-of-concept for an improved changeset-info service (improved compared to looking up changeset details on http://openstreetmap.org)
+2. Provide insight into changes in your area of interest
+3. Improve team spirit of a regional OSM team/task-force.
+4. Quality ensurance through peer review
+5. Learning by seeing how other make edits to your region of interest.
 
 The service is available as a web-service and provide three different information elements:
 
-0. An overall summary with a overview map containing bounding boxes of recent edits
-0. A list of changesets with analytic details
-0. A visual diff for the changes of each changeset
+1. An overall summary with a overview map containing bounding boxes of recent edits
+2. A list of changesets with analytic details
+3. A visual diff for the changes of each changeset
 
 ### Summary
 

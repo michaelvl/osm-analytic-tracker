@@ -8,10 +8,13 @@ below are recommended.
 
 The Kubernetes deployment consists of the following resources
 
-0. A MongoDB POD and a service definition for the database. All other PODs will use the database for persisting diff and changeset information.
-0. A single stateless minutely diff tracker POD.
-0. One or more stateless worker PODs for analyzing changesets.
-0. One or more stateless frontend PODs which use a POD volume for sharing data between the osmtracker backend and the Nginx web server.
+1. A MongoDB POD and a service definition for the database. All other PODs will use the database for persisting diff and changeset information.
+2. A single stateless minutely diff tracker POD.
+3. One or more stateless worker PODs for analyzing changesets.
+4. One or more stateless frontend PODs which use a POD volume for sharing data between the osmtracker backend and the Nginx web server.
+5. A supervisor service for monitoring state of worker PODs and for providing aggregated metrics for e.g. Prometheus.
+6. An optional API server for add-on services - see the OpenAPI.Swagger [apispec.yaml](apiserver/apispec.yaml).
+7. An optional Elasticsearch gateway, which pushes changeset information to Elasticsearch.
 
 ![Image](architecture.png?raw=true)
 
