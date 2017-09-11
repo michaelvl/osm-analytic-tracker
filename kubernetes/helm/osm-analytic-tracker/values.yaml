@@ -99,3 +99,13 @@ db:
     tag: 3.4.1-1
     pullPolicy: IfNotPresent
 
+elasticsearch_gw:
+  enabled: false
+  resources:
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 50m
+      memory: 512Mi

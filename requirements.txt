@@ -8,3 +8,4 @@ prometheus_client==0.0.19
 flask==0.12.2
 flask-restful==0.3.6
 connexion==1.1.10
+elasticsearch==5.4.0
