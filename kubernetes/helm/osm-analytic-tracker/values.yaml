@@ -101,7 +101,8 @@ db:
 
 elasticsearch_gw:
   enabled: false
-  resources:
+  elasticsearch_url: 'http://elastic:changeme@osmtracker-elasticsearch:9200'
+  elasticsearch_index: 'osmtracker'
   resources:
     limits:
       cpu: 500m

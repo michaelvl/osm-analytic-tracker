@@ -1,5 +1,5 @@
 {{ if .Values.elasticsearch_gw.enabled }}
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
   name: osmtracker-elasticsearch-gw-deployment
@@ -37,9 +37,9 @@ spec:
               name: osmtracker-secrets
               key: dbuser_ro_pass
         - name: ES_ENDPOINT
-          value: "http://elastic:changeme@osmtracker-elasticsearch:9200"
+          value: {{ .Values.elasticsearch_gw.elasticsearch_url }}
         - name: ES_OSMTRACKER_INDEX
-          value: "osmtracker"
+          value: {{ .Values.elasticsearch_gw.elasticsearch_index }}
         resources:
 {{ toYaml .Values.elasticsearch_gw.resources | indent 10 }}
 {{ end }}

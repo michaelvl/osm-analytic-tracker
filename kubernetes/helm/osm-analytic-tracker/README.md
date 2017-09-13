@@ -68,12 +68,18 @@ The following table lists the configurable parameters of OpenStreetMap Analytic 
 | `db.image.image` | Database image name | michaelvl/mongo |
 | `db.image.tag` | Database image tag | 3.4.1-1 |
 | `db.image.pullPolicy` | Database image pull policy | IfNotPresent |
+| `elasticsearch_gw.enabled | Elasticsearch gateway enable | false |
+| `elasticsearch_gw.elasticsearch_url | URL for Elasticssearch service | 'http://elastic:changeme@osmtracker-elasticsearch:9200' |
+| `elasticsearch_gw.elasticsearch_index | Elasticsearch index to use for pushing changeset info | 'osmtracker' |
+| `elasticsearch_gw.resources.limits | Elasticsearch gateway resource limits | { cpu: 500m, memory: 1Gi } |
+| `elasticsearch_gw.resources.requests | Elasticsearch gateway resource requests | { cpu: 50m, memory: 512Mi } |
+
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm
 install`. For example,
 
 ```
-helm install --name osmtracker --namespace osmtracker osm-analytic-tracker/kubernetes/helm/osm-analytic-tracker --set osmtracker.image.tag=66fc207
+helm install --name osmtracker --namespace osmtracker osm-analytic-tracker/kubernetes/helm/osm-analytic-tracker --set osmtracker.image.tag=git-393a0cf,osmtracker.region=/osm-regions/denmark.poly
 ```
 
 For the most recent images, see [here](https://hub.docker.com/r/michaelvl/osmtracker/tags/)
