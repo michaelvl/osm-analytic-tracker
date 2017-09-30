@@ -122,4 +122,6 @@ Kubernetes network plugin that supports network policies for this to have any
 effect.
 
 If you are using a Kubernetes ingress/ingress-controller, you could refine the
-osmtracker-frontend network policy selectors to match the labels of the ingress.
+osmtracker-frontend network policy selectors to match the labels of the
+ingress. The same applies for the metrics network policy, which could be limited
+to accept only connections from e.g. Prometheus.
