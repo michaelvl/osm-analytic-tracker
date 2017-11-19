@@ -85,7 +85,7 @@ db:
     enabled: false
     volume:
       accessMode: ReadWriteOnce
-      storageClass: local-storage
+      storageClass: null
       size: 8Gi
   users:
     admin: adm.user

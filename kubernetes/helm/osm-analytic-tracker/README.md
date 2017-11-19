@@ -56,7 +56,7 @@ The following table lists the configurable parameters of OpenStreetMap Analytic 
 | `web.image.tag` | Web server image tag | 1.11-alpine |
 | `web.image.pullPolicy` | Web server image pull policy | IfNotPresent |
 | `db.persistence.enabled` | Database persistence. Defaults to image ephemeral storage | false |
-| `db.persistence.volume.storageClass` | PVC storage class | local-storage |
+| `db.persistence.volume.storageClass` | PVC storage class | null |
 | `db.persistence.volume.accessMode` | PVC access mode | ReadWriteOnce |
 | `db.persistence.volume.size` | PVC storage size request| 8Gi |
 | `db.users.admin` | Database admin user name | adm.user |
