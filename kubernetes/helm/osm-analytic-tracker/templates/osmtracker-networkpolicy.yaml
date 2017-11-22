@@ -4,6 +4,8 @@ kind: NetworkPolicy
 metadata:
   name: default-deny
 spec:
+  policyTypes:
+  - Ingress
   podSelector:
 ---
 kind: NetworkPolicy
@@ -11,6 +13,8 @@ apiVersion: networking.k8s.io/v1
 metadata:
   name: access-db
 spec:
+  policyTypes:
+  - Ingress
   podSelector:
     matchLabels:
       app: osmtracker
@@ -29,6 +33,8 @@ apiVersion: networking.k8s.io/v1
 metadata:
   name: access-frontend
 spec:
+  policyTypes:
+  - Ingress
   podSelector:
     matchLabels:
       app: osmtracker
@@ -44,6 +50,8 @@ apiVersion: networking.k8s.io/v1
 metadata:
   name: access-metrics
 spec:
+  policyTypes:
+  - Ingress
   podSelector:
     matchLabels:
       app: osmtracker
