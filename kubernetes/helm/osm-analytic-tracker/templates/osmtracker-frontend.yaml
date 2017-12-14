@@ -18,8 +18,14 @@ spec:
       containers:
       - name: osmtracker-frontend
         image: "{{ .Values.osmtracker.image.image }}:{{ .Values.osmtracker.image.tag }}"
-        command: ["python", "/osmtracker/osm-analytic-tracker/osmtracker.py", "--db", "mongodb://$(DBUSER):$(DBPASSWD)@osmtracker-database/osmtracker", "--configdir", "/osmtracker-config"]
-        args: ["run-backends", "--track"]
+        command: ["python", "/osmtracker/osm-analytic-tracker/osmtracker.py"]
+        args: [
+              "--db", "mongodb://$(DBUSER):$(DBPASSWD)@osmtracker-database/osmtracker", "--configdir", "/osmtracker-config",
+{{- if .Values.osmtracker.debug }}
+              "-lDEBUG",
+{{- end }}
+               "run-backends", "--track"
+              ]
         imagePullPolicy: {{ .Values.osmtracker.image.pullPolicy }}
         securityContext:
 {{ toYaml .Values.osmtracker.securityContext | indent 10 }}

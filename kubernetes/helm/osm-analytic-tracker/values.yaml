@@ -60,6 +60,7 @@ apiserver:
 # shared between multiple osm-analytic-tracker pods
 
 osmtracker:
+  debug: false
   region: /osm-regions/denmark.poly
   map_scale: 6
   image:

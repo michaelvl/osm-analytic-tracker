@@ -21,12 +21,16 @@ spec:
       containers:
       - name: osmtracker-difftracker
         image: "{{ .Values.osmtracker.image.image }}:{{ .Values.osmtracker.image.tag }}"
-        command: ["python", "/osmtracker/osm-analytic-tracker/osmtracker.py", "--db", "mongodb://$(DBUSER):$(DBPASSWD)@osmtracker-database/osmtracker",
-          {{- if .Values.difftracker.metrics.enabled }}
-	         "--metrics",
-          {{- end }}
-		 "--configdir", "/osmtracker-config"]
-        args: ["diff-fetch", "--track"]
+        command: ["python", "/osmtracker/osm-analytic-tracker/osmtracker.py"]
+        args: [
+               "--db", "mongodb://$(DBUSER):$(DBPASSWD)@osmtracker-database/osmtracker", "--configdir", "/osmtracker-config",
+{{- if .Values.difftracker.metrics.enabled }}
+               "--metrics",
+{{- end }}
+{{- if .Values.osmtracker.debug }}
+               "-lDEBUG",
+{{- end }}
+               "diff-fetch", "--track"]
         imagePullPolicy: {{ .Values.osmtracker.image.pullPolicy }}
         securityContext:
 {{ toYaml .Values.osmtracker.securityContext | indent 10 }}
