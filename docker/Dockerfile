@@ -38,9 +38,11 @@ ADD apiserver ./apiserver
 RUN mkdir /osmtracker/templates
 ADD templates templates/
 
-RUN groupadd -g 945 osmtracker
-RUN useradd -r -u 945 -g osmtracker osmtracker
+# IDs>1000 since most Linux distros start allocating users from 1000
+RUN groupadd -g 1042 osmtracker
+RUN useradd -r -u 1042 -g osmtracker osmtracker
 RUN chown -R osmtracker:osmtracker /osmtracker
-USER osmtracker
+# Numeric to allow for non-root test
+USER 1042
 
 ENTRYPOINT ["python", "/osmtracker/osm-analytic-tracker/osmtracker.py", "--configdir", "/osmtracker-config"]
