@@ -76,23 +76,16 @@ class testUrlToBeRead(object):
     def __init__(self, parent, url):
         self.parent = parent
         self.url = url
-
-    def getcode(self):
-        return 200
-
-    def read(self):
+        self.status_code = 200
         with open(self.parent.datapath+'/urls/{}'.format(self.url)) as f:
-            return f.read()
+            self.content = f.read()
 
-class testUrllib2(object):
+class testRequests(object):
     def __init__(self, datapath='test/data', sigint_on=[]):
         self.datapath = datapath
         self.sigint_on = sigint_on
 
-    def request(self, url):
-        return url
-
-    def urlopen(self, url):
-        if 'urlopen' in self.sigint_on:
+    def get(self, url):
+        if 'get' in self.sigint_on:
             os.kill(os.getpid(), signal.SIGINT)
         return testUrlToBeRead(self, url)

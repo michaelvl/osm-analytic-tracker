@@ -1,10 +1,13 @@
 import sys
 import datetime, pytz
-import urllib2
+import requests
 import gzip
 from StringIO import StringIO
 import xml.etree.ElementTree as etree
 import logging
+import eventlet
+
+eventlet.monkey_patch()
 
 logger = logging.getLogger(__name__)
 
@@ -138,14 +141,18 @@ class Diff(Base):
     def _data_url(self):
         return self.repl_url+'/'+self.type+'/'+self._path_frag()+'.osc.gz'
 
-    def get_csets(self):
+    def get_csets(self, timeout=50):
         '''Fetch and parse diff to fetch changeset IDs only. More memory efficient than get()'''
         csets = []
         url = self._data_url()
         logger.debug('Fetching url {}'.format(url))
-        req = urllib2.Request(url)
-        resp = urllib2.urlopen(req)
-        dfile = gzip.GzipFile(fileobj=StringIO(resp.read()))
+        with eventlet.Timeout(timeout):
+            req = requests.get(url)
+            if req.status_code!=200:
+                raise OsmDiffException('Error fetching URL: {}:{}'.format(r.status_code,r.text,url))
+            resp = req.content
+            dfile = gzip.GzipFile(fileobj=StringIO(resp))
+        logging.debug('Parsing diff {}, url {} (logger {})'.format(self.sequenceno, url, logger))
         for event, element in etree.iterparse(dfile):
             if element.tag in ['node', 'way', 'relation']:
                 cid = int(element.attrib['changeset'])
@@ -177,19 +184,18 @@ class State(Base):
         else:
             return self.repl_url+self.type+'/'+self._path_frag()+'.state.txt'
 
-    def load_state(self):
+    def load_state(self, timeout=10):
         url = self._state_url()
         state = {}
         state['state url'] = url
         now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
         state['retrieved'] = now
-        req = urllib2.Request(url)
-        resp = urllib2.urlopen(req)
-        logger.debug('urlopen code={}'.format(resp.getcode()))
-        if resp.getcode() != 200:
-            raise OsmDiffException('Unexpected return code:'+resp.getcode())
-        tmp = resp.read()
-        for line in tmp.splitlines():
+        with eventlet.Timeout(timeout):
+            req = requests.get(url)
+            if req.status_code!=200:
+                raise OsmDiffException('Error fetching URL: {}:{}'.format(r.status_code,r.text,url))
+            resp = req.content
+        for line in resp.splitlines():
             if len(line.split('=')) == 2:
                 k, v = line.split('=')
                 if k == 'sequenceNumber':
