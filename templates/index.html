@@ -83,7 +83,14 @@ function small_load_done(respTxt, txtStatus, req) {
   append_count($("#summ_csets").text(), "#num_csets");
   append_count($("#summ_csets_with_notes").text(), "#num_csets_w_notes");
   append_count($("#summ_csets_with_addr_changes").text(), "#num_csets_w_addr_changes");
-  compute_lag();
+  compute_lag("#pointer_timestamp", "#lag");
+  if ($("#processing_outstanding_cset_cnt").text()=='0') {
+    console.log('no outstanding csets')
+    $("#lag_processing").text("NA");
+  } else {
+    console.log('has outstanding csets')
+    compute_lag("#processing_oldest_outstanding_cset", "#lag_processing");
+  }
   large_load_test();  
 }
 
@@ -128,10 +135,9 @@ function large_load_done() {
 }
 
 function compute_lag(ts_src, dest) {
-  //var ts = $("#summary_created").text();
-  var ts = $("#pointer_timestamp").text();
+  var ts = $(ts_src).text();
   var hts = htimestamp(ts, undefined, undefined);
-  $("#lag").text("Lag: "+hts);
+  $(dest).text(hts);
 }
 
 function append_count(cnt, cnt_dest_id) {

@@ -84,7 +84,7 @@ width: 360px;
 background-color: rgb(250,250,250);
 }
 
-#generation, #summ_csets, #summ_csets_with_notes, #summ_csets_with_addr_changes {
+#generation, #summ_csets, #summ_csets_with_notes, #summ_csets_with_addr_changes, #processing_outstanding_cset_cnt, #processing_oldest_outstanding_cset {
 display: none;
 }
 #summary_created {
@@ -313,7 +313,7 @@ h1 {
   font-family: Ubuntu,"Bitstream Vera Sans","DejaVu Sans",Tahoma,sans-serif;font-size:16px;
 }
 
-#lag, .csetopen,
+#lag, #lag_processing, .csetopen,
 .node_create, .node_delete, .node_modify,
 .way_create, .way_delete, .way_modify,
 .relation_create, .relation_delete, .relation_modify,
@@ -323,7 +323,7 @@ h1 {
     position: relative;
 }
 
-#lag:hover:after, .csetopen:hover:after,
+#lag:hover:after, #lag_processing:hover:after, .csetopen:hover:after,
 .node_create:hover:after, .node_delete:hover:after, .node_modify:hover:after,
 .way_create:hover:after, .way_delete:hover:after, .way_modify:hover:after,
 .relation_create:hover:after, .relation_delete:hover:after, .relation_modify:hover:after,
@@ -339,7 +339,7 @@ h1 {
     z-index: 99;
 }
 
-#lag:hover:before, .csetopen:hover:before,
+#lag:hover:before, #lag_processing:hover:before, .csetopen:hover:before,
 .node_create:hover:before, .node_delete:hover:before, .node_modify:hover:before,
 .way_create:hover:before, .way_delete:hover:before, .way_modify:hover:before,
 .relation_create:hover:before, .relation_delete:hover:before, .relation_modify:hover:before,
@@ -357,7 +357,10 @@ h1 {
 }
 
 #lag:hover:before {
-    content: "How much this service is lagging behind OpenStreetMap minutely diffs.  Note that changeset timestamps are shown as the latest change to the changeset.  Since we are tracking changeset close events independently from the minutely diffs, the lag may be larger than the changeset timestamps.";
+    content: "How much this service is lagging behind OpenStreetMap minutely diffs.  Note that changeset timestamps are shown as the latest change to the changeset.  Since we are tracking changeset 'close' events independently from the minutely diffs, the lag may be larger than the changeset timestamps.";
+}
+#lag_processing:hover:before {
+    content: "How much delay that are introduced due to the changeset processing pipeline. NA means the pipeline is empty.";
 }
 .csetopen:hover:before {
     content: "Changeset is still open for edits";

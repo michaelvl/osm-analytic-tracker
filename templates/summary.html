@@ -17,7 +17,7 @@
   </ul>
   {% endif %}
   <li><div>{{ csets|length }} changesets by {{ users|length }} users</div></li>
-  <li><div id="lag">Lag</div></li>
+  <li>Replication lag: <div id="lag">TBD</div>, processing lag: <div id="lag_processing">TBD</div></li>
 </ul>
 <div id="sequence_numbers">Diff sequence numbers: {{first_seqno}} - {{latest_seqno}}</div>
 <div id="generation">Generation {{generation}}</div>
@@ -26,3 +26,7 @@
 <div id="summ_csets">{{csets|length}}</div>
 <div id="summ_csets_with_notes">{{csets_with_notes}}</div>
 <div id="summ_csets_with_addr_changes">{{csets_with_addr_changes}}</div>
+<div id="processing_outstanding_cset_cnt">{{processing_outstanding_cset_cnt}}</div>
+{% if processing_outstanding_cset_cnt %}
+<div id="processing_oldest_outstanding_cset">{{processing_oldest_outstanding_cset}}</div>
+{% endif %}

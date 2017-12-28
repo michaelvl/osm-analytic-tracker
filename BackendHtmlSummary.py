@@ -112,6 +112,21 @@ class Backend(BackendHtml.Backend):
                 # metrics are for one hours
                 data['mileage_meter_per_hour'] = self._i2s(int(sum/max(1,cset_tracked_hours)))
 
+            # Export info about analytics queue
+            now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+            oldest_ts = None
+            processing_cnt = 0
+            for c in db.chgsets_find(state=[db.STATE_NEW, db.STATE_BOUNDS_CHECK, db.STATE_BOUNDS_CHECKED,
+                                            db.STATE_ANALYZING1, db.STATE_ANALYZING2], sort=False):
+                age_s = (now-c['queued']).total_seconds()
+                if oldest_ts is None or age_s > oldest:
+                    oldest = age_s
+                    oldest_ts = c['queued']
+                processing_cnt += 1
+            data['processing_outstanding_cset_cnt'] = processing_cnt
+            if oldest_ts:
+                data['processing_oldest_outstanding_cset'] = oldest_ts
+
             #if hasattr(state, 'pointer'):   # FIXME
             #    lag = now-state.pointer.timestamp()
             #    data['lag_seconds'] = int(lag.seconds)
