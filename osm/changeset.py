@@ -129,10 +129,17 @@ class Changeset(object):
                     nd_ops = self.diffStat(old['nd'], data['nd'])
                     if nd_ops or diff:
                         if nd_ops:
-                            if nd_ops[0]:
-                                notes.append(u'added {} node{}'.format(nd_ops[0], self._pluS(nd_ops[0])))
-                            if nd_ops[1]:
-                                notes.append(u'removed {} node{}'.format(nd_ops[1], self._pluS(nd_ops[1])))
+                            nd_ops_add = len(nd_ops[0])
+                            nd_ops_del = len(nd_ops[1])
+                            if nd_ops_add:
+                                notes.append(u'added {} node{}'.format(nd_ops_add, self._pluS(nd_ops_add)))
+                            if nd_ops_del:
+                                in_new_ways = self.findNodesInOtherWays(nd_ops[1], edit_action='create')
+                                in_mod_ways = self.findNodesInOtherWays(nd_ops[1], edit_action='modify')
+                                if len(in_new_ways)>0:
+                                    notes.append(u'removed {} node{}, of which {} is present in newly created way(s) and {} in modified way(s)'.format(nd_ops_del, self._pluS(nd_ops_del), len(in_new_ways), len(in_mod_ways)))
+                                else:
+                                    notes.append(u'removed {} node{}'.format(nd_ops_del, self._pluS(nd_ops_del)))
                         if old['uid'] != data['uid']:
                             prev_authors.append(old['user'])
                 if etype=='relation':
@@ -142,10 +149,12 @@ class Changeset(object):
                     m_ops = self.diffStat(ombr, nmbr)
                     if m_ops or diff:
                         if m_ops:
-                            if m_ops[0]:
-                                notes.append(u'added {} member{}'.format(m_ops[0], self._pluS(m_ops[0])))
-                            if m_ops[1]:
-                                notes.append(u'deleted {} member{}'.format(m_ops[1], self._pluS(m_ops[1])))
+                            m_ops_add = len(m_ops[0])
+                            m_ops_del = len(m_ops[1])
+                            if m_ops_add:
+                                notes.append(u'added {} member{}'.format(m_ops_add, self._pluS(m_ops_add)))
+                            if m_ops_del:
+                                notes.append(u'deleted {} member{}'.format(m_ops_del, self._pluS(m_ops_del)))
                         if old['uid'] != data['uid']:
                             prev_authors.append(old['user'])
                     if not m_ops and ombr!=nmbr:
@@ -154,15 +163,34 @@ class Changeset(object):
                 # TODO: Show relation as modified if member changes (e.g. way has added a node)
         return self.diffs
 
+    def findNodesInOtherWays(self, nodes, edit_action='create'):
+        '''Given a list of nodes removed from a way, build list of these nodes present
+        in new ways (e.g. a typical way split operation)'''
+        nds = []
+        logger.debug('Nodes to find in ways {} edit action {}'.format(nodes, edit_action))
+        for modif in self.changes:
+            logger.debug('Processing modif: {}'.format(modif))
+            etype = modif['type']
+            action = modif['action']
+            if action==edit_action and etype=='way':
+                data = modif['data']
+                nd = data['nd']
+                isect = list(set(nodes).intersection(nd))
+                print 'xxx', nd, isect
+                nds += isect
+            #id = data['id']
+            #version = data['version']
+        return list(set(nds))
+    
     def diffStat(self, a, b):
-        ''' Given two lists of ids, return tuple with (added, removed) '''
+        ''' Given two lists of ids, return tuple with lists of (added, removed) '''
         aa = set(a)
         bb = set(b)
         d1 = aa-bb
         d2 = bb-aa
         if not d1 and not d2:
             return None
-        return (len(d2), len(d1))
+        return (list(d2), list(d1))
 
     def downloadMeta(self, set_tz=True):
         if not self.meta:
