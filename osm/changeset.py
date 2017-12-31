@@ -176,12 +176,11 @@ class Changeset(object):
                 data = modif['data']
                 nd = data['nd']
                 isect = list(set(nodes).intersection(nd))
-                print 'xxx', nd, isect
                 nds += isect
             #id = data['id']
             #version = data['version']
         return list(set(nds))
-    
+
     def diffStat(self, a, b):
         ''' Given two lists of ids, return tuple with lists of (added, removed) '''
         aa = set(a)
