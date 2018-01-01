@@ -285,10 +285,10 @@ table {
     border-collapse: collapse;
 }
 tr.tagadded {
-    background: rgb(0,154,0);
+    background: rgb(148,255,148);
 }
 tr.tagdeleted {
-    background: rgb(255,34,0);
+    background: rgb(255,158,145);
 }
 tr.tagchanged {
     background: rgb(102,170,204);
