@@ -282,19 +282,17 @@ class DataBase(object):
         return loads(cset['info'])
 
     def dict_changed(self, old, new):
-        logger.debug('Compare old: {}'.format(old))
-        logger.debug('Compare new: {}'.format(new))
         def subcompare(old, new):
             for k in old:
                 if k not in new:
-                    logger.debug('Dict change: k={} not present'.format(k))
+                    logger.debug(u'Dict change: k={} not present'.format(k))
                     return True
                 elif type(old[k])==dict and type(new[k])==dict:
                     if subcompare(old[k], new[k]):
-                        logger.debug('Dict change: k={} v=dict'.format(k))
+                        logger.debug(u'Dict change: k={} v=dict'.format(k))
                         return True
                 elif old[k]!=new[k]:
-                    logger.debug('Dict change: k={} v_old={}, v_new={}'.format(k,old[k],new[k]))
+                    logger.debug(u'Dict change: k={} v_old={}, v_new={}'.format(k,old[k],new[k]))
                     return True
         if subcompare(old, new) or subcompare(new, old):
             return True
