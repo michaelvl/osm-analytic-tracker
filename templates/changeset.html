@@ -29,7 +29,7 @@ No changesets.
 <!-- Changeset {{cid}} source type {{c.source.type}} seqno {{c.source.sequenceno}} labels {{c.labels}} -->
 {{ macros.cset_head_ts_li_start(meta,info) -}}  
   {{ macros.cset_head_ul(c,meta,info) -}}
-  {% if not info.state.truncated and show_details and (c.state=='DONE' or c.state=='REANALYZING') %}
+  {% if not info.state.truncated and show_details and (c.state=='DONE' or c.state=='REANALYSING') %}
     <ul class="details">
     {{ macros.cset_change_summary(meta,info) -}}
     {{ macros.cset_tags(meta,info) -}}

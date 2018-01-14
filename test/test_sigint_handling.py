@@ -8,7 +8,7 @@ import osmtracker
 import db
 import stubs
 import osm.test.stubs
-import datetime
+import datetime, pytz
 import pprint
 
 logger = logging.getLogger('')
@@ -43,30 +43,26 @@ class TestSigInt(BaseTest):
 
     @patch('osm.diff.requests.get')
     @patch('osm.changeset.OsmApi')
-    def test_csets_filter(self, OsmApi, UrlGet):
+    def test_cset_filter(self, OsmApi, UrlGet):
         UrlGet.side_effect = self.requests.get
         OsmApi.return_value = self.osmapi
-        self.db.test_add_cid(11, state=self.db.STATE_NEW, append=False)
+        self.db.test_add_cid(10, state=self.db.STATE_NEW, append=False)
 
         self.osmapi.sigint_on = ['ChangesetGet']
-        self.assertRaises(KeyboardInterrupt, osmtracker.csets_filter, None, self.cfg, self.db)
+        self.assertRaises(KeyboardInterrupt, osmtracker.cset_filter, self.cfg, self.db, {'cid': 10, 'source': {'sequenceno': 20000}})
         self.assertEqual(self.db.csets[0]['state'], self.db.STATE_NEW)
 
     @patch('osm.diff.requests.get')
     @patch('osm.changeset.OsmApi')
-    def test_csets_analyze(self, OsmApi, UrlGet):
+    def test_cset_analyse(self, OsmApi, UrlGet):
         UrlGet.side_effect = self.requests.get
         OsmApi.return_value = self.osmapi
+        self.db.test_add_cid(10, state=self.db.STATE_BOUNDS_CHECKED, append=False)
 
         self.db.sigint_on = ['chgset_get_meta']
         self.osmapi.sigint_on = ['ChangesetGet']
-
-        # TODO: csets_analyze_periodic_reprocess_open and csets_analyze_periodic_reprocess_closed not covered
-
-        for state in [self.db.STATE_BOUNDS_CHECKED, self.db.STATE_CLOSED, self.db.STATE_OPEN]:
-            self.db.test_add_cid(11, state=state, append=False)
-            self.assertRaises(KeyboardInterrupt, osmtracker.csets_analyze, None, self.cfg, self.db)
-            self.assertEqual(self.db.csets[0]['state'], state)
+        self.assertRaises(KeyboardInterrupt, osmtracker.csets_analyse_initial, self.cfg, self.db, {'cid': 10, 'source': {'sequenceno': 20000}})
+        self.assertEqual(self.db.csets[0]['state'], self.db.STATE_BOUNDS_CHECKED)
 
     @patch('osm.diff.requests.get')
     @patch('osm.changeset.OsmApi')
@@ -77,7 +73,7 @@ class TestSigInt(BaseTest):
 
         self.db.sigint_on = ['chgset_get_meta']
         self.osmapi.sigint_on = ['ChangesetGet']
-        self.assertRaises(KeyboardInterrupt, osmtracker.worker, None, self.cfg, self.db)
+        self.assertRaises(KeyboardInterrupt, osmtracker.cset_filter, self.cfg, self.db, {'cid': 10, 'source': {'sequenceno': 20000}})
         self.assertEqual(self.db.csets[0]['state'], self.db.STATE_NEW)
 
 if __name__ == '__main__':

@@ -17,17 +17,17 @@ class DataBase(object):
     STATE_NEW = 'NEW'
     STATE_BOUNDS_CHECK = 'BOUNDS_CHECK'     # Used for combined bounds and regex filtering
     STATE_BOUNDS_CHECKED = 'BOUNDS_CHECKED' # Cset passed filter
-    STATE_ANALYZING1 = 'ANALYZING1'         # Initial processing (meta etc)
+    STATE_ANALYSING1 = 'ANALYSING1'         # Initial processing (meta etc)
     STATE_OPEN = 'OPEN'                     # Wait state
     STATE_CLOSED = 'CLOSED'                 # Staging state for deep analysis
-    STATE_ANALYZING2 = 'ANALYZING2'         # Deeper analysis of closed csets
-    STATE_REANALYZING = 'REANALYZING'       # Updates (notes etc)
+    STATE_ANALYSING2 = 'ANALYSING2'         # Deeper analysis of closed csets
+    STATE_REANALYSING = 'REANALYSING'       # Updates (notes etc)
     STATE_DONE = 'DONE'                     # For now, all analysis completed
     STATE_QUARANTINED = 'QUARANTINED'       # Temporary error experienced
     
     def __init__(self, url='mongodb://localhost:27017/', admin=False, timeout=360):
         self.url = url
-        self.client = pymongo.MongoClient(url)
+        self.client = pymongo.MongoClient(url, j=True)
         start = time.time()
         while True:
             try:
@@ -45,8 +45,8 @@ class DataBase(object):
         self.ctx = self.db.context
         self.csets = self.db.chgsets
         self.all_states = [self.STATE_NEW, self.STATE_BOUNDS_CHECK, self.STATE_BOUNDS_CHECKED,
-                           self.STATE_ANALYZING1, self.STATE_OPEN, self.STATE_CLOSED,
-                           self.STATE_ANALYZING2, self.STATE_REANALYZING, self.STATE_DONE,
+                           self.STATE_ANALYSING1, self.STATE_OPEN, self.STATE_CLOSED,
+                           self.STATE_ANALYSING2, self.STATE_REANALYSING, self.STATE_DONE,
                            self.STATE_QUARANTINED]
         if admin:
             self.csets.create_index('state')
@@ -91,6 +91,7 @@ class DataBase(object):
     def pointer_advance(self, offset=1):
         old = self.ctx.pointer.find_one_and_update({u'_id':0}, {'$inc': {u'seqno': offset}})
         logger.debug('Old pointer before advance by {}: {}'.format(offset, old))
+        return old['seqno']+offset
 
     @property
     def generation(self):
@@ -109,6 +110,7 @@ class DataBase(object):
             self.generation = 0
         old = self.ctx.generation.find_one_and_update({u'_id':0}, {'$inc': {u'no': offset}})
         logger.debug('Old generation before advance by {}: {}'.format(offset, old))
+        return old['no']+offset
 
     @property
     def chgsets(self):
@@ -171,12 +173,15 @@ class DataBase(object):
         if source:
             c[u'source'] = source
         self.csets.replace_one({'_id':cid}, c, upsert=True)
+        return c
 
     # TODO: Use chgsets_find_selector()
-    def chgset_start_processing(self, istate, nstate, before=None, after=None, timestamp='state_changed'):
+    def chgset_start_processing(self, istate, nstate, before=None, after=None, timestamp='state_changed', cid=None):
         '''Start a processing of a changeset with state istate and set intermediate state nstate''' 
         now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
         sel = {}
+        if cid:
+            sel['cid'] = cid
         if type(istate) is list:
             sel['state'] = {'$in': istate}
         else:
@@ -304,8 +309,8 @@ def drop(args, db):
     if args.timeout:
         now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
         dt = now-datetime.timedelta(seconds=1200)
-        states = [db.STATE_NEW, db.STATE_BOUNDS_CHECK, db.STATE_ANALYZING1,
-                  db.STATE_ANALYZING2, db.STATE_REANALYZING]
+        states = [db.STATE_NEW, db.STATE_BOUNDS_CHECK, db.STATE_ANALYSING1,
+                  db.STATE_ANALYSING2, db.STATE_REANALYSING]
         selector = db.chgsets_find_selector(state=states, before=dt, after=None,
                                             timestamp='state_changed')
         if args.cid:
@@ -332,7 +337,7 @@ def show_brief(args, db, reltime=True):
             else:
                 def ts(dt):
                     return dt.strftime('%Y:%m:%d %H:%M:%S')
-            if c['state'] != 'NEW' and c['state'] != 'BOUNDS_CHECK' and c['state'] != 'ANALYZING1':
+            if c['state'] != 'NEW' and c['state'] != 'BOUNDS_CHECK' and c['state'] != 'ANALYSING1':
                 meta = db.chgset_get_meta(cid)
                 if not meta:
                     logger.error('No meta found for cid {}: {}'.format(cid, c))
@@ -358,40 +363,40 @@ def show(args, db):
             if (not args.cid or args.cid==c['cid']) and (args.new or c['state']!=db.STATE_NEW):
                 print '  cid={}: {}'.format(c['cid'], pprint.pformat(c))
 
-def do_reanalyze(db, now, selector, newstate):
-    logger.debug('Reanalyze selector: {}'.format(selector))
+def do_reanalyse(db, now, selector, newstate):
+    logger.debug('Reanalyse selector: {}'.format(selector))
     cnt = db.chgsets.update_many(selector,
                                  {'$set': {'state': newstate,
                                            'state_changed': now}}).modified_count
     if cnt>0:
         logger.warn('Re-scheduled {} csets for analysis (new state {})'.format(cnt, newstate))
 
-def reanalyze(args, db):
+def reanalyse(args, db):
     now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
     if args.timeout:
         dt = now-datetime.timedelta(seconds=1200)
-        states = [db.STATE_ANALYZING1, db.STATE_ANALYZING2, db.STATE_REANALYZING]
+        states = [db.STATE_ANALYSING1, db.STATE_ANALYSING2, db.STATE_REANALYSING]
         selector = db.chgsets_find_selector(state=states, before=dt, after=None, timestamp='state_changed')
         if args.cid:
             selector['cid'] = args.cid
-        do_reanalyze(db, now, selector, db.STATE_BOUNDS_CHECKED)
+        do_reanalyse(db, now, selector, db.STATE_BOUNDS_CHECKED)
 
         states = [db.STATE_BOUNDS_CHECK]
         selector = db.chgsets_find_selector(state=states, before=dt, after=None, timestamp='state_changed')
         if args.cid:
             selector['cid'] = args.cid
-        do_reanalyze(db, now, selector, db.STATE_NEW)
+        do_reanalyse(db, now, selector, db.STATE_NEW)
     else:
         newstate = db.STATE_BOUNDS_CHECKED
         if args.new:
             newstate = db.STATE_NEW
-        states = [db.STATE_BOUNDS_CHECK, db.STATE_ANALYZING1, db.STATE_OPEN,
-                  db.STATE_CLOSED, db.STATE_ANALYZING2, db.STATE_REANALYZING, db.STATE_DONE]
+        states = [db.STATE_BOUNDS_CHECK, db.STATE_ANALYSING1, db.STATE_OPEN,
+                  db.STATE_CLOSED, db.STATE_ANALYSING2, db.STATE_REANALYSING, db.STATE_DONE]
         selector = {'state': {'$in': states}}
         if args.cid:
             selector['cid'] = args.cid
 
-        do_reanalyze(db, now, selector, newstate)
+        do_reanalyse(db, now, selector, newstate)
 
 def ptrset(args, db):
     db.pointer = args.seqno
@@ -415,12 +420,12 @@ def main(argv):
     parser_show.add_argument('--brief', action='store_true', default=False, help='Show less information')
     parser_show.add_argument('--new', action='store_true', default=False, help='Show changesets in NEW state')
 
-    parser_reanalyze = subparsers.add_parser('reanalyze')
-    parser_reanalyze.set_defaults(func=reanalyze)
-    parser_reanalyze.add_argument('--cid', type=int, default=None, help='Changeset ID')
-    parser_reanalyze.add_argument('--new', action='store_true', default=False, help='Reset states to NEW')
-    parser_reanalyze.add_argument('--timeout', action='store_true', default=False, help='Perform timeout check only')
-    parser_reanalyze.add_argument('--hard', action='store_true', default=False, help='Re-analyze changesets already fully analyzed. Default is only re-analyze those that are partially analyzed.')
+    parser_reanalyse = subparsers.add_parser('reanalyse')
+    parser_reanalyse.set_defaults(func=reanalyse)
+    parser_reanalyse.add_argument('--cid', type=int, default=None, help='Changeset ID')
+    parser_reanalyse.add_argument('--new', action='store_true', default=False, help='Reset states to NEW')
+    parser_reanalyse.add_argument('--timeout', action='store_true', default=False, help='Perform timeout check only')
+    parser_reanalyse.add_argument('--hard', action='store_true', default=False, help='Re-analyse changesets already fully analysed. Default is only re-analyse those that are partially analysed.')
 
     parser_ptrset = subparsers.add_parser('ptrset')
     parser_ptrset.set_defaults(func=ptrset)

@@ -35,13 +35,16 @@ The following table lists the configurable parameters of OpenStreetMap Analytic 
 | `osmtracker.image.tag` | Image tag. See [here](https://hub.docker.com/r/michaelvl/osmtracker/tags/) | latest |
 | `osmtracker.image.pullPolicy` | Image pull policy | IfNotPresent |
 | `osmtracker.networkpolicy.enabled` | Selects deployment of Kubernetes network policies | true |
+| `osmtracker.metrics.enabled` | Prometheus metrics support | True |
 | `difftracker.replicas` | Number of minutely diff trackers. Should generally not be changed! | 1 |
-| `difftracker.resources.limits` | Service resource limits | `{cpu: 500m, memory: 1Gi}` |
-| `difftracker.resources.requests` | Service resource requests | `{cpu: 100m,  memory: 512Mi}` |
-| `difftracker.metrics.enabled` | Prometheus metrics support | True |
-| `worker.replicas` | Number of agents analysing changesets. More than one is generally recommended. | 2 |
-| `worker.resources.limits` | Worker resource limits | `{cpu: 500m, memory: 1Gi}` |
-| `worker.resources.requests` | Worker resource requests | `{cpu: 50m, memory: 512Mi}` |
+| `difftracker.resources.limits` | Service resource limits | `{cpu: 250m, memory: 1Gi}` |
+| `difftracker.resources.requests` | Service resource requests | `{cpu: 50m,  memory: 512Mi}` |
+| `filter.replicas` | Filter task of agents analysing changesets. More than one is generally recommended. | 2 |
+| `filter.resources.limits` | Filter task resource limits | `{cpu: 250m, memory: 1Gi}` |
+| `filter.resources.requests` | Filter task resource requests | `{cpu: 50m, memory: 512Mi}` |
+| `analyser.replicas` | Analyser task of agents analysing changesets. More than one is generally recommended. | 2 |
+| `analyser.resources.limits` | Analyser task resource limits | `{cpu: 250m, memory: 1Gi}` |
+| `analyser.resources.requests` | Analyser task resource requests | `{cpu: 50m, memory: 512Mi}` |
 | `frontend.replicas` | Number of web frontends. Two recommended for HA during upgrade. | 1 |
 | `frontend.service.name` | Name of frontend Kubernetes service | osmtracker-frontend |
 | `frontend.service.type` | Frontend service type | NodePort |

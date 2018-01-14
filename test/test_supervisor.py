@@ -8,7 +8,7 @@ import osmtracker
 import db
 import stubs
 import osm.test.stubs
-import datetime
+import datetime, pytz
 import pprint
 
 logger = logging.getLogger('')
@@ -17,6 +17,7 @@ class Args:
     def __init__(self):
         self.metrics = True
         self.track = False
+        self.amqp_url = 'AMQPURL'
 
 class BaseTest(unittest.TestCase, stubs.FileWriter_Mixin):
     def setUp(self):
@@ -30,15 +31,16 @@ class BaseTest(unittest.TestCase, stubs.FileWriter_Mixin):
         
 class TestCsetFilter(BaseTest):
 
-    @patch('db.do_reanalyze')
-    def test_supervisor(self, DbRea):
-        self.db.test_add_cid(10, append=False, state=self.db.STATE_NEW)
-
-        osmtracker.supervisor(None, self.cfg, self.db)
+    @patch('osmtracker.messagebus.Amqp')
+    @patch('db.do_reanalyse')
+    def test_supervisor(self, DbRea, MsgBus):
+        self.db.test_add_cid(10, append=False, state=self.db.STATE_OPEN)
+        self.db.csets[0]['refreshed'] = datetime.datetime(2007, 6, 17, 0, 3, 4).replace(tzinfo=pytz.utc)
         osmtracker.supervisor(self.args, self.cfg, self.db)
-        #print 'xx', Db.mock_calls
-        DbRea.assert_has_calls([call(mock.ANY, mock.ANY, mock.ANY, 'NEW')])
-
+        #print 'Db calls', DbRea.mock_calls
+        #DbRea.assert_has_calls([call(mock.ANY, mock.ANY, mock.ANY, 'NEW')])
+        #print 'MsgBus calls', MsgBus.mock_calls
+        MsgBus.assert_has_calls([call().send(mock.ANY, mock.ANY, mock.ANY, mock.ANY, mock.ANY)])
 
 if __name__ == '__main__':
     unittest.main()

@@ -140,14 +140,20 @@ of any element type will match.
 
 ### Architecture
 
+The general architecture is shown below. See also the [Kubernetes
+architecture](kubernetes/architecture.png?raw=true)
+
+
 ![Image](doc/architecture.png?raw=true)
 
 ### Components
 
-- osmtracker.py  The main script with multiple roles depending on arguments.
+- osmtracker.py  The core functionality with multiple roles depending on arguments.
 - apiserver.py  An API server providing access to the database. The
   OpenAPI/Swagger API specicication is in [apispec.yaml](apiserver/apispec.yaml).
+- elastic-gw.py  An ElasticSearch sync componentat which pushes changesets to ElasticSearch.
 - db.py   MongoDB backend for storing changeset information
+- messagebus.py Am AMQP (RabbitMQ) messagebus for interconnection components.
 - osm/changeset.py  The class which contain the main analysis code.
 
 The osmtracker.py script tracks OpenStreetMap minutely diffs and optionally

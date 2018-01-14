@@ -1,40 +1,34 @@
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
-  name: osmtracker-difftracker-deployment
+  name: osmtracker-analyser-deployment
   namespace: {{ .Release.Namespace }}
   labels:
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
 spec:
-  replicas: {{ .Values.difftracker.replicas }}
-  strategy:
-    type: Recreate
+  replicas: {{ .Values.analyser.replicas }}
   template:
     metadata:
       labels:
         app: osmtracker
-        role: difftracker
-        metrics: 'true'
+        role: analyser
       annotations:
         checksum/config: {{ include (print $.Chart.Name "/templates/osmtracker-secrets.yaml") . | sha256sum }}
     spec:
       containers:
-      - name: osmtracker-difftracker
+      - name: osmtracker-analyser
         image: "{{ .Values.osmtracker.image.image }}:{{ .Values.osmtracker.image.tag }}"
         command: ["python", "/osmtracker/osm-analytic-tracker/osmtracker.py"]
         args: [
                "--db", "mongodb://$(DBUSER):$(DBPASSWD)@osmtracker-database/osmtracker",
-	       "--configdir", "/osmtracker-config",
-{{- if .Values.osmtracker.metrics.enabled }}
-               "--metrics",
-{{- end }}
+               "--configdir", "/osmtracker-config",
 {{- if .Values.amqp.enabled }}
                "--amqp", "{{ .Values.amqp.service.name }}",
 {{- end }}
 {{- if .Values.osmtracker.debug }}
                "-lDEBUG",
 {{- end }}
-               "diff-fetch", "--track"]
+               "csets-analyse"]
         imagePullPolicy: {{ .Values.osmtracker.image.pullPolicy }}
         securityContext:
 {{ toYaml .Values.osmtracker.securityContext | indent 10 }}
@@ -52,4 +46,4 @@ spec:
               name: osmtracker-secrets
               key: dbuser_rw_pass
         resources:
-{{ toYaml .Values.difftracker.resources | indent 10 }}
+{{ toYaml .Values.analyser.resources | indent 10 }}

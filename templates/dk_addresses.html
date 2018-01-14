@@ -19,7 +19,7 @@ No changesets which modifies addresses.
   <li class="cset" data-timestamp="{{info.misc.timestamp|js_datetime}} UTC" data-timestamp_type="{{info.misc.timestamp_type_txt}}">
   {% endif -%}
     {{ macros.cset_head_ul(c,meta,info) }}
-    {% if c.state=="DONE" or c.state=="REANALYZING" %}
+    {% if c.state=="DONE" or c.state=="REANALYSING" %}
       <ul class="details">
       {{ macros.cset_change_summary(meta,info) }}
       {{ macros.cset_tags(meta,info) }}

@@ -47,23 +47,22 @@ class testDB(object):
     STATE_NEW = 'NEW'
     STATE_BOUNDS_CHECK = 'BOUNDS_CHECK'     # Used for combined bounds and regex filtering
     STATE_BOUNDS_CHECKED = 'BOUNDS_CHECKED' # Cset passed filter
-    STATE_ANALYZING1 = 'ANALYZING1'         # Initial processing (meta etc)
+    STATE_ANALYSING1 = 'ANALYSING1'         # Initial processing (meta etc)
     STATE_OPEN = 'OPEN'                     # Wait state
     STATE_CLOSED = 'CLOSED'                 # Staging state for deep analysis
-    STATE_ANALYZING2 = 'ANALYZING2'         # Deeper analysis of closed csets
-    STATE_REANALYZING = 'REANALYZING'       # Updates (notes etc)
+    STATE_ANALYSING2 = 'ANALYSING2'         # Deeper analysis of closed csets
+    STATE_REANALYSING = 'REANALYSING'       # Updates (notes etc)
     STATE_DONE = 'DONE'                     # For now, all analysis completed
     STATE_QUARANTINED = 'QUARANTINED'       # Temporary error experienced
 
     def __init__(self, admin=False, sigint_on=[]):
         self.sigint_on = sigint_on
         self.csets = []
-        self.test_add_cid(10)
         self.url = 'TESTDATABASE'
         self.generation = 1
         self.all_states = [self.STATE_NEW, self.STATE_BOUNDS_CHECK, self.STATE_BOUNDS_CHECKED,
-                           self.STATE_ANALYZING1, self.STATE_OPEN,self. STATE_CLOSED,
-                           self.STATE_ANALYZING2, self.STATE_REANALYZING,
+                           self.STATE_ANALYSING1, self.STATE_OPEN,self. STATE_CLOSED,
+                           self.STATE_ANALYSING2, self.STATE_REANALYSING,
                            self.STATE_DONE, self.STATE_QUARANTINED]
         self.pointer = {'stype': 'minute',
                         'seqno': 12345678,
@@ -83,6 +82,7 @@ class testDB(object):
         if not append:
             self.csets = []
         self.csets.append(cset)
+        return cset
 
     def pointer_meta_update(self, upd):
         for k,v in upd.iteritems():
@@ -134,8 +134,11 @@ class testDB(object):
                     found.append(c)
         return DBcursor(found)
 
-    def chgset_start_processing(self, istate, nstate, before=None, after=None, timestamp='state_changed'):
-        c = self.chgsets_find(istate, before, after, timestamp)
+    def chgset_append(self, cid, source=None):
+        return self.test_add_cid(cid)
+
+    def chgset_start_processing(self, istate, nstate, before=None, after=None, timestamp='state_changed', cid=None):
+        c = self.chgsets_find(istate, before, after, timestamp, cid=cid)
         if c:
             c = c[0]
             c['state'] = nstate

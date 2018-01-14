@@ -1,0 +1,24 @@
+{"namespace": "osmtracker.avro",
+ "type": "record",
+ "name": "cset",
+ "fields": [
+    {"name": "cid", "type": "long"},
+    {"name": "source",
+     "type": ["null", {"type": "record", "name": "sourceRecord",
+                       "fields": [{"name": "type", "type": "string"},
+                                  {"name": "sequenceno", "type": "long"},
+                                  {"name": "observed", "type": "string"}]
+                      }
+             ]
+    },
+    {"name": "points_bbox",
+     "type": ["null", {"type": "record", "name": "pointsBBoxRecord",
+                       "fields": [{"name": "lat_min", "type": "double"},
+                                  {"name": "lat_max", "type": "double"},
+                                  {"name": "lon_min", "type": "double"},
+                                  {"name": "lon_max", "type": "double"}]
+                      }
+             ]
+    }
+  ]
+}

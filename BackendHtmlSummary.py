@@ -50,8 +50,8 @@ class Backend(BackendHtml.Backend):
             notes = 0
             csets_w_notes = 0
             csets_w_addr_changes = 0
-            for c in db.chgsets_find(state=[db.STATE_CLOSED, db.STATE_OPEN, db.STATE_ANALYZING2,
-                                            db.STATE_REANALYZING, db.STATE_DONE], sort=False):
+            for c in db.chgsets_find(state=[db.STATE_CLOSED, db.STATE_OPEN, db.STATE_ANALYSING2,
+                                            db.STATE_REANALYSING, db.STATE_DONE], sort=False):
                 data['csets'].append(c)
                 cid = c['cid']
                 meta = db.chgset_get_meta(cid)
@@ -117,7 +117,7 @@ class Backend(BackendHtml.Backend):
             oldest_ts = None
             processing_cnt = 0
             for c in db.chgsets_find(state=[db.STATE_NEW, db.STATE_BOUNDS_CHECK, db.STATE_BOUNDS_CHECKED,
-                                            db.STATE_ANALYZING1, db.STATE_ANALYZING2], sort=False):
+                                            db.STATE_ANALYSING1, db.STATE_ANALYSING2], sort=False):
                 age_s = (now-c['queued']).total_seconds()
                 if oldest_ts is None or age_s > oldest:
                     oldest = age_s

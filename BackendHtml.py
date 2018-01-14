@@ -85,8 +85,8 @@ class Backend(Backend.Backend):
             csets_total = 0
             csets_w_notes = 0
             csets_w_addr_changes = 0
-            for c in db.chgsets_find(state=[db.STATE_CLOSED, db.STATE_OPEN, db.STATE_ANALYZING2,
-                                            db.STATE_REANALYZING, db.STATE_DONE]):
+            for c in db.chgsets_find(state=[db.STATE_CLOSED, db.STATE_OPEN, db.STATE_ANALYSING2,
+                                            db.STATE_REANALYSING, db.STATE_DONE]):
                 logger.debug('Cset={}'.format(c))
                 logger.debug('Backend labels {}, cset labels {}'.format(self.labels, c['labels']))
                 csets_total += 1

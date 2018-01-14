@@ -1,0 +1,14 @@
+{"namespace": "osmtracker.avro",
+ "type": "record",
+ "name": "generation",
+ "fields": [
+    {"name": "generation", "type": "long"},
+    {"name": "trigger",
+     "type": ["null", {"type": "record", "name": "triggerRecord",
+                       "fields": [{"name": "cid", "type": "long"},
+                                  {"name": "event", "type": "string"}]
+                      }
+             ]
+    }
+  ]
+}

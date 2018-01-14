@@ -1,0 +1,7 @@
+{"namespace": "osmtracker.avro",
+ "type": "record",
+ "name": "replication_pointer",
+ "fields": [
+    {"name": "pointer", "type": "long"}
+  ]
+}

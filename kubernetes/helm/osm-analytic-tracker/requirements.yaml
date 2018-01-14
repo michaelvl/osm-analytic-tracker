@@ -1,0 +1,5 @@
+dependencies:
+- name: rabbitmq
+  version: "0.6.13"
+  repository: "https://kubernetes-charts.storage.googleapis.com/"
+  alias: amqp

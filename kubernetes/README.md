@@ -10,7 +10,7 @@ The Kubernetes deployment consists of the following resources
 
 1. A MongoDB POD and a service definition for the database. All other PODs will use the database for persisting diff and changeset information.
 2. A single stateless minutely diff tracker POD.
-3. One or more stateless worker PODs for analyzing changesets.
+3. One or more stateless worker PODs for analysing changesets.
 4. One or more stateless frontend PODs which use a POD volume for sharing data between the osmtracker backend and the Nginx web server.
 5. A supervisor service for monitoring state of worker PODs and for providing aggregated metrics for e.g. Prometheus.
 6. An optional API server for add-on services - see the OpenAPI.Swagger [apispec.yaml](apiserver/apispec.yaml).
@@ -52,7 +52,7 @@ At this stage you can access the frontend service using a web-browser although
 no changesets will be shown and the status on the right side will show a
 'Loading...' message.
 
-To begin tracking minutely diffs and analyze them, you need to deploy the
+To begin tracking minutely diffs and analyse them, you need to deploy the
 diff-tracker and worker pods as follows:
 
 ```
@@ -87,7 +87,7 @@ The metrics exported are:
 
 - *osmtracker_changeset_cnt* - the number of changesets currently in the
    database. Labelled with changeset state. If changesets in e.g. state NEW or
-   ANALYZING states it could mean the number of worker tasks cannot cope with
+   ANALYSING states it could mean the number of worker tasks cannot cope with
    the influx of new changesets.
 
 - *osmtracker_minutely_diff_processing_time_seconds* - histogram with processing

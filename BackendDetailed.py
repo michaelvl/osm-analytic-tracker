@@ -17,8 +17,8 @@ class Backend(Backend.Backend):
         self.print_chgsets(db, self.print_meta)
 
     def print_chgsets(self, db, print_meta=False):
-        for c in db.chgsets_find(state=[db.STATE_CLOSED, db.STATE_OPEN, db.STATE_ANALYZING2,
-                                        db.STATE_REANALYZING, db.STATE_DONE]):
+        for c in db.chgsets_find(state=[db.STATE_CLOSED, db.STATE_OPEN, db.STATE_ANALYSING2,
+                                        db.STATE_REANALYSING, db.STATE_DONE]):
             cid = c['cid']
             meta = db.chgset_get_meta(cid)
             info = db.chgset_get_info(cid)

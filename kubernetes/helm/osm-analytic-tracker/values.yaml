@@ -6,19 +6,27 @@ difftracker:
   replicas: 1
   resources:
     limits:
-      cpu: 500m
+      cpu: 250m
       memory: 1Gi
     requests:
-      cpu: 100m
+      cpu: 50m
       memory: 512Mi
-  metrics:
-    enabled: True
 
-worker:
+filter:
   replicas: 2
   resources:
     limits:
-      cpu: 500m
+      cpu: 250m
+      memory: 1Gi
+    requests:
+      cpu: 50m
+      memory: 512Mi
+
+analyser:
+  replicas: 2
+  resources:
+    limits:
+      cpu: 250m
       memory: 1Gi
     requests:
       cpu: 50m
@@ -28,7 +36,7 @@ supervisor:
   replicas: 1
   resources:
     limits:
-      cpu: 500m
+      cpu: 250m
       memory: 1Gi
     requests:
       cpu: 50m
@@ -72,6 +80,17 @@ osmtracker:
     readOnlyRootFilesystem: true
   networkpolicy:
     enabled: true
+  metrics:
+    enabled: true
+
+amqp:
+  enabled: true
+  service:
+    name: "amqp://user:rabbitpw@osmtracker-amqp"
+  # RabbitMQ chart specific settings below
+  #persistence: false
+  rabbitmqUsername: user
+  rabbitmqPassword: rabbitpw
 
 # supporting services
 

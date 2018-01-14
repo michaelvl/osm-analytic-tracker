@@ -7,7 +7,7 @@ import osm.changeset
 import osm.diff as osmdiff
 import osm.poly
 import json, pickle
-import datetime, pytz
+import datetime, pytz, dateutil.parser
 import pprint
 import logging, logging.config
 import db as database
@@ -16,19 +16,28 @@ import importlib
 import ColourScheme as col
 import HumanTime
 import operator
-import urllib2, socket
+import requests, socket
 import traceback
 import BackendHtml, BackendHtmlSummary, BackendGeoJson
 import prometheus_client
+import messagebus
 
 logger = logging.getLogger('osmtracker')
+
+AMQP_EXCHANGE_TOPIC = 'osmtracker'     # topic
+AMQP_EXCHANGE_FANOUT = 'osmtracker_bc'  # Fanout
+AMQP_FILTER_QUEUE = ('new_cset', 'new_cset.osmtracker')
+AMQP_ANALYSIS_QUEUE = ('analysis_cset', 'analysis_cset.osmtracker')
+AMQP_GENERATION_KEY = 'new_generation.osmtracker'
+AMQP_REPLICATION_POINTER_QUEUE = ('replication_pointer', 'new_replication_pointer.osmtracker')
+AMQP_QUEUES = [AMQP_FILTER_QUEUE, AMQP_ANALYSIS_QUEUE]
 
 def fetch_and_process_diff(config, dapi, seqno, ctype):
     chgsets = dapi.get_diff_csets(seqno, ctype)
     return chgsets
 
 # FIXME: Refactor to use db.find with timestamps
-def cset_refresh_meta(args, config, db, cset, no_delay=False):
+def cset_refresh_meta(config, db, cset, no_delay=False):
     cid = cset['cid']
     timeout_s = config.get('refresh_meta_minutes', 'tracker')*60
     refresh = no_delay
@@ -47,7 +56,7 @@ def cset_refresh_meta(args, config, db, cset, no_delay=False):
         return db.chgset_set_meta(cid, c.meta)
     return False
 
-def cset_process_local1(args, config, db, cset, info):
+def cset_process_local1(config, db, cset, info):
     '''Preprocess cset, i.e. locally compute various information based on meta, tag
        info or other data.
     '''
@@ -65,7 +74,7 @@ def cset_process_local1(args, config, db, cset, info):
     else:
         misc = info['misc']
 
-    if cset_refresh_meta(args, config, db, cset, no_delay=('timestamp_type' not in misc)) or 'timestamp_type' not in misc:
+    if cset_refresh_meta(config, db, cset, no_delay=('timestamp_type' not in misc)) or 'timestamp_type' not in misc:
         (tstype, timestamp) = osm.changeset.Changeset.get_timestamp(meta)
         ts_type2txt = { 'created_at': 'Started', 'closed_at': 'Closed' }
         misc['timestamp_type'] = tstype
@@ -82,11 +91,11 @@ def cset_process_local1(args, config, db, cset, info):
         state = 'old'
     misc['state'] = state
 
-def cset_process_local2(args, config, db, cset, meta, info):
+def cset_process_local2(config, db, cset, meta, info):
     '''Preprocess cset, i.e. locally compute various information based on meta, tag
        info or other data.
     '''
-    cset_process_local1(args, config, db, cset, info)
+    cset_process_local1(config, db, cset, info)
     misc = info['misc']
 
     tagdiff = info['tagdiff']
@@ -102,17 +111,15 @@ def cset_process_local2(args, config, db, cset, meta, info):
                 break
         misc['processed_tagdiff_'+action] = tdiff
         
-def cset_process_open(args, config, db, cset, debug=0):
+def cset_process_open(config, db, cset, debug=0):
     '''Initial processing of changesets. Also applied to open changesets'''
     info = {'state': {}}
-    cset_process_local1(args, config, db, cset, info)
+    cset_process_local1(config, db, cset, info)
     return info
 
-def cset_process(args, config, db, cset, debug=0):
+def cset_process(config, db, cset, debug=0):
     '''One-time processing of closed changesets'''
     cid = cset['cid']
-    ######geojson = config.get('path', 'tracker')+'/'+config.get('geojsondiff-filename', 'tracker')
-    ####bbox = config.get('path', 'tracker')+'/'+config.get('bounds-filename', 'tracker')
     truncated = None
     diffs = None
     try:
@@ -136,20 +143,8 @@ def cset_process(args, config, db, cset, debug=0):
     if truncated:
         info['state']['truncated'] = truncated
         logger.error('Changeset {} not fully processed: {}'.format(c.id, truncated))
-    # else:
-    #     if geojson:
-    #         fn = geojson.format(id=c.id)
-    #         with open(fn, 'w') as f:
-    #             json.dump(c.getGeoJsonDiff(), f)
 
-    # if bbox:
-    #     b = '{},{},{},{}'.format(c.meta['min_lat'], c.meta['min_lon'],
-    #                                    c.meta['max_lat'], c.meta['max_lon'])
-    #     fn = bbox.format(id=c.id)
-    #     with open(fn, 'w') as f:
-    #         f.write(b)
-
-    cset_process_local2(args, config, db, cset, c.meta, info)
+    cset_process_local2(config, db, cset, c.meta, info)
 
     # Apply labels
     labelrules = config.get('post_labels','tracker')
@@ -160,11 +155,11 @@ def cset_process(args, config, db, cset, debug=0):
     c.unload()
     return info
 
-def cset_reprocess(args, config, db, cset):
+def cset_reprocess(config, db, cset):
     '''Periodic re-processing of closed changesets'''
     cid = cset['cid']
     info = db.chgset_get_info(cid)
-    cset_process_local1(args, config, db, cset, info)
+    cset_process_local1(config, db, cset, info)
     return info
 
 def diff_fetch(args, config, db):
@@ -198,6 +193,11 @@ def diff_fetch(args, config, db):
         if args.log_level == 'DEBUG':
             dapi.debug = True
 
+        amqp = None
+        if args.amqp_url!='':
+            amqp = messagebus.Amqp(args.amqp_url, AMQP_EXCHANGE_TOPIC, 'topic', AMQP_QUEUES)
+            amqp_gen = messagebus.Amqp(args.amqp_url, AMQP_EXCHANGE_FANOUT, 'fanout', [], [])
+
         if args.history:
             history = HumanTime.human2date(args.history)
             head = dapi.get_state('minute')
@@ -224,7 +224,14 @@ def diff_fetch(args, config, db):
                     source = {'type': 'minute',
                               'sequenceno': ptr,
                               'observed': now}
-                    db.chgset_append(cid, source)
+                    if amqp:
+                        source['observed'] = source['observed'].isoformat()
+                        msg = {'cid': cid, 'source': source}
+                        logger.debug('Sending to messagebus: {}'.format(msg))
+                        amqp.send(msg, schema_name='cset', schema_version=1,
+                                  routing_key='new_cset.osmtracker')
+                    else:
+                        db.chgset_append(cid, source)
                 # Set timestamp from old seqno as new seqno might not yet exist
                 seqno = db.pointer['seqno']
                 nptr = dapi.get_state('minute', seqno=seqno)
@@ -235,10 +242,13 @@ def diff_fetch(args, config, db):
                 m_seqno.set(seqno)
                 m_head_seqno.set(head.sequenceno)
                 m_csets.set(len(chgsets))
+                msg = {'pointer': seqno}
+                amqp_gen.send(msg, schema_name='replication_pointer', schema_version=1,
+                              routing_key='new_replication_pointer.osmtracker')
         except KeyboardInterrupt as e:
             logger.warn('Processing interrupted, exiting...')
             raise e
-        except (urllib2.HTTPError, urllib2.URLError, socket.error, socket.timeout) as e:
+        except (requests.exceptions.Timeout, requests.exceptions.HTTPError, socket.error, socket.timeout) as e:
             logger.error('Error retrieving OSM data: '.format(e))
             logger.error(traceback.format_exc())
             time.sleep(60)
@@ -261,78 +271,104 @@ def diff_fetch(args, config, db):
             break
     return 0
 
-def csets_filter(args, config, db):
-    while True:
-        cset = db.chgset_start_processing(db.STATE_NEW, db.STATE_BOUNDS_CHECK)
-        if not cset:
-            break
+def cset_filter(config, db, new_cset):
+        cid = new_cset['cid']
 
+        # Apply labels
+        labelrules = config.get('pre_labels','tracker')
         try:
-            cid = cset['cid']
+            c = osm.changeset.Changeset(cid, api=config.get('osm_api_url','tracker'))
+            c.downloadMeta()
+            clabels = c.build_labels(labelrules)
+            logger.debug('Added labels to cid {}: {}'.format(cid, clabels))
+        except osmapi.ApiError as e:
+            logger.error('Failed reading changeset {}: {}'.format(cid, e))
+            #db.chgset_processed(cset, state=db.STATE_QUARANTINED, failed=True)
 
-            # Apply labels
-            labelrules = config.get('pre_labels','tracker')
-            try:
-                c = osm.changeset.Changeset(cid, api=config.get('osm_api_url','tracker'))
-                c.downloadMeta()
-                clabels = c.build_labels(labelrules)
-                logger.debug('Added labels to cid {}: {}'.format(cid, clabels))
-                cset['labels'] = clabels
-            except osmapi.ApiError as e:
-                logger.error('Failed reading changeset {}: {}'.format(cid, e))
-                db.chgset_processed(cset, state=db.STATE_QUARANTINED, failed=True)
+        # Check labels
+        labelfilters = config.get('prefilter_labels','tracker')
+        passed_filters = False
+        for lf in labelfilters:
+            logger.debug('lf={}'.format(lf))
+            if set(lf).issubset(set(clabels)):
+                logger.debug("Cset labels '{}' is subset of '{}'".format(clabels, lf))
+                passed_filters = True
 
-            # Check labels
-            labelfilters = config.get('prefilter_labels','tracker')
-            passed_filters = False
-            for lf in labelfilters:
-                logger.debug('lf={}'.format(lf))
-                if set(lf).issubset(set(clabels)):
-                    logger.debug("Cset labels '{}' is subset of '{}'".format(clabels, lf))
-                    passed_filters = True
+        if not passed_filters:
+            logger.debug('Cset {} does not match filters'.format(cid))
+        else:
+            logger.debug('Cset {} matches filters'.format(cid))
+            source = { 'type': new_cset['source']['type'],
+                       'sequenceno': new_cset['source']['sequenceno'],
+                       'observed': dateutil.parser.parse(new_cset['source']['observed'])}
+            cset = db.chgset_append(cid, source)
+            cset['labels'] = clabels
+            db.chgset_set_meta(cid, c.meta)
+            db.chgset_processed(cset, state=db.STATE_BOUNDS_CHECKED)
+            return True
+        return False
 
-            if not passed_filters:
-                logger.debug('Cset {} not within area'.format(cid))
-                db.chgset_drop(cid)
-            else:
-                logger.debug('Cset {} passed filters'.format(cid))
-                db.chgset_set_meta(cid, c.meta)
-                db.chgset_processed(cset, state=db.STATE_BOUNDS_CHECKED)
-        except KeyboardInterrupt as e:
-            logging.warn('Processing interrupted, restoring cid {} state to NEW...'.format(cid))
-            db.chgset_processed(cset, state=db.STATE_NEW)
-            raise e
-    return 0
+def csets_filter_worker(args, config, db):
 
-def csets_analyze_initial(args, config, db):
+    class FilterAmqp(messagebus.Amqp):
+        def on_message(self, payload, message):
+            logger.info('Filter: {}'.format(payload))
+            if cset_filter(self.config, self.db, payload):
+                amqp.send(payload, schema_name='cset', schema_version=1,
+                          routing_key='analysis_cset.osmtracker')
+            message.ack()
+
+    amqp = FilterAmqp(args.amqp_url, AMQP_EXCHANGE_TOPIC, 'topic', AMQP_QUEUES, [AMQP_FILTER_QUEUE])
+    amqp.config = config
+    amqp.db = db
+    logger.debug('Starting filter worker')
+    amqp.run()
+
+def csets_analyse_initial(config, db, new_cset=None):
     # Initial and open changesets
     while True:
-        cset = db.chgset_start_processing(db.STATE_BOUNDS_CHECKED, db.STATE_ANALYZING1)
-        if not cset:
-            break
         try:
-            logger.debug('Cset {} analysis step 1'.format(cset['cid']))
-            info = cset_process_open(args, config, db, cset)
-            db.chgset_set_info(cset['cid'], info)
+            if new_cset:
+                cid = new_cset['cid']
+            else:
+                cid = None
+            cset = db.chgset_start_processing(db.STATE_BOUNDS_CHECKED, db.STATE_ANALYSING1, cid=cid)
+            if not cset:
+                logger.warning('Could not find cid {}'.format(cid))
+                return False
+            logger.debug('Cset {} analysis step 1'.format(cid))
+            info = cset_process_open(config, db, cset)
+            db.chgset_set_info(cid, info)
             meta = db.chgset_get_meta(cset['cid'])
             if meta['open']:
+                logger.debug('Cset {} is open, stopping analysis'.format(cid))
                 db.chgset_processed(cset, state=db.STATE_OPEN, refreshed=True)
+                return False
             else:
-                db.chgset_processed(cset, state=db.STATE_CLOSED, refreshed=True)
+                db.chgset_processed(cset, state=db.STATE_CLOSED, refreshed=True)  # FIXME
+                csets_analyse_on_close(config, db, new_cset)
+                return True
         except KeyboardInterrupt as e:
             logging.warn('Processing interrupted, restoring cid {} state to BOUNDS_CHECKED...'.format(cset['cid']))
             db.chgset_processed(cset, state=db.STATE_BOUNDS_CHECKED)
             raise e
+        if new_cset:
+            break
+    return False
 
-def csets_analyze_on_close(args, config, db):
+def csets_analyse_on_close(config, db, new_cset=None):
     # One-time processing when changesets are closed
     while True:
-        cset = db.chgset_start_processing(db.STATE_CLOSED, db.STATE_ANALYZING2)
+        if new_cset:
+            cid = new_cset['cid']
+        else:
+            cid = None
+        cset = db.chgset_start_processing(db.STATE_CLOSED, db.STATE_ANALYSING2, cid=cid)
         if not cset:
             break
         try:
             logger.debug('Cset {} analysis step 2'.format(cset['cid']))
-            info = cset_process(args, config, db, cset)
+            info = cset_process(config, db, cset)
             db.chgset_set_info(cset['cid'], info)
             meta = db.chgset_get_meta(cset['cid'])
             db.chgset_processed(cset, state=db.STATE_DONE, refreshed=True)
@@ -340,68 +376,45 @@ def csets_analyze_on_close(args, config, db):
             logging.warn('Processing interrupted, restoring cid {} state to CLOSED...'.format(cset['cid']))
             db.chgset_processed(cset, state=db.STATE_CLOSED)
             raise e
+        if new_cset:
+            break
 
-def csets_analyze_periodic_reprocess_open(args, config, db):
-    # Peridic reprocessing of open changesets
+def cset2csetmsg(cset):
+    c = {'cid': cset['cid'], 'source': cset['source'] }
+    c['source']['observed'] = cset['source']['observed'].isoformat()
+    return c
+
+def cset_check_reprocess_open(amqp, config, db, cset):
     now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
     dt = now-datetime.timedelta(minutes=config.get('refresh_open_minutes','tracker'))
-    while True:
-        cset = db.chgset_start_processing(db.STATE_OPEN, db.STATE_ANALYZING1, before=dt, timestamp='refreshed')
-        if not cset:
-            break
-        try:
-            logger.info('Reprocess OPEN changeset, cid={}'.format(cset['cid']))
-            info = cset_process_open(args, config, db, cset)
-            db.chgset_set_info(cset['cid'], info)
-            meta = db.chgset_get_meta(cset['cid'])
-            if meta['open']:
-                db.chgset_processed(cset, state=db.STATE_OPEN, refreshed=True)
-            else:
-                db.chgset_processed(cset, state=db.STATE_CLOSED, refreshed=True)
-        except KeyboardInterrupt as e:
-            logging.warn('Processing interrupted, restoring cid {} state to OPEN...'.format(cset['cid']))
-            db.chgset_processed(cset, state=db.STATE_OPEN)
-            raise e
+    if cset['refreshed']<dt:
+        logger.info('Request refresh of OPEN cset {}'.format(cset['cid']))
+        amqp.send(cset2csetmsg(cset), schema_name='cset', schema_version=1,
+                  routing_key='analysis_cset.osmtracker')
 
-def csets_analyze_periodic_reprocess_closed(args, config, db):
+def cset_reprocess_closed(amqp, config, db, cset):
     # Peridic reprocessing of finished changesets
     # Called functions may have longer delays on e.g. when meta is refreshed
     now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
     dt = now-datetime.timedelta(minutes=config.get('refresh_meta_minutes','tracker'))
-    while True:
-        cset = db.chgset_start_processing(db.STATE_DONE, db.STATE_REANALYZING, before=dt, timestamp='refreshed')
-        if not cset:
-            break
-        try:
-            info = cset_reprocess(args, config, db, cset)
-            db.chgset_set_info(cset['cid'], info)
-            meta = db.chgset_get_meta(cset['cid'])
-            db.chgset_processed(cset, state=db.STATE_DONE, refreshed=True)
-        except KeyboardInterrupt as e:
-            logging.warn('Processing interrupted, restoring cid {} state to DONE...'.format(cset['cid']))
-            db.chgset_processed(cset, state=db.STATE_DONE)
-            raise e
+    if cset['refreshed']<dt:
+        logger.info('Request refresh of CLOSED cset {}'.format(cset['cid']))
+        amqp.send(cset2csetmsg(cset), schema_name='cset', schema_version=1,
+                  routing_key='meta_refresh_cset.osmtracker')
 
-def csets_analyze_drop_old(args, config, db):
+def csets_analyse_drop_old(args, config, db):
     # Drop old changesets
     now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
     horizon_s = config.get('horizon_hours','tracker')*3600
     dt = now-datetime.timedelta(seconds=horizon_s)
     while True:
-        cset = db.chgset_start_processing([db.STATE_DONE, db.STATE_QUARANTINED], db.STATE_REANALYZING, before=dt, timestamp='updated')
+        cset = db.chgset_start_processing([db.STATE_DONE, db.STATE_QUARANTINED], db.STATE_REANALYSING, before=dt, timestamp='updated')
         if not cset:
             break
         logger.info('Dropping cset {} due to age'.format(cset['cid']))
         db.chgset_drop(cset['cid'])
 
     return 0
-
-def csets_analyze(args, config, db):
-    csets_analyze_initial(args, config, db)
-    csets_analyze_on_close(args, config, db)
-    csets_analyze_periodic_reprocess_open(args, config, db)
-    csets_analyze_periodic_reprocess_closed(args, config, db)
-    csets_analyze_drop_old(args, config, db)
 
 def load_backend(backend, config):
     logger.debug("Loading backend {}".format(backend))
@@ -416,49 +429,81 @@ def run_backends(args, config, db):
     for backend in blist:
         backends.append(load_backend(backend, config))
     logger.debug('Loaded {} backends'.format(len(backends)))
-    initial = True
-    while True:
-        for b in backends:
-            if not initial and 'init_only' in b.cfg and b.cfg['init_only']:
-                continue
-            starttime = time.clock()
-            b.print_state(db)
-            logger.info('Running backend {} took {:.2f}s'.format(b, time.clock()-starttime))
-        if not (args and args.track):
-            break
-        time.sleep(60)
-        initial = False
-    return 0
 
-def worker(args, config, db):
-    while True:
-        csets_filter(args, config, db)
-        csets_analyze(args, config, db)
-        if not args or not args.track:
-            break
-        time.sleep(15)
+    for b in backends:
+        starttime = time.clock()
+        b.print_state(db)
+        logger.info('Running backend {} took {:.2f}s'.format(b, time.clock()-starttime))
+
+def backends_worker(args, config, db):
+
+    class AnalysisAmqp(messagebus.Amqp):
+        def on_message(self, payload, message):
+            logger.info('Run backends, generation: {}'.format(payload))
+            starttime = time.clock()
+            run_backends(args, config, db)
+            logger.info('Running all backends took {:.2f}s'.format(time.clock()-starttime))
+            message.ack()
+
+    # Will create initial versions
+    run_backends(args, config, db)
+
+    queue = [(socket.gethostname(), 'new_generation.osmtracker'), AMQP_REPLICATION_POINTER_QUEUE]
+    amqp = AnalysisAmqp(args.amqp_url, AMQP_EXCHANGE_FANOUT, 'fanout', queue, queue)
+    amqp.config = config
+    amqp.db = db
+    logger.debug('Starting backend worker, queue/routing-key: {}'.format(queue))
+    amqp.run()
+
+def csets_analysis_worker(args, config, db):
+
+    class AnalysisAmqp(messagebus.Amqp):
+        def on_message(self, payload, message):
+            logger.info('Analyse: {}'.format(payload))
+            post_new_generation = csets_analyse_initial(self.config, self.db, payload)
+            if post_new_generation:
+                gen = db.generation_advance()
+                msg = {'generation': gen}
+                amqp_gen.send(msg, schema_name='generation', schema_version=1,
+                              routing_key='new_generation.osmtracker')
+            message.ack()
+
+    amqp_gen = messagebus.Amqp(args.amqp_url, AMQP_EXCHANGE_FANOUT, 'fanout', [], [])
+    amqp = AnalysisAmqp(args.amqp_url, AMQP_EXCHANGE_TOPIC, 'topic', AMQP_QUEUES, [AMQP_ANALYSIS_QUEUE])
+    amqp.config = config
+    amqp.db = db
+    logger.debug('Starting analysis worker')
+    amqp.run()
 
 def supervisor(args, config, db):
-    if args:
-        setattr(args, 'timeout', True)
-        setattr(args, 'cid', None)
-        if args.metrics:
-            m_changesets = prometheus_client.Gauge('osmtracker_changeset_cnt',
-                                                   'Number of changesets in database',
-                                                   ['state'])
+    if args.metrics:
+        m_changesets = prometheus_client.Gauge('osmtracker_changeset_cnt',
+                                               'Number of changesets in database',
+                                               ['state'])
+
+    amqp = messagebus.Amqp(args.amqp_url, AMQP_EXCHANGE_TOPIC, 'topic', AMQP_QUEUES, [])
+
     while True:
-        if args and args.metrics:
-            cset_cnt = dict()
-            for state in db.all_states:
-                cset_cnt[state] = 0
-            for c in db.chgsets_find():
+        logger.debug('Starting supervision loop')
+        start = time.clock()
+        cset_cnt = {}
+        for state in db.all_states:
+            cset_cnt[state] = 0
+        for c in db.chgsets_find(state=None):
+            logger.debug('Found cid {}, state:{}, refreshed:{}'.format(c['cid'], c['state'], c['refreshed']))
+            if args.metrics:
                 cset_cnt[c['state']] += 1
+            if c['state']==db.STATE_OPEN:
+                cset_check_reprocess_open(amqp, config, db, c)
+            elif c['state']==db.STATE_CLOSED:
+                cset_check_reprocess_closed(amqp, config, db, c)
+        if args.metrics:
             for state in db.all_states:
                 m_changesets.labels(state=state).set(cset_cnt[state])
-        if args:
-            database.reanalyze(args, db)
-        if not args or not args.track:
+        #database.reanalyse(args, db)  # FIXME
+        if not args.track:
             break
+        logger.info('Supervision loop took {:.2f}s. State stats: {}'.format(time.clock()-start, cset_cnt))
         time.sleep(60)
 
 def main():
@@ -475,6 +520,8 @@ def main():
                         help='Enable metrics through Prometheus client API')
     parser.add_argument('--metricsport', dest='metricsport', type=int, default=8000,
                         help='Port through which to serve metrics')
+    parser.add_argument('--amqp', dest='amqp_url', default='',
+                        help='Set url for message bus')
     subparsers = parser.add_subparsers()
 
     parser_diff_fetch = subparsers.add_parser('diff-fetch')
@@ -487,20 +534,15 @@ def main():
     parser_diff_fetch.add_argument('--simulate', type=int, default=None, help='Simulate changeset observation')
 
     parser_csets_filter = subparsers.add_parser('csets-filter')
-    parser_csets_filter.set_defaults(func=csets_filter)
+    parser_csets_filter.set_defaults(func=csets_filter_worker)
 
-    parser_csets_analyze = subparsers.add_parser('csets-analyze')
-    parser_csets_analyze.set_defaults(func=csets_analyze)
+    parser_csets_analyse = subparsers.add_parser('csets-analyse')
+    parser_csets_analyse.set_defaults(func=csets_analysis_worker)
 
     parser_run_backends = subparsers.add_parser('run-backends')
-    parser_run_backends.set_defaults(func=run_backends)
+    parser_run_backends.set_defaults(func=backends_worker)
     parser_run_backends.add_argument('--track', action='store_true', default=False,
                                    help='Track changes and re-run backends periodically')
-
-    parser_worker = subparsers.add_parser('worker')
-    parser_worker.set_defaults(func=worker)
-    parser_worker.add_argument('--track', action='store_true', default=False,
-                               help='Track changes and re-run worker tasks periodically')
 
     parser_supervisor = subparsers.add_parser('supervisor')
     parser_supervisor.set_defaults(func=supervisor)
@@ -521,7 +563,10 @@ def main():
     else:
         dbadm=False
     db = database.DataBase(url=args.db_url, admin=dbadm)
-    logger.debug('Connected to db: {} (RW={})'.format(db, dbadm))
+    logger.info('DB URL: {} (RW={})'.format(db, dbadm))
+
+    if args.amqp_url!='':
+        logger.info('AMQP URL {}, exchange {}'.format(args.amqp_url, AMQP_EXCHANGE_TOPIC))
 
     return args.func(args, config, db)
 

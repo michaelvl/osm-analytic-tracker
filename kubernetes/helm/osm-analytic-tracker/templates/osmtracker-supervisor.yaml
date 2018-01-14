@@ -22,8 +22,11 @@ spec:
         command: ["python", "/osmtracker/osm-analytic-tracker/osmtracker.py"]
         args: [
                "--db", "mongodb://$(DBUSER):$(DBPASSWD)@osmtracker-database/osmtracker", "--configdir", "/osmtracker-config",
-{{- if .Values.difftracker.metrics.enabled }}
+{{- if .Values.osmtracker.metrics.enabled }}
                "--metrics",
+{{- end }}
+{{- if .Values.amqp.enabled }}
+               "--amqp", "{{ .Values.amqp.service.name }}",
 {{- end }}
 {{- if .Values.osmtracker.debug }}
                "-lDEBUG",
