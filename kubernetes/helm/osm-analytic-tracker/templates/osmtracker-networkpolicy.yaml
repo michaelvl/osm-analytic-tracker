@@ -17,8 +17,8 @@ spec:
   - Ingress
   podSelector:
     matchLabels:
-      app: osmtracker
-      role: database
+      app: osmtracker-db
+      #role: database
   ingress:
   - from:
     - podSelector:

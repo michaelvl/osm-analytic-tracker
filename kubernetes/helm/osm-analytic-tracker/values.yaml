@@ -50,21 +50,6 @@ frontend:
     externalPort: 30000
     internalPort: 80
 
-apiserver:
-  enabled: false
-  replicas: 1
-  resources:
-    limits:
-      cpu: 500m
-      memory: 1Gi
-    requests:
-      cpu: 50m
-      memory: 512Mi
-  service:
-    name: osmtracker-apiserver
-    type: NodePort
-    externalPort: 30001
-
 # shared between multiple osm-analytic-tracker pods
 
 osmtracker:
@@ -83,6 +68,8 @@ osmtracker:
   metrics:
     enabled: true
 
+# supporting services
+
 amqp:
   enabled: true
   service:
@@ -91,8 +78,6 @@ amqp:
   #persistence: false
   rabbitmqUsername: user
   rabbitmqPassword: rabbitpw
-
-# supporting services
 
 web:
   image:
@@ -103,21 +88,31 @@ web:
 db:
   persistence:
     enabled: false
-    volume:
-      accessMode: ReadWriteOnce
-      storageClass: null
-      size: 8Gi
-  users:
-    admin: adm.user
-    admin_pass: adm.secret
-    user_rw: rw.user
-    user_rw_pass: rw.user.secret
-    user_ro: ro.user
-    user_ro_pass: ro.user.secret
-  image:
-    image: michaelvl/mongo
-    tag: 3.4.1-1
-    pullPolicy: IfNotPresent
+    accessMode: ReadWriteOnce
+    storageClass: null
+    size: 8Gi
+  service:
+    name: osmtracker-db
+  mongodbUsername: rw.user
+  mongodbPassword: rw.user.secret
+  mongodbDatabase: osmtracker
+
+# Optional components
+
+apiserver:
+  enabled: false
+  replicas: 1
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 50m
+      memory: 512Mi
+  service:
+    name: osmtracker-apiserver
+    type: NodePort
+    externalPort: 30001
 
 elasticsearch_gw:
   enabled: false

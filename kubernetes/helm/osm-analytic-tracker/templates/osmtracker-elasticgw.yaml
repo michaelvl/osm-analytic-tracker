@@ -19,9 +19,10 @@ spec:
       containers:
       - name: elasticsearch-gw
         image: "{{ .Values.osmtracker.image.image }}:{{ .Values.osmtracker.image.tag }}"
-        command: ["python", "/osmtracker/osm-analytic-tracker/elastic-gw.py", "-l", "DEBUG", "--db", "mongodb://$(DBUSER):$(DBPASSWD)@osmtracker-database/osmtracker"]
-        #command: ["sleep", "100000"]
-        args: []
+        command: ["python", "/osmtracker/osm-analytic-tracker/elastic-gw.py"]
+        args: [
+{{- template "osmtracker.common_args" . }}
+	]
         imagePullPolicy: {{ .Values.osmtracker.image.pullPolicy }}
         securityContext:
 {{ toYaml .Values.osmtracker.securityContext | indent 10 }}

@@ -8,67 +8,34 @@ below are recommended.
 
 The Kubernetes deployment consists of the following resources
 
-1. A MongoDB POD and a service definition for the database. All other PODs will use the database for persisting diff and changeset information.
-2. A single stateless minutely diff tracker POD.
-3. One or more stateless worker PODs for analysing changesets.
-4. One or more stateless frontend PODs which use a POD volume for sharing data between the osmtracker backend and the Nginx web server.
-5. A supervisor service for monitoring state of worker PODs and for providing aggregated metrics for e.g. Prometheus.
-6. An optional API server for add-on services - see the OpenAPI.Swagger [apispec.yaml](apiserver/apispec.yaml).
-7. An optional Elasticsearch gateway, which pushes changeset information to Elasticsearch.
+1. A MongoDB deployment for the database. All other PODs will use the database for persisting diff and changeset information. This deployment is based on a MongoDB Helm subchart.
+2. A RabbitMQ message queue deployment for communication between components. This deployment is based on a RabbitMQ Helm subchart.
+3. A single stateless minutely diff tracker POD.
+4. A changeset filtering deployment which performs initial filtering using labels and geometric rules.  Typically two pod are recommended for this deployment.
+5. A changeset analyzer deployment which perform the full analysis of changesets which passes the defined filters.   Typically two pod are recommended for this deployment.
+5. A frontend deployment which use a POD volume for sharing data between the osmtracker backend and the Nginx web server.
+6. A supervisor service for monitoring state of worker PODs and for providing aggregated metrics for e.g. Prometheus.
+7. An optional API server for add-on services - see the OpenAPI.Swagger [apispec.yaml](apiserver/apispec.yaml).
+8. An optional Elasticsearch gateway, which pushes changeset information to Elasticsearch.
 
 ![Image](architecture.png?raw=true)
 
-The three osmtracker container types all use the [michaelvl/osmtracker](https://hub.docker.com/r/michaelvl/osmtracker/) Docker image. Note that this image is using a non-root user with UID and GID of 945 and the helm charts enforce a non-root user together with a read-only filesystem.
+The three osmtracker container types all use the
+[michaelvl/osmtracker](https://hub.docker.com/r/michaelvl/osmtracker/) Docker
+image. Note that this image is using a non-root user with UID and GID of 1042
+and the helm charts enforce a non-root user together with a read-only
+filesystem.
 
-An actual deployment can be created either using the Helm charts or stand-alone
-yaml resource definitions.  See the Helm chart
-[README](helm/osm-analytic-tracker/README.md) for description of a
+An actual deployment can be created either using the Helm chart.  See the Helm
+chart [README](helm/osm-analytic-tracker/README.md) for description of a
 Helm-based deployment.
 
-## Deployment from resource manifests
-
-The stand-alone Kubernetes deployment manifests can be found in the kubernetes
-folder. Generally the Helm-based deployment is recommeded and the stand-alone
-manifests will have fewer features.
-
-The resources can be deployed as follows:
+The default worker deployment use two filter and two analyzer instances,
+however, for larger regions it might ne necessary with more instance. To scale
+the deployments do e.g.:
 
 ```
-kubectl create -f osmtracker-namespace.yaml
-kubectl create -f osmtracker-secrets.yaml
-```
-
-The secrets resource define database credentials - read-only for frontends and
-read/write for other services. You might want to change the default credentials.
-
-```
-kubectl create -f osmtracker-database-service.yaml
-kubectl create -f osmtracker-frontend-service.yaml
-kubectl create -f osmtracker-database.yaml
-kubectl create -f osmtracker-frontend.yaml
-```
-
-At this stage you can access the frontend service using a web-browser although
-no changesets will be shown and the status on the right side will show a
-'Loading...' message.
-
-To begin tracking minutely diffs and analyse them, you need to deploy the
-diff-tracker and worker pods as follows:
-
-```
-kubectl create -f osmtracker-difftracker.yaml
-kubectl create -f osmtracker-worker.yaml
-```
-
-After a little while, the status panel should show tracker status and new
-changesets should begin to appear.
-
-The default worker deployment use a single worker instance, however, it is
-recommended to use at least two, i.e. the deployment should be updated as
-follows:
-
-```
-kubectl -n osmtracker scale deployment osmtracker-worker-deployment --replicas=2
+kubectl -n osmtracker scale deployment osmtracker-filter-deployment --replicas=3
 ```
 
 For debugging you can run the osmtracker image interactively as follows:

@@ -21,10 +21,7 @@ spec:
         image: "{{ .Values.osmtracker.image.image }}:{{ .Values.osmtracker.image.tag }}"
         command: ["python", "/osmtracker/osm-analytic-tracker/apiserver.py"]
         args: [
-               "--db", "mongodb://$(DBUSER):$(DBPASSWD)@osmtracker-database/osmtracker", "--configdir", "/osmtracker-config",
-{{- if .Values.osmtracker.debug }}
-               "-lDEBUG"
-{{- end }}
+{{- template "osmtracker.common_args" . }}
               ]
         imagePullPolicy: {{ .Values.osmtracker.image.pullPolicy }}
         securityContext:
