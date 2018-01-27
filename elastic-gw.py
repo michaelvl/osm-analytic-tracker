@@ -16,6 +16,10 @@ def main():
                         help='Set the log level')
     parser.add_argument('--db', dest='db_url', default='mongodb://localhost:27017/',
                         help='Set url for database')
+    parser.add_argument('--amqp', dest='amqp_url', default='',
+                        help='Set url for message bus')
+    parser.add_argument('--configdir', dest='configdir', default='.',
+                        help='Set path to config file')
 
     args = parser.parse_args()
     logging.getLogger('').setLevel(getattr(logging, args.log_level))
