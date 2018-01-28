@@ -529,6 +529,8 @@ def supervisor(args, config, db):
         m_changesets = prometheus_client.Gauge('osmtracker_changeset_cnt',
                                                'Number of changesets in database',
                                                ['state'])
+        m_csets_analysis_in = prometheus_client.Counter('osmtracker_changeset_analysis_in',
+                                                        'Number of changesets analysis requests')
         m_csets_rfsh_in = prometheus_client.Counter('osmtracker_changeset_refresh_in',
                                                      'Number of changesets refresh requests')
 
@@ -546,7 +548,7 @@ def supervisor(args, config, db):
                 cset_cnt[c['state']] += 1
             if c['state']==db.STATE_OPEN:
                 if cset_check_reprocess_open(amqp, config, db, c):
-                    m_csets_rfsh_in.inc()
+                    m_csets_analysis_in.inc()
             elif c['state']==db.STATE_CLOSED:
                 if cset_check_reprocess_closed(amqp, config, db, c):
                     m_csets_rfsh_in.inc()
