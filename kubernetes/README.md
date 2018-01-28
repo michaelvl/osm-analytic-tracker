@@ -81,6 +81,33 @@ The metrics exported are:
    the recent minutely diff. A very large influx of changesets might cause small
    increased delays in the tracker.
 
+- *osmtracker_changeset_filter_in*, *osmtracker_changeset_filter_out* -
+   changeset filter requests sent into the message bus (in) and changeset filter
+   request handled (out). If the difference between these metrics increase,
+   scale up the filter deployment.
+
+- *osmtracker_changeset_filter_processing_time_seconds* - histogram with
+   processing time for filter events.
+
+- *osmtracker_changeset_analysis_in*, *osmtracker_changeset_analysis_out* -
+   changeset analysis requests sent into the message bus (in) and changeset
+   analysis requests handled (out). If the difference between these metrics
+   increase, scale up the analysis deployment.
+
+- *osmtracker_changeset_analysis_processing_time_seconds* - histogram with
+   processing time for changeset analysis events.
+
+- *osmtracker_changeset_refresh_in*, *osmtracker_changeset_refresh_out* -
+   changeset refresh requests sent into the message bus (in) and changeset
+   refresh requests handled (out). If the difference between these metrics
+   increase, scale up the analysis deployment.
+
+- *osmtracker_changeset_refresh_processing_time_seconds* - histogram with
+   processing time for changeset refresh events.
+
+- *osmtracker_backend_processing_time_seconds* - histogram with processing time
+   for backend refresh events.
+
 ## Kubernetes Network Policies
 
 The Helm-based deployment supports deploying Kubernetes network policies to

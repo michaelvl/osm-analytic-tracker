@@ -71,9 +71,10 @@ class Amqp(kombu.mixins.ConsumerProducerMixin):
                               routing_key=routing_key, retry=True)
 
     def get_consumers(self, Consumer, channel):
-        logger.debug('Consumer queues: {}'.format(self.handle_queues))
+        handle_queues = getattr(self, 'handle_queues', None)
+        logger.debug('Consumer queues: {}'.format(handle_queues))
         return [Consumer(
-            queues = self.handle_queues,
+            queues = handle_queues,
             on_message = self.message_cb,
             accept = {'application/json'},
             prefetch_count = 1,
@@ -97,12 +98,13 @@ class Amqp(kombu.mixins.ConsumerProducerMixin):
 
 class TestAmqp(Amqp):
     def on_message(self, payload, message):
-        print payload
+        print 'Routing key:', message.delivery_info['routing_key']
+        print 'Payload:', payload
         message.ack()
 
 def test_recv(args):
     logging.debug('Entering test_recv(), key={}'.format(args.key))
-    amqp = TestAmqp(args.url, args.exchange, [(args.queue, args.key)])
+    amqp = TestAmqp(args.url, args.exchange, args.exchange_type, [(args.queue, args.key)], [(args.queue, args.key)])
     amqp.run()
 
 
@@ -115,6 +117,7 @@ if __name__ == '__main__':
     #parser.add_argument('--url', default='amqp://guest:guest@localhost:5672')
     parser.add_argument('--url', default='amqp://osmtracker-amqp')
     parser.add_argument('--exchange', default='osmtracker')
+    parser.add_argument('--exchange-type', default='topic', choices=['topic', 'fanout'])
     subparsers = parser.add_subparsers()
 
     parser_recv = subparsers.add_parser('recv')

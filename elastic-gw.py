@@ -18,6 +18,10 @@ def main():
                         help='Set url for database')
     parser.add_argument('--amqp', dest='amqp_url', default='',
                         help='Set url for message bus')
+    parser.add_argument('--metrics', dest='metrics', action='store_true', default=False,
+                        help='Enable metrics through Prometheus client API')
+    parser.add_argument('--metricsport', dest='metricsport', type=int, default=8000,
+                        help='Port through which to serve metrics')
     parser.add_argument('--configdir', dest='configdir', default='.',
                         help='Set path to config file')
 
