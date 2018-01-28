@@ -5,9 +5,11 @@ metadata:
   name: osmtracker-apiserver
   namespace: {{ .Release.Namespace }}
   labels:
-    app: osmtracker
-    role: apiserver-service
+    app: {{ template "osmtracker.name" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+    component: apiserver-service
 spec:
   type: {{ .Values.apiserver.service.type }}
   ports:
@@ -19,6 +21,6 @@ spec:
     protocol: TCP
     name: {{ .Values.apiserver.service.name }}
   selector:
-    app: osmtracker
-    role: apiserver
+    app: {{ template "osmtracker.name" . }}
+    component: apiserver
 {{ end }}

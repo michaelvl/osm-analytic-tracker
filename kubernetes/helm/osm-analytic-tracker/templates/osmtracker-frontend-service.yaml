@@ -4,9 +4,11 @@ metadata:
   name: osmtracker-frontend
   namespace: {{ .Release.Namespace }}
   labels:
-    app: osmtracker
-    role: frontend-service
+    app: {{ template "osmtracker.name" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+    component: frontend-service
 spec:
   type: {{ .Values.frontend.service.type }}
   ports:
@@ -18,5 +20,5 @@ spec:
     protocol: TCP
     name: {{ .Values.frontend.service.name }}
   selector:
-    app: osmtracker
-    role: frontend
+    app: {{ template "osmtracker.name" . }}
+    component: frontend

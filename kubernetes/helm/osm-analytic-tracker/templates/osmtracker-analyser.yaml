@@ -4,14 +4,18 @@ metadata:
   name: osmtracker-analyser-deployment
   namespace: {{ .Release.Namespace }}
   labels:
+    app: {{ template "osmtracker.name" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
 spec:
   replicas: {{ .Values.analyser.replicas }}
   template:
     metadata:
       labels:
-        app: osmtracker
-        role: analyser
+        app: {{ template "osmtracker.name" . }}
+        component: analyser
+        metrics: 'true'
       annotations:
         checksum/config: {{ include (print $.Chart.Name "/templates/osmtracker-secrets.yaml") . | sha256sum }}
     spec:

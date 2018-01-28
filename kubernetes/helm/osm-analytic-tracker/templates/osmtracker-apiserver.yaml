@@ -5,14 +5,17 @@ metadata:
   name: osmtracker-apiserver-deployment
   namespace: {{ .Release.Namespace }}
   labels:
+    app: {{ template "osmtracker.name" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
 spec:
   replicas: {{ .Values.apiserver.replicas }}
   template:
     metadata:
       labels:
-        app: osmtracker
-        role: apiserver
+        app: {{ template "osmtracker.name" . }}
+        component: apiserver
       annotations:
         checksum/config: {{ include (print $.Chart.Name "/templates/osmtracker-secrets.yaml") . | sha256sum }}
     spec:

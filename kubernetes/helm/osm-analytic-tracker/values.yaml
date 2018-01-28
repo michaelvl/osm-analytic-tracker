@@ -71,7 +71,6 @@ osmtracker:
 # supporting services
 
 amqp:
-  enabled: true
   service:
     name: "amqp://user:rabbitpw@osmtracker-amqp"
   # RabbitMQ chart specific settings below

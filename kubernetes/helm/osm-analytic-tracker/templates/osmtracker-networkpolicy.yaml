@@ -17,13 +17,13 @@ spec:
   - Ingress
   podSelector:
     matchLabels:
-      app: osmtracker-db
-      #role: database
+      app: {{ .Release.Name }}-db
+      #component: database
   ingress:
   - from:
     - podSelector:
         matchLabels:
-          app: osmtracker
+          app: {{ template "osmtracker.name" . }}
     ports:
     - protocol: TCP
       port: 27017
@@ -37,14 +37,13 @@ spec:
   - Ingress
   podSelector:
     matchLabels:
-      app: osmtracker
-      role: frontend
+      app: {{ template "osmtracker.name" . }}
+      component: frontend
   ingress:
   - from:
     ports:
     - protocol: TCP
       port: 80
-{{ if .Values.amqp.enabled }}
 ---
 kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
@@ -55,14 +54,13 @@ spec:
   - Ingress
   podSelector:
     matchLabels:
-      app: osmtracker-amqp
-      #role: amqp
+      app: {{ .Release.Name }}-amqp
+      #component: amqp
   ingress:
   - from:
     ports:
     - protocol: TCP
       port: 5672
-{{ end }}
 {{ if .Values.osmtracker.metrics.enabled }}
 ---
 kind: NetworkPolicy
@@ -74,7 +72,7 @@ spec:
   - Ingress
   podSelector:
     matchLabels:
-      app: osmtracker
+      app: {{ template "osmtracker.name" . }}
       metrics: 'true'
   ingress:
   - from:

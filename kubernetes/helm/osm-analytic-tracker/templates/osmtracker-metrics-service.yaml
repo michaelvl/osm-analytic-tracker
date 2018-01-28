@@ -5,9 +5,11 @@ metadata:
   name: osmtracker-metrics
   namespace: {{ .Release.Namespace }}
   labels:
-    app: osmtracker
-    role: difftracker-metrics-service
+    app: {{ template "osmtracker.name" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+    component: metrics-service
   annotations:
     prometheus.io/scrape: 'true'
 spec:
@@ -18,6 +20,6 @@ spec:
     targetPort: 8000
     protocol: TCP
   selector:
-    app: osmtracker
+    app: {{ template "osmtracker.name" . }}
     metrics: 'true'
 {{ end }}
