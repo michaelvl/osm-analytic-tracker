@@ -346,7 +346,7 @@ def csets_analyse_initial(config, db, new_cset=None):
                 cid = new_cset['cid']
             else:
                 cid = None
-            cset = db.chgset_start_processing(db.STATE_BOUNDS_CHECKED, db.STATE_ANALYSING1, cid=cid)
+            cset = db.chgset_start_processing([db.STATE_BOUNDS_CHECKED,db.STATE_OPEN], db.STATE_ANALYSING1, cid=cid)
             if not cset:
                 logger.warning('Could not find cid {}'.format(cid))
                 return False
