@@ -1,12 +1,64 @@
 {
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "4.6.3"
+    },
+    {
+      "type": "panel",
+      "id": "graph",
+      "name": "Graph",
+      "version": ""
+    },
+    {
+      "type": "datasource",
+      "id": "prometheus",
+      "name": "Prometheus",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "singlestat",
+      "name": "Singlestat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    }
+  ],
   "annotations": {
-    "list": []
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
   },
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
   "hideControls": false,
-  "id": 2,
+  "id": null,
   "links": [],
   "refresh": "10s",
   "rows": [
@@ -15,9 +67,249 @@
       "height": 250,
       "panels": [
         {
+          "cacheTimeout": null,
+          "colorBackground": false,
+          "colorValue": true,
+          "colors": [
+            "#299c46",
+            "rgba(237, 129, 40, 0.89)",
+            "#bf1b00"
+          ],
+          "datasource": "${DS_PROMETHEUS}",
+          "format": "s",
+          "gauge": {
+            "maxValue": 100,
+            "minValue": 0,
+            "show": false,
+            "thresholdLabels": false,
+            "thresholdMarkers": true
+          },
+          "id": 13,
+          "interval": null,
+          "links": [],
+          "mappingType": 1,
+          "mappingTypes": [
+            {
+              "name": "value to text",
+              "value": 1
+            },
+            {
+              "name": "range to text",
+              "value": 2
+            }
+          ],
+          "maxDataPoints": 100,
+          "nullPointMode": "connected",
+          "nullText": null,
+          "postfix": "",
+          "postfixFontSize": "50%",
+          "prefix": "",
+          "prefixFontSize": "50%",
+          "rangeMaps": [
+            {
+              "from": "null",
+              "text": "N/A",
+              "to": "null"
+            }
+          ],
+          "span": 4,
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)",
+            "full": false,
+            "lineColor": "rgb(31, 120, 193)",
+            "show": true
+          },
+          "tableColumn": "",
+          "targets": [
+            {
+              "expr": "time()-osmtracker_minutely_diff_timestamp",
+              "format": "time_series",
+              "intervalFactor": 2,
+              "refId": "A"
+            }
+          ],
+          "thresholds": "3:4",
+          "title": "Replication lag",
+          "type": "singlestat",
+          "valueFontSize": "100%",
+          "valueMaps": [
+            {
+              "op": "=",
+              "text": "N/A",
+              "value": "null"
+            }
+          ],
+          "valueName": "avg"
+        },
+        {
+          "cacheTimeout": null,
+          "colorBackground": false,
+          "colorValue": true,
+          "colors": [
+            "rgba(237, 129, 40, 0.89)",
+            "#299c46",
+            "rgba(237, 129, 40, 0.89)"
+          ],
+          "datasource": "${DS_PROMETHEUS}",
+          "format": "none",
+          "gauge": {
+            "maxValue": 100,
+            "minValue": 0,
+            "show": false,
+            "thresholdLabels": false,
+            "thresholdMarkers": true
+          },
+          "id": 15,
+          "interval": null,
+          "links": [],
+          "mappingType": 1,
+          "mappingTypes": [
+            {
+              "name": "value to text",
+              "value": 1
+            },
+            {
+              "name": "range to text",
+              "value": 2
+            }
+          ],
+          "maxDataPoints": 100,
+          "nullPointMode": "connected",
+          "nullText": null,
+          "postfix": "",
+          "postfixFontSize": "50%",
+          "prefix": "",
+          "prefixFontSize": "50%",
+          "rangeMaps": [
+            {
+              "from": "null",
+              "text": "N/A",
+              "to": "null"
+            }
+          ],
+          "span": 4,
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)",
+            "full": false,
+            "lineColor": "rgb(31, 120, 193)",
+            "show": true
+          },
+          "tableColumn": "",
+          "targets": [
+            {
+              "expr": "irate(osmtracker_minutely_diff_latest_seqno[10m])*60",
+              "format": "time_series",
+              "hide": false,
+              "intervalFactor": 2,
+              "refId": "A"
+            }
+          ],
+          "thresholds": "0.9,1.1",
+          "title": "OpenStreetMap replication sequence number rate",
+          "type": "singlestat",
+          "valueFontSize": "100%",
+          "valueMaps": [
+            {
+              "op": "=",
+              "text": "N/A",
+              "value": "null"
+            }
+          ],
+          "valueName": "avg"
+        },
+        {
+          "cacheTimeout": null,
+          "colorBackground": false,
+          "colorValue": true,
+          "colors": [
+            "#299c46",
+            "#299c46",
+            "#d44a3a"
+          ],
+          "datasource": "${DS_PROMETHEUS}",
+          "format": "none",
+          "gauge": {
+            "maxValue": 100,
+            "minValue": 0,
+            "show": false,
+            "thresholdLabels": false,
+            "thresholdMarkers": true
+          },
+          "id": 14,
+          "interval": null,
+          "links": [],
+          "mappingType": 1,
+          "mappingTypes": [
+            {
+              "name": "value to text",
+              "value": 1
+            },
+            {
+              "name": "range to text",
+              "value": 2
+            }
+          ],
+          "maxDataPoints": 100,
+          "nullPointMode": "connected",
+          "nullText": null,
+          "postfix": "",
+          "postfixFontSize": "50%",
+          "prefix": "",
+          "prefixFontSize": "50%",
+          "rangeMaps": [
+            {
+              "from": "null",
+              "text": "N/A",
+              "to": "null"
+            }
+          ],
+          "span": 4,
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)",
+            "full": false,
+            "lineColor": "rgb(31, 120, 193)",
+            "show": true
+          },
+          "tableColumn": "",
+          "targets": [
+            {
+              "expr": "rate(osmtracker_minutely_diff_csets_observed[5m])",
+              "format": "time_series",
+              "intervalFactor": 2,
+              "refId": "A"
+            }
+          ],
+          "thresholds": "0",
+          "title": "Minutely diff changeset rate",
+          "type": "singlestat",
+          "valueFontSize": "100%",
+          "valueMaps": [
+            {
+              "op": "=",
+              "text": "N/A",
+              "value": "null"
+            }
+          ],
+          "valueName": "current"
+        }
+      ],
+      "repeat": null,
+      "repeatIteration": null,
+      "repeatRowId": null,
+      "showTitle": false,
+      "title": "Dashboard Row",
+      "titleSize": "h6"
+    },
+    {
+      "collapse": false,
+      "height": 250,
+      "panels": [
+        {
           "aliasColors": {},
           "bars": false,
-          "datasource": "Prometheus",
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "${DS_PROMETHEUS}",
           "fill": 0,
           "id": 1,
           "legend": {
@@ -38,12 +330,14 @@
           "points": false,
           "renderer": "flot",
           "seriesOverrides": [],
-          "span": 6,
+          "spaceLength": 10,
+          "span": 4,
           "stack": false,
           "steppedLine": false,
           "targets": [
             {
               "expr": "time()-osmtracker_minutely_diff_processing_timestamp",
+              "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "Diff tracker service lag",
               "refId": "A",
@@ -51,6 +345,7 @@
             },
             {
               "expr": "time()-osmtracker_minutely_diff_timestamp",
+              "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
               "legendFormat": "Total database lag",
@@ -69,6 +364,7 @@
           },
           "type": "graph",
           "xaxis": {
+            "buckets": null,
             "mode": "time",
             "name": null,
             "show": true,
@@ -96,7 +392,9 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": null,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "${DS_PROMETHEUS}",
           "fill": 1,
           "id": 5,
           "legend": {
@@ -117,12 +415,14 @@
           "points": false,
           "renderer": "flot",
           "seriesOverrides": [],
-          "span": 6,
+          "spaceLength": 10,
+          "span": 4,
           "stack": false,
           "steppedLine": false,
           "targets": [
             {
-              "expr": "osmtracker_minutely_diff_head_seqno",
+              "expr": "delta(osmtracker_minutely_diff_head_seqno[1h])",
+              "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
               "legendFormat": "Head seqno",
@@ -131,7 +431,8 @@
               "step": 10
             },
             {
-              "expr": "osmtracker_minutely_diff_latest_seqno",
+              "expr": "delta(osmtracker_minutely_diff_latest_seqno[1h])",
+              "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "Latest processed seqno",
               "metric": "osmtracker_minutely_diff_latest_seqno",
@@ -142,7 +443,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Replication sequence numbers",
+          "title": "Replication sequence number delta (1 hour)",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -150,6 +451,7 @@
           },
           "type": "graph",
           "xaxis": {
+            "buckets": null,
             "mode": "time",
             "name": null,
             "show": true,
@@ -157,8 +459,87 @@
           },
           "yaxes": [
             {
+              "decimals": 0,
+              "format": "short",
+              "label": "",
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
               "format": "short",
               "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ]
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "${DS_PROMETHEUS}",
+          "fill": 1,
+          "id": 2,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "span": 4,
+          "stack": false,
+          "steppedLine": true,
+          "targets": [
+            {
+              "expr": "osmtracker_minutely_diff_csets_observed",
+              "format": "time_series",
+              "hide": false,
+              "intervalFactor": 2,
+              "legendFormat": "Changesets per minutely diff",
+              "refId": "A",
+              "step": 10
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Changesets in minutely diffs",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "decimals": 0,
+              "format": "short",
+              "label": "",
               "logBase": 1,
               "max": null,
               "min": null,
@@ -189,14 +570,17 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "Prometheus",
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "${DS_PROMETHEUS}",
           "fill": 1,
-          "id": 2,
+          "id": 4,
           "legend": {
             "avg": false,
             "current": false,
             "max": false,
             "min": false,
+            "rightSide": true,
             "show": true,
             "total": false,
             "values": false
@@ -210,15 +594,17 @@
           "points": false,
           "renderer": "flot",
           "seriesOverrides": [],
+          "spaceLength": 10,
           "span": 4,
           "stack": false,
-          "steppedLine": true,
+          "steppedLine": false,
           "targets": [
             {
-              "expr": "osmtracker_minutely_diff_csets_observed",
+              "expr": "osmtracker_changeset_cnt",
+              "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
-              "legendFormat": "Changesets per minutely diff",
+              "legendFormat": "{{state}}",
               "refId": "A",
               "step": 10
             }
@@ -226,7 +612,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Changesets in minutely diffs",
+          "title": "Changesets in database",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -234,6 +620,7 @@
           },
           "type": "graph",
           "xaxis": {
+            "buckets": null,
             "mode": "time",
             "name": null,
             "show": true,
@@ -241,11 +628,12 @@
           },
           "yaxes": [
             {
+              "decimals": 0,
               "format": "short",
-              "label": null,
+              "label": "",
               "logBase": 1,
               "max": null,
-              "min": null,
+              "min": "0",
               "show": true
             },
             {
@@ -259,15 +647,13 @@
           ]
         },
         {
-          "aliasColors": {
-            ".80 quantile": "#1F78C1",
-            "Minutely diff processing time (s) .90 quantile": "#6D1F62",
-            "Minutely diff processing time (s) .95 quantile": "#0A437C"
-          },
+          "aliasColors": {},
           "bars": false,
-          "datasource": "Prometheus",
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "${DS_PROMETHEUS}",
           "fill": 1,
-          "id": 3,
+          "id": 10,
           "legend": {
             "avg": false,
             "current": false,
@@ -286,38 +672,23 @@
           "points": false,
           "renderer": "flot",
           "seriesOverrides": [],
+          "spaceLength": 10,
           "span": 4,
           "stack": false,
-          "steppedLine": true,
+          "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, rate(osmtracker_minutely_diff_processing_time_seconds_bucket[10m]))",
-              "hide": false,
+              "expr": "sum(rate(osmtracker_events[5m])) by (event,action)",
+              "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": ".95 quantile",
-              "refId": "A",
-              "step": 10
-            },
-            {
-              "expr": "histogram_quantile(0.90, rate(osmtracker_minutely_diff_processing_time_seconds_bucket[10m]))",
-              "hide": false,
-              "intervalFactor": 2,
-              "legendFormat": ".90 quantile",
-              "refId": "B",
-              "step": 10
-            },
-            {
-              "expr": "histogram_quantile(0.80, rate(osmtracker_minutely_diff_processing_time_seconds_bucket[10m]))",
-              "intervalFactor": 2,
-              "legendFormat": ".80 quantile",
-              "refId": "C",
-              "step": 10
+              "legendFormat": "{{event}} - {{action}}",
+              "refId": "A"
             }
           ],
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Minutely diff processing time",
+          "title": "Event rates",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -325,6 +696,212 @@
           },
           "type": "graph",
           "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": "0",
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ]
+        },
+        {
+          "columns": [],
+          "datasource": "${DS_PROMETHEUS}",
+          "fontSize": "90%",
+          "id": 11,
+          "links": [],
+          "pageSize": null,
+          "scroll": true,
+          "showHeader": true,
+          "sort": {
+            "col": 2,
+            "desc": false
+          },
+          "span": 4,
+          "styles": [
+            {
+              "alias": "Event type",
+              "colorMode": null,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "dateFormat": "YYYY-MM-DD HH:mm:ss",
+              "decimals": 2,
+              "pattern": "event",
+              "thresholds": [],
+              "type": "number",
+              "unit": "short"
+            },
+            {
+              "alias": "Direction",
+              "colorMode": null,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "dateFormat": "YYYY-MM-DD HH:mm:ss",
+              "decimals": 2,
+              "pattern": "action",
+              "thresholds": [],
+              "type": "number",
+              "unit": "short"
+            },
+            {
+              "alias": "",
+              "colorMode": null,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "dateFormat": "YYYY-MM-DD HH:mm:ss",
+              "decimals": 0,
+              "pattern": "Value",
+              "thresholds": [],
+              "type": "number",
+              "unit": "none"
+            },
+            {
+              "alias": "",
+              "colorMode": null,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "dateFormat": "YYYY-MM-DD HH:mm:ss",
+              "decimals": 2,
+              "pattern": "Time",
+              "thresholds": [],
+              "type": "hidden",
+              "unit": "short"
+            },
+            {
+              "alias": "",
+              "colorMode": null,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "decimals": 2,
+              "pattern": "/.*/",
+              "thresholds": [],
+              "type": "number",
+              "unit": "short"
+            }
+          ],
+          "targets": [
+            {
+              "expr": "sum(osmtracker_events) by (event,action)",
+              "format": "table",
+              "instant": true,
+              "intervalFactor": 2,
+              "legendFormat": "{{event}} - {{action}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Events",
+          "transform": "table",
+          "type": "table"
+        }
+      ],
+      "repeat": null,
+      "repeatIteration": null,
+      "repeatRowId": null,
+      "showTitle": false,
+      "title": "Dashboard Row",
+      "titleSize": "h6"
+    },
+    {
+      "collapse": false,
+      "height": 250,
+      "panels": [
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "${DS_PROMETHEUS}",
+          "fill": 1,
+          "id": 7,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "span": 3,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, rate(osmtracker_changeset_filter_processing_time_seconds_bucket[10m]))",
+              "format": "time_series",
+              "intervalFactor": 2,
+              "legendFormat": ".95 quantile",
+              "refId": "A"
+            },
+            {
+              "expr": "histogram_quantile(0.90, rate(osmtracker_changeset_filter_processing_time_seconds_bucket[10m]))",
+              "format": "time_series",
+              "intervalFactor": 2,
+              "legendFormat": ".90 quantile",
+              "refId": "B"
+            },
+            {
+              "expr": "histogram_quantile(0.80, rate(osmtracker_changeset_filter_processing_time_seconds_bucket[10m]))",
+              "format": "time_series",
+              "intervalFactor": 2,
+              "legendFormat": ".80 quantile",
+              "refId": "C"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Changeset filtering processing time",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
             "mode": "time",
             "name": null,
             "show": true,
@@ -352,9 +929,11 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": null,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "${DS_PROMETHEUS}",
           "fill": 1,
-          "id": 4,
+          "id": 9,
           "legend": {
             "avg": false,
             "current": false,
@@ -373,23 +952,37 @@
           "points": false,
           "renderer": "flot",
           "seriesOverrides": [],
-          "span": 4,
+          "spaceLength": 10,
+          "span": 3,
           "stack": false,
           "steppedLine": false,
           "targets": [
             {
-              "expr": "osmtracker_changeset_cnt",
-              "hide": false,
+              "expr": "histogram_quantile(0.95, rate(osmtracker_changeset_refresh_processing_time_seconds_bucket[10m]))",
+              "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{state}}",
-              "refId": "A",
-              "step": 10
+              "legendFormat": ".95 quantile",
+              "refId": "A"
+            },
+            {
+              "expr": "histogram_quantile(0.90, rate(osmtracker_changeset_refresh_processing_time_seconds_bucket[10m]))",
+              "format": "time_series",
+              "intervalFactor": 2,
+              "legendFormat": ".90 quantile",
+              "refId": "B"
+            },
+            {
+              "expr": "histogram_quantile(0.80, rate(osmtracker_changeset_refresh_processing_time_seconds_bucket[10m]))",
+              "format": "time_series",
+              "intervalFactor": 2,
+              "legendFormat": ".80 quantile",
+              "refId": "C"
             }
           ],
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Changesets in database",
+          "title": "Changeset refresh processing time",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -397,6 +990,7 @@
           },
           "type": "graph",
           "xaxis": {
+            "buckets": null,
             "mode": "time",
             "name": null,
             "show": true,
@@ -405,7 +999,185 @@
           "yaxes": [
             {
               "format": "short",
+              "label": "Seconds",
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
               "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ]
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "${DS_PROMETHEUS}",
+          "fill": 1,
+          "id": 8,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "span": 3,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, rate(osmtracker_changeset_analysis_processing_time_seconds_bucket[10m]))",
+              "format": "time_series",
+              "intervalFactor": 2,
+              "legendFormat": ".95 quantile",
+              "refId": "A"
+            },
+            {
+              "expr": "histogram_quantile(0.90, rate(osmtracker_changeset_analysis_processing_time_seconds_bucket[10m]))",
+              "format": "time_series",
+              "intervalFactor": 2,
+              "legendFormat": ".90 quantile",
+              "refId": "B"
+            },
+            {
+              "expr": "histogram_quantile(0.80, rate(osmtracker_changeset_analysis_processing_time_seconds_bucket[10m]))",
+              "format": "time_series",
+              "intervalFactor": 2,
+              "legendFormat": ".80 quantile",
+              "refId": "C"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Changeset analysis processing time",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": "Seconds",
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ]
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "${DS_PROMETHEUS}",
+          "fill": 1,
+          "id": 12,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "span": 3,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, rate(osmtracker_backend_processing_time_seconds_bucket[10m]))",
+              "format": "time_series",
+              "intervalFactor": 2,
+              "legendFormat": ".95 quantile",
+              "refId": "A"
+            },
+            {
+              "expr": "histogram_quantile(0.90, rate(osmtracker_backend_processing_time_seconds_bucket[10m]))",
+              "format": "time_series",
+              "intervalFactor": 2,
+              "legendFormat": ".90 quantile",
+              "refId": "B"
+            },
+            {
+              "expr": "histogram_quantile(0.80, rate(osmtracker_backend_processing_time_seconds_bucket[10m]))",
+              "format": "time_series",
+              "intervalFactor": 2,
+              "legendFormat": ".80 quantile",
+              "refId": "C"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Backend refresh processing time",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": "Seconds",
               "logBase": 1,
               "max": null,
               "min": null,
@@ -437,7 +1209,7 @@
     "list": []
   },
   "time": {
-    "from": "now-1h",
+    "from": "now-3h",
     "to": "now"
   },
   "timepicker": {
@@ -467,5 +1239,5 @@
   },
   "timezone": "browser",
   "title": "OSMTracker",
-  "version": 3
+  "version": 1
 }
