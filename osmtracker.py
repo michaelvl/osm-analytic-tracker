@@ -29,9 +29,12 @@ AMQP_EXCHANGE_FANOUT = 'osmtracker_bc'  # Fanout
 AMQP_FILTER_QUEUE = ('new_cset', 'new_cset.osmtracker')
 AMQP_ANALYSIS_QUEUE = ('analysis_cset', 'analysis_cset.osmtracker')
 AMQP_REFRESH_QUEUE = ('refresh_cset', 'refresh_cset.osmtracker')
-AMQP_GENERATION_KEY = 'new_generation.osmtracker'
-AMQP_REPLICATION_POINTER_QUEUE = ('replication_pointer', 'new_replication_pointer.osmtracker')
+AMQP_NEW_GENERATION_KEY = 'new_generation.osmtracker'
+AMQP_NEW_POINTER_KEY = 'new_replication_pointer.osmtracker'
+AMQP_REPLICATION_POINTER_QUEUE = ('replication_pointer', AMQP_NEW_POINTER_KEY)
 AMQP_QUEUES = [AMQP_FILTER_QUEUE, AMQP_ANALYSIS_QUEUE, AMQP_REFRESH_QUEUE]
+
+EVENT_LABELS = ['event', 'action']
 
 def fetch_and_process_diff(config, dapi, seqno, ctype):
     chgsets = dapi.get_diff_csets(seqno, ctype)
@@ -40,22 +43,12 @@ def fetch_and_process_diff(config, dapi, seqno, ctype):
 # FIXME: Refactor to use db.find with timestamps
 def cset_refresh_meta(config, db, cset, no_delay=False):
     cid = cset['cid']
-    timeout_s = config.get('refresh_meta_minutes', 'tracker')*60
-    refresh = no_delay
-    if timeout_s>0:
-       now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
-       last_refresh = cset['refreshed']
-       age_s = (now-last_refresh).total_seconds()
-       if age_s > timeout_s:
-           logger.debug('Refresh meta due to age {}s, timeout {}s'.format(age_s, timeout_s))
-           refresh = True
-    if refresh:
-        logger.info('Refresh meta for cid {} (no_delay={})'.format(cid, no_delay))
-        c = osm.changeset.Changeset(cid, api=config.get('osm_api_url','tracker'))
-        c.downloadMeta()
-        old_meta = db.chgset_get_meta(cid)
-        return db.chgset_set_meta(cid, c.meta)
-    return False
+    logger.info('Refresh meta for cid {} (no_delay={})'.format(cid, no_delay))
+    c = osm.changeset.Changeset(cid, api=config.get('osm_api_url','tracker'))
+    c.downloadMeta()
+    updated = db.chgset_set_meta(cid, c.meta)
+    db.chgset_processed(cset, state=None, refreshed=True)
+    return updated
 
 def cset_process_local1(config, db, cset, info):
     '''Preprocess cset, i.e. locally compute various information based on meta, tag
@@ -86,10 +79,10 @@ def cset_process_local1(config, db, cset, info):
 
     now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
     observed_s = (now-cset['source']['observed']).total_seconds()
-    if observed_s < 240:
-        state = 'new'
-    else:
-        state = 'old'
+    #if observed_s < 240:
+    #    state = 'new'
+    #else:
+    state = 'old'
     misc['state'] = state
 
 def cset_process_local2(config, db, cset, meta, info):
@@ -186,8 +179,8 @@ def diff_fetch(args, config, db):
                                           'Head sequence number of minutely diff replication')
         m_csets = prometheus_client.Gauge('osmtracker_minutely_diff_csets_observed',
                                           'Number of changesets observed in recently processed minutely diff')
-        m_csets_in = prometheus_client.Counter('osmtracker_changeset_filter_in',
-                                                'Number of changesets filter requests')
+        m_events = prometheus_client.Counter('osmtracker_events',
+                                             'Number of events', EVENT_LABELS)
 
     dapi = osmdiff.OsmDiffApi()
     ptr = db.pointer
@@ -217,7 +210,7 @@ def diff_fetch(args, config, db):
             start = None
             now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
             if ptr <= head.sequenceno:
-                logger.debug('Fetching diff, ptr={}, head={}'.format(ptr, head.sequenceno))
+                logger.debug('Fetching diff, ptr={}, head={}'.format(ptr, head))
                 start = time.time()
                 chgsets = fetch_and_process_diff(config, dapi, ptr, 'minute')
                 logger.debug('{} changesets: {}'.format(len(chgsets), chgsets))
@@ -230,7 +223,7 @@ def diff_fetch(args, config, db):
                     logger.debug('Sending to messagebus: {}'.format(msg))
                     amqp.send(msg, schema_name='cset', schema_version=1,
                               routing_key='new_cset.osmtracker')
-                    m_csets_in.inc()
+                    m_events.labels('filter', 'in').inc()
                 # Set timestamp from old seqno as new seqno might not yet exist
                 seqno = db.pointer['seqno']
                 nptr = dapi.get_state('minute', seqno=seqno)
@@ -243,7 +236,7 @@ def diff_fetch(args, config, db):
                 m_csets.set(len(chgsets))
                 msg = {'pointer': seqno}
                 amqp_gen.send(msg, schema_name='replication_pointer', schema_version=1,
-                              routing_key='new_replication_pointer.osmtracker')
+                              routing_key=AMQP_NEW_POINTER_KEY)
         except KeyboardInterrupt as e:
             logger.warn('Processing interrupted, exiting...')
             raise e
@@ -316,8 +309,8 @@ def csets_filter_worker(args, config, db):
             if cset_filter(self.config, self.db, payload):
                 amqp.send(payload, schema_name='cset', schema_version=1,
                           routing_key='analysis_cset.osmtracker')
-                m_csets_analysis_in.inc()
-            m_csets_out.inc()
+                m_events.labels('analysis', 'in').inc()
+            m_events.labels('filter', 'out').inc()
             elapsed = time.time()-start
             m_filter_time.observe(elapsed)
             logger.info('Filtering of cid {} took {:.2f}s'.format(payload['cid'], elapsed))
@@ -328,10 +321,8 @@ def csets_filter_worker(args, config, db):
     amqp.db = db
 
     if args.metrics:
-        m_csets_out = prometheus_client.Counter('osmtracker_changeset_filter_out',
-                                                'Number of changesets filter requests handled')
-        m_csets_analysis_in = prometheus_client.Counter('osmtracker_changeset_analysis_in',
-                                                        'Number of changesets analysis requests')
+        m_events = prometheus_client.Counter('osmtracker_events',
+                                             'Number of events', EVENT_LABELS)
         m_filter_time = prometheus_client.Histogram('osmtracker_changeset_filter_processing_time_seconds',
                                                     'Changeset filtering time (seconds)')
 
@@ -408,16 +399,18 @@ def cset_check_reprocess_open(amqp, config, db, cset):
         return True
     return False
 
-def cset_check_reprocess_closed(amqp, config, db, cset):
+def cset_check_reprocess_done(amqp, config, db, cset):
     # Peridic reprocessing of finished changesets
     # Called functions may have longer delays on e.g. when meta is refreshed
-    now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
-    dt = now-datetime.timedelta(minutes=config.get('refresh_meta_minutes','tracker'))
-    if cset['refreshed']<dt:
-        logger.info('Request refresh of CLOSED cset {}'.format(cset['cid']))
-        amqp.send(cset2csetmsg(cset), schema_name='cset', schema_version=1,
-                  routing_key='refresh_cset.osmtracker')
-        return True
+    refresh_period = config.get('refresh_meta_minutes','tracker')
+    if refresh_period>0:
+        now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+        dt = now-datetime.timedelta(minutes=refresh_period)
+        if cset['refreshed']<dt:
+            logger.info('Request refresh of cset {}'.format(cset['cid']))
+            amqp.send(cset2csetmsg(cset), schema_name='cset', schema_version=1,
+                      routing_key='refresh_cset.osmtracker')
+            return True
     return False
 
 def csets_analyse_drop_old(args, config, db):
@@ -457,7 +450,8 @@ def backends_worker(args, config, db):
 
     class BackendAmqp(messagebus.Amqp):
         def on_message(self, payload, message):
-            logger.info('Run backends, generation: {}'.format(payload))
+            key = message.delivery_info['routing_key']
+            logger.info('Run backends, key: {}'.format(key))
             start = time.time()
             run_backends(args, config, db)
             elapsed = time.time()-start
@@ -468,7 +462,7 @@ def backends_worker(args, config, db):
     # Will create initial versions
     run_backends(args, config, db)
 
-    queue = [(socket.gethostname(), 'new_generation.osmtracker'), AMQP_REPLICATION_POINTER_QUEUE]
+    queue = [(socket.gethostname(), AMQP_NEW_GENERATION_KEY), (socket.gethostname(), AMQP_NEW_POINTER_KEY)]
     amqp = BackendAmqp(args.amqp_url, AMQP_EXCHANGE_FANOUT, 'fanout', queue, queue)
     amqp.config = config
     amqp.db = db
@@ -493,13 +487,13 @@ def csets_analysis_worker(args, config, db):
                     gen = db.generation_advance()
                     msg = {'generation': gen}
                     amqp_gen.send(msg, schema_name='generation', schema_version=1,
-                                  routing_key='new_generation.osmtracker')
+                                  routing_key=AMQP_NEW_GENERATION_KEY)
                 elapsed = time.time()-start
-                m_csets_analysis_out.inc()
+                m_events.labels('analysis', 'out').inc()
                 m_analysis_time.observe(elapsed)
             elif key=='refresh_cset.osmtracker':
                 cset_refresh_meta(self.config, self.db, payload)
-                m_csets_refresh_out.inc()
+                m_events.labels('refresh', 'out').inc()
                 elapsed = time.time()-start
                 m_refresh_time.observe(elapsed)
             logger.info('Analysis of cid {} took {:.2f}s'.format(payload['cid'], elapsed))
@@ -512,12 +506,11 @@ def csets_analysis_worker(args, config, db):
     amqp.db = db
 
     if args.metrics:
-        m_csets_analysis_out = prometheus_client.Counter('osmtracker_changeset_analysis_out',
-                                                         'Number of changesets analysis requests handled')
-        m_csets_rfsh_out = prometheus_client.Counter('osmtracker_changeset_refresh_out',
-                                                     'Number of changesets refresh requests handled')
+        m_events = prometheus_client.Counter('osmtracker_events',
+                                             'Number of events', EVENT_LABELS)
         m_analysis_time = prometheus_client.Histogram('osmtracker_changeset_analysis_processing_time_seconds',
-                                                      'Changeset analysis time (seconds)')
+                                                      'Changeset analysis time (seconds)',
+                                                      buckets=(.075, .1, .25, .5, .75, 1.0, 2.5, 5.0, 7.5, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, float("inf")))
         m_refresh_time = prometheus_client.Histogram('osmtracker_changeset_refresh_processing_time_seconds',
                                                      'Changeset refresh time (seconds)')
 
@@ -526,13 +519,11 @@ def csets_analysis_worker(args, config, db):
 
 def supervisor(args, config, db):
     if args.metrics:
+        m_events = prometheus_client.Counter('osmtracker_events',
+                                             'Number of events', EVENT_LABELS)
         m_changesets = prometheus_client.Gauge('osmtracker_changeset_cnt',
                                                'Number of changesets in database',
                                                ['state'])
-        m_csets_analysis_in = prometheus_client.Counter('osmtracker_changeset_analysis_in',
-                                                        'Number of changesets analysis requests')
-        m_csets_rfsh_in = prometheus_client.Counter('osmtracker_changeset_refresh_in',
-                                                     'Number of changesets refresh requests')
 
     amqp = messagebus.Amqp(args.amqp_url, AMQP_EXCHANGE_TOPIC, 'topic', AMQP_QUEUES, [])
 
@@ -548,10 +539,10 @@ def supervisor(args, config, db):
                 cset_cnt[c['state']] += 1
             if c['state']==db.STATE_OPEN:
                 if cset_check_reprocess_open(amqp, config, db, c):
-                    m_csets_analysis_in.inc()
-            elif c['state']==db.STATE_CLOSED:
-                if cset_check_reprocess_closed(amqp, config, db, c):
-                    m_csets_rfsh_in.inc()
+                    m_events.labels('analysis', 'in').inc()
+            elif c['state']==db.STATE_DONE:
+                if cset_check_reprocess_done(amqp, config, db, c):
+                    m_events.labels('refresh', 'in').inc()
         if args.metrics:
             for state in db.all_states:
                 m_changesets.labels(state=state).set(cset_cnt[state])

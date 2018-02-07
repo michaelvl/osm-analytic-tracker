@@ -213,10 +213,12 @@ class DataBase(object):
             logger.debug('Dropped cset {}'.format(cid))
 
     def chgset_processed(self, c, state, failed=False, refreshed=False):
-        now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
         cid = c['cid']
-        setter = {'$set': {'state': state,
-                           'state_changed': now}}
+        setter = {'$set': {}}
+        if state:
+            now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+            setter = {'$set': {'state': state,
+                               'state_changed': now}}
         if refreshed:
             setter['$set']['refreshed'] = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
         if 'meta' in c:
