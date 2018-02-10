@@ -3,34 +3,33 @@
 The 'all-in-one' container image
 ([michaelvl/osmtracker-all-in-one](https://hub.docker.com/r/michaelvl/osmtracker-all-in-one/))
 is mainly intended as an easily approachable demonstrator.  For real production
-deployments, the generic container image and the Kubernetes procedure described
-below are recommended.
+deployments, the generic container image and the Kubernetes/Helm based procedure
+described below are recommended.
 
 The Kubernetes deployment consists of the following resources
 
-1. A MongoDB deployment for the database. All other PODs will use the database for persisting diff and changeset information. This deployment is based on a MongoDB Helm subchart.
-2. A RabbitMQ message queue deployment for communication between components. This deployment is based on a RabbitMQ Helm subchart.
-3. A single stateless minutely diff tracker POD.
-4. A changeset filtering deployment which performs initial filtering using labels and geometric rules.  Typically two pod are recommended for this deployment.
-5. A changeset analyzer deployment which perform the full analysis of changesets which passes the defined filters.   Typically two pod are recommended for this deployment.
-5. A frontend deployment which use a POD volume for sharing data between the osmtracker backend and the Nginx web server.
-6. A supervisor service for monitoring state of worker PODs and for providing aggregated metrics for e.g. Prometheus.
-7. An optional API server for add-on services - see the OpenAPI.Swagger [apispec.yaml](apiserver/apispec.yaml).
-8. An optional Elasticsearch gateway, which pushes changeset information to Elasticsearch.
+1. A single stateless minutely diff tracker POD.
+2. A changeset filtering deployment which performs initial filtering using labels and geometric rules.  Typically two pods are recommended for this deployment.
+3. A changeset analyser deployment which perform the full analysis of changesets which passes the defined filters.   Typically two pods are recommended for this deployment.
+4. A frontend deployment which use a POD volume for sharing data between the osmtracker backend and the Nginx web server.
+5. A supervisor service for monitoring state of worker PODs and for providing aggregated metrics for e.g. Prometheus.
+6. An optional API server for add-on services - see the OpenAPI.Swagger [apispec.yaml](apiserver/apispec.yaml).
+7. An optional Elasticsearch gateway, which pushes changeset information to Elasticsearch.
+8. A MongoDB deployment for the database in which replication state and individual changeset information is stored. All other PODs will use the database for persisting diff and changeset information. This deployment is based on a MongoDB Helm subchart.
+9. A RabbitMQ message queue deployment for communication between components. This deployment is based on a RabbitMQ Helm subchart.
 
 ![Image](architecture.png?raw=true)
 
-The three osmtracker container types all use the
+The osmtracker cocomponents all use the
 [michaelvl/osmtracker](https://hub.docker.com/r/michaelvl/osmtracker/) Docker
 image. Note that this image is using a non-root user with UID and GID of 1042
 and the helm charts enforce a non-root user together with a read-only
 filesystem.
 
-An actual deployment can be created either using the Helm chart.  See the Helm
-chart [README](helm/osm-analytic-tracker/README.md) for description of a
-Helm-based deployment.
+See the Helm chart [README](helm/osm-analytic-tracker/README.md) for description
+of the parameters available in the Helm chart.
 
-The default worker deployment use two filter and two analyzer instances,
+The default worker deployment use two filter pods and two analyzer pods,
 however, for larger regions it might ne necessary with more instance. To scale
 the deployments do e.g.:
 
@@ -46,9 +45,25 @@ kubectl run -it test --image michaelvl/osmtracker --command /bin/bash
 
 ## Metrics
 
-The Helm-based deployment enable Prometheus-style metrics and a Grafana dashboard are available [here](osmtracker-grafana-dashboard.json?raw=true). The dashboard is shown below:
+The Helm-based deployment enable Prometheus-style metrics and a Grafana
+dashboard are available [here](osmtracker-grafana-dashboard.json?raw=true). The
+dashboard is shown below:
 
 ![Image](grafana-dashboard.png?raw=true)
+
+The first row presents the general overview of the status of the tracker service
+- the following rows contain information that is mostly useful for debugging
+problems. The panels in the first row shows:
+
+- Replication lag relative to OpenStreetMap. Since updates are published from
+  OpenStreetMap every minute, the lag should generally be less than two minutes
+  - worst case a little above two minutes.
+
+- Replication sequence number rate. Since a new sequence number is used for each
+  minutely diff from OpenStreetMap, this value should be approximately 1.
+
+- The rate of changesets in the minutely diffs. Generally this should be larger
+  than zero (unless everyone stops editing OpenStreetMap data).
 
 The metrics exported are:
 
