@@ -273,7 +273,7 @@
           "tableColumn": "",
           "targets": [
             {
-              "expr": "rate(osmtracker_minutely_diff_csets_observed[5m])",
+              "expr": "rate(osmtracker_minutely_diff_csets_observed[5m])*60",
               "format": "time_series",
               "intervalFactor": 2,
               "refId": "A"
@@ -421,7 +421,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "delta(osmtracker_minutely_diff_head_seqno[1h])",
+              "expr": "osmtracker_minutely_diff_head_seqno",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
@@ -431,7 +431,7 @@
               "step": 10
             },
             {
-              "expr": "delta(osmtracker_minutely_diff_latest_seqno[1h])",
+              "expr": "osmtracker_minutely_diff_latest_seqno",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "Latest processed seqno",
@@ -443,7 +443,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Replication sequence number delta (1 hour)",
+          "title": "Replication sequence number",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -582,6 +582,7 @@
             "min": false,
             "rightSide": true,
             "show": true,
+            "sideWidth": 95,
             "total": false,
             "values": false
           },
@@ -595,7 +596,7 @@
           "renderer": "flot",
           "seriesOverrides": [],
           "spaceLength": 10,
-          "span": 4,
+          "span": 3,
           "stack": false,
           "steppedLine": false,
           "targets": [
@@ -659,7 +660,9 @@
             "current": false,
             "max": false,
             "min": false,
+            "rightSide": true,
             "show": true,
+            "sideWidth": 95,
             "total": false,
             "values": false
           },
@@ -673,7 +676,7 @@
           "renderer": "flot",
           "seriesOverrides": [],
           "spaceLength": 10,
-          "span": 4,
+          "span": 3,
           "stack": false,
           "steppedLine": false,
           "targets": [
@@ -734,7 +737,7 @@
             "col": 2,
             "desc": false
           },
-          "span": 4,
+          "span": 3,
           "styles": [
             {
               "alias": "Event type",
@@ -824,6 +827,83 @@
           "title": "Events",
           "transform": "table",
           "type": "table"
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "${DS_PROMETHEUS}",
+          "fill": 1,
+          "id": 16,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "sideWidth": 95,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "span": 3,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "label_replace(process_virtual_memory_bytes{app=\"osm-analytic-tracker\"}, \"instance\", \"$1\", \"instance\", \"(.*):.*\")",
+              "format": "time_series",
+              "intervalFactor": 2,
+              "legendFormat": "{{instance}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Component memory usage",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "decbytes",
+              "label": "Memory",
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ]
         }
       ],
       "repeat": null,
