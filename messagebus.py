@@ -45,9 +45,9 @@ class Amqp(kombu.mixins.ConsumerProducerMixin):
         logger.info('AMQP URL={}'.format(url))
         self.connection = kombu.Connection(url)
         self.exchange = kombu.Exchange(exchange, type=exchange_type)
-        self.declare_queues = [kombu.Queue(name=n, exchange=self.exchange, routing_key=k) for n,k in declare_queues]
+        self.declare_queues = [kombu.Queue(name=n, exchange=self.exchange, routing_key=k, auto_delete=d) for n,k,d in declare_queues]
         if handle_queues:
-            self.handle_queues = [kombu.Queue(name=n, exchange=self.exchange, routing_key=k) for n,k in handle_queues]
+            self.handle_queues = [kombu.Queue(name=n, exchange=self.exchange, routing_key=k, auto_delete=d) for n,k,d in handle_queues]
         logger.debug('Exchange {}, queues declared {}, handle queues {}'.format(exchange, declare_queues, handle_queues))
         self.schema_registry = SchemaRegistry()
 

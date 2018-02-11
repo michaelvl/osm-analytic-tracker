@@ -26,12 +26,12 @@ logger = logging.getLogger('osmtracker')
 
 AMQP_EXCHANGE_TOPIC = 'osmtracker'     # topic
 AMQP_EXCHANGE_FANOUT = 'osmtracker_bc'  # Fanout
-AMQP_FILTER_QUEUE = ('new_cset', 'new_cset.osmtracker')
-AMQP_ANALYSIS_QUEUE = ('analysis_cset', 'analysis_cset.osmtracker')
-AMQP_REFRESH_QUEUE = ('refresh_cset', 'refresh_cset.osmtracker')
+AMQP_FILTER_QUEUE = ('new_cset', 'new_cset.osmtracker', False) # name,key,auto_delete
+AMQP_ANALYSIS_QUEUE = ('analysis_cset', 'analysis_cset.osmtracker', False)
+AMQP_REFRESH_QUEUE = ('refresh_cset', 'refresh_cset.osmtracker', False)
 AMQP_NEW_GENERATION_KEY = 'new_generation.osmtracker'
 AMQP_NEW_POINTER_KEY = 'new_replication_pointer.osmtracker'
-AMQP_REPLICATION_POINTER_QUEUE = ('replication_pointer', AMQP_NEW_POINTER_KEY)
+AMQP_REPLICATION_POINTER_QUEUE = ('replication_pointer', AMQP_NEW_POINTER_KEY, False)
 AMQP_QUEUES = [AMQP_FILTER_QUEUE, AMQP_ANALYSIS_QUEUE, AMQP_REFRESH_QUEUE]
 
 EVENT_LABELS = ['event', 'action']
@@ -221,8 +221,9 @@ def diff_fetch(args, config, db):
                     source['observed'] = source['observed'].isoformat()
                     msg = {'cid': cid, 'source': source}
                     logger.debug('Sending to messagebus: {}'.format(msg))
-                    amqp.send(msg, schema_name='cset', schema_version=1,
+                    r = amqp.send(msg, schema_name='cset', schema_version=1,
                               routing_key='new_cset.osmtracker')
+                    logger.debug('Send result: {}'.format(r))
                     m_events.labels('filter', 'in').inc()
                 # Set timestamp from old seqno as new seqno might not yet exist
                 seqno = db.pointer['seqno']
@@ -462,7 +463,7 @@ def backends_worker(args, config, db):
     # Will create initial versions
     run_backends(args, config, db)
 
-    queue = [(socket.gethostname(), AMQP_NEW_GENERATION_KEY), (socket.gethostname(), AMQP_NEW_POINTER_KEY)]
+    queue = [(socket.gethostname(), AMQP_NEW_GENERATION_KEY, True), (socket.gethostname(), AMQP_NEW_POINTER_KEY, True)]
     amqp = BackendAmqp(args.amqp_url, AMQP_EXCHANGE_FANOUT, 'fanout', queue, queue)
     amqp.config = config
     amqp.db = db
