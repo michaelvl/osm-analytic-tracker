@@ -62,8 +62,12 @@ problems. The panels in the first row shows:
 - Replication sequence number rate. Since a new sequence number is used for each
   minutely diff from OpenStreetMap, this value should be approximately 1.
 
-- The rate of changesets in the minutely diffs. Generally this should be larger
-  than zero (unless everyone stops editing OpenStreetMap data).
+- The rate of changesets in the minutely diffs (i.e. changesets per
+  minute). Generally this should be larger than zero (unless everyone stops
+  editing OpenStreetMap data).
+
+- The rate of changesets matching the filtering (hourly rate). Generally this
+  should be larger than zero.
 
 The metrics exported are:
 
