@@ -74,7 +74,8 @@ amqp:
   service:
     name: "amqp://user:rabbitpw@osmtracker-amqp"
   # RabbitMQ chart specific settings below
-  #persistence: false
+  persistence:
+    enabled: false
   rabbitmqUsername: user
   rabbitmqPassword: rabbitpw
 
