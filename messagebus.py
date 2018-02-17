@@ -48,7 +48,7 @@ class Amqp(kombu.mixins.ConsumerProducerMixin):
         self.declare_queues = [kombu.Queue(name=n, exchange=self.exchange, routing_key=k, auto_delete=d) for n,k,d in declare_queues]
         if handle_queues:
             self.handle_queues = [kombu.Queue(name=n, exchange=self.exchange, routing_key=k, auto_delete=d) for n,k,d in handle_queues]
-        logger.debug('Exchange {}, queues declared {}, handle queues {}'.format(exchange, declare_queues, handle_queues))
+        logger.info('Exchange {}, queues declared {}, handle queues {}'.format(exchange, declare_queues, handle_queues))
         self.schema_registry = SchemaRegistry()
 
     def __del__(self):

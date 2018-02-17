@@ -238,6 +238,7 @@ def diff_fetch(args, config, db):
                 msg = {'pointer': seqno}
                 amqp_gen.send(msg, schema_name='replication_pointer', schema_version=1,
                               routing_key=AMQP_NEW_POINTER_KEY)
+                m_events.labels('new_pointer', 'in').inc()
         except KeyboardInterrupt as e:
             logger.warn('Processing interrupted, exiting...')
             raise e
@@ -453,6 +454,12 @@ def backends_worker(args, config, db):
         def on_message(self, payload, message):
             key = message.delivery_info['routing_key']
             logger.info('Run backends, key: {}'.format(key))
+            if key==AMQP_NEW_GENERATION_KEY:
+                m_events.labels('new_generation', 'out').inc()
+            elif key==AMQP_NEW_POINTER_KEY:
+                m_events.labels('new_pointer', 'out').inc()
+            else:
+                logger.error('Unknown key {}'.format(key))
             start = time.time()
             run_backends(args, config, db)
             elapsed = time.time()-start
@@ -463,14 +470,17 @@ def backends_worker(args, config, db):
     # Will create initial versions
     run_backends(args, config, db)
 
-    queue = [(socket.gethostname(), AMQP_NEW_GENERATION_KEY, True), (socket.gethostname(), AMQP_NEW_POINTER_KEY, True)]
+    queue = [(socket.gethostname(), '', True)] # No needed on broadcast exchange
     amqp = BackendAmqp(args.amqp_url, AMQP_EXCHANGE_FANOUT, 'fanout', queue, queue)
     amqp.config = config
     amqp.db = db
 
     if args.metrics:
         m_backend_time = prometheus_client.Histogram('osmtracker_backend_processing_time_seconds',
-                                                     'Backend refresh time (seconds)')
+                                                     'Backend refresh time (seconds)',
+                                                     buckets=(.1, .5, 1.0, 2.5, 5.0, 7.5, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0, 55.0, 60.0, 80.0, 100.0, 130.0, 160.0, float("inf")))
+        m_events = prometheus_client.Counter('osmtracker_events',
+                                             'Number of events', EVENT_LABELS)
 
     logger.debug('Starting backend worker, queue/routing-key: {}'.format(queue))
     amqp.run()
@@ -511,7 +521,7 @@ def csets_analysis_worker(args, config, db):
                                              'Number of events', EVENT_LABELS)
         m_analysis_time = prometheus_client.Histogram('osmtracker_changeset_analysis_processing_time_seconds',
                                                       'Changeset analysis time (seconds)',
-                                                      buckets=(.075, .1, .25, .5, .75, 1.0, 2.5, 5.0, 7.5, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, float("inf")))
+                                                      buckets=(.1, .5, 1.0, 2.5, 5.0, 7.5, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0, 55.0, 60.0, 80.0, 100.0, 130.0, 160.0, float("inf")))
         m_refresh_time = prometheus_client.Histogram('osmtracker_changeset_refresh_processing_time_seconds',
                                                      'Changeset refresh time (seconds)')
 
