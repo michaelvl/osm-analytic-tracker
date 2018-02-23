@@ -52,7 +52,7 @@ class TestCsetFilter(BaseTest):
         #print 'DB:{}'.format(pprint.pformat(self.db.csets))
 
         self.cfg.cfg['backends'][0]['labels'] = ['adjustments']
-        osmtracker.run_backends(self.args, self.cfg, self.db)
+        osmtracker.run_backends(self.args, self.cfg, self.db, 'new_generation.osmtracker')
         #print 'files:', self.files.keys()
         #print 'xx', FileWriter.mock_calls
         #self.print_file('html/dynamic/today.html')
@@ -78,7 +78,7 @@ class TestCsetFilter(BaseTest):
         
         # Rerun with non-matching labels
         self.cfg.cfg['backends'][0]['labels'] = ['xxadjustments']
-        osmtracker.run_backends(None, self.cfg, self.db)
+        osmtracker.run_backends(None, self.cfg, self.db, 'new_generation.osmtracker')
         #self.print_file('html/dynamic/today.html')
         self.assertTrue('No changesets' in self.files['html/dynamic/today.html'])
 
@@ -114,7 +114,7 @@ class TestCsetFilter(BaseTest):
         # Interpreted map_center config in index.html
         self.cfg.cfg['backends'][6]['map_center'] = {'area_file_conversion_type': 'area_center',
                                                      'area_file': 'region.poly'}
-        osmtracker.run_backends(self.args, self.cfg, self.db)
+        osmtracker.run_backends(self.args, self.cfg, self.db, 'new_generation.osmtracker')
         self.assertTrue('html/index.html' in self.files)
         self.assertTrue('setView(new L.LatLng(56,11),6)' in self.files['html/index.html'])
         Poly.assert_has_calls([call().load('region.poly')])
@@ -148,7 +148,7 @@ class TestCsetFilter(BaseTest):
 
         self.cfg.cfg['backends'][6]['map_center'] = {'area_file_conversion_type': 'area_center',
                                                      'area_file': 'region-not-used.poly'}
-        osmtracker.run_backends(self.args, self.cfg, self.db)
+        osmtracker.run_backends(self.args, self.cfg, self.db, 'new_generation.osmtracker')
         self.assertTrue('html/index.html' in self.files)
         #self.print_file('html/index.html')
         self.assertTrue('setView(new L.LatLng(56,11),4)' in self.files['html/index.html'])

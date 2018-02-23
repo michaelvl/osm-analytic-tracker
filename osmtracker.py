@@ -236,8 +236,9 @@ def diff_fetch(args, config, db):
                 m_head_seqno.set(head.sequenceno)
                 m_csets.set(len(chgsets))
                 msg = {'pointer': seqno}
-                amqp_gen.send(msg, schema_name='replication_pointer', schema_version=1,
-                              routing_key=AMQP_NEW_POINTER_KEY)
+                r = amqp_gen.send(msg, schema_name='replication_pointer', schema_version=1,
+                                  routing_key=AMQP_NEW_POINTER_KEY)
+                logger.debug('New pointer send result: {}'.format(r))
                 m_events.labels('new_pointer', 'in').inc()
         except KeyboardInterrupt as e:
             logger.warn('Processing interrupted, exiting...')
@@ -433,7 +434,7 @@ def load_backend(backend, config):
     logger.debug("Loading backend {}".format(backend))
     return globals()[backend['type']].Backend(config, backend)
 
-def run_backends(args, config, db):
+def run_backends(args, config, db, key):
     blist = config.get('backends')
     if not blist:
         logger.warning('No backends specified')
@@ -445,7 +446,7 @@ def run_backends(args, config, db):
 
     for b in backends:
         starttime = time.time()
-        b.print_state(db)
+        b.print_state(db, key)
         logger.info('Running backend {} took {:.2f}s'.format(b, time.time()-starttime))
 
 def backends_worker(args, config, db):
@@ -461,14 +462,14 @@ def backends_worker(args, config, db):
             else:
                 logger.error('Unknown key {}'.format(key))
             start = time.time()
-            run_backends(args, config, db)
+            run_backends(args, config, db, key)
             elapsed = time.time()-start
-            logger.info('Running all backends took {:.2f}s'.format(elapsed))
+            logger.info('Running all backends (key {}) took {:.2f}s'.format(key, elapsed))
             m_backend_time.observe(elapsed)
             message.ack()
 
     # Will create initial versions
-    run_backends(args, config, db)
+    run_backends(args, config, db, AMQP_NEW_GENERATION_KEY)
 
     queue = [(socket.gethostname(), '', True)] # No needed on broadcast exchange
     amqp = BackendAmqp(args.amqp_url, AMQP_EXCHANGE_FANOUT, 'fanout', queue, queue)
@@ -499,6 +500,7 @@ def csets_analysis_worker(args, config, db):
                     msg = {'generation': gen}
                     amqp_gen.send(msg, schema_name='generation', schema_version=1,
                                   routing_key=AMQP_NEW_GENERATION_KEY)
+                    m_events.labels('new_generation', 'in').inc()
                 elapsed = time.time()-start
                 m_events.labels('analysis', 'out').inc()
                 m_analysis_time.observe(elapsed)

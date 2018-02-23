@@ -24,7 +24,7 @@ class Backend(BackendHtml.Backend):
         self.env.filters['utc_datetime'] = self._utc_datetime_filter
         self.horizon_hours = globalconfig.get('horizon_hours','tracker')
 
-    def print_state(self, db):
+    def print_state(self, db, update_reason):
         force = True # Because otherwise 'summary_created' timestamp below is not updated
         if not db or self.generation != db.generation or force:
             if not db or not db.pointer:

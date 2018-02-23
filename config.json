@@ -13,7 +13,7 @@
 	],
 	"history": "5 minutes ago",
 	"horizon_type": "sliding",
-	"horizon_hours": 48,
+	"horizon_hours": 24,
 	"refresh_open_minutes": 5,
 	"refresh_meta_minutes": 15,
 	"cset_processing_time_max_s": 800,

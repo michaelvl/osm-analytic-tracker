@@ -9,7 +9,9 @@ class Backend(Backend.Backend):
         super(Backend, self).__init__(config, subcfg)
         self.print_meta = subcfg.get('print_meta', False)
 
-    def print_state(self, db):
+    def print_state(self, db, update_reason):
+        if update_reason!='new_generation.osmtracker':
+            return
         strfmt = '%Y:%m:%d %H:%M:%S'
         #time1 = state.first_timestamp.strftime(strfmt)
         #time2 = state.timestamp.strftime(strfmt)

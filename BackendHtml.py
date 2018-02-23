@@ -58,7 +58,9 @@ class Backend(Backend.Backend):
         TIMESTAMP_FMT = '%Y:%m:%d %H:%M:%S'
         return value.strftime(TIMESTAMP_FMT)
 
-    def print_state(self, db):
+    def print_state(self, db, update_reason):
+        if update_reason!='new_generation.osmtracker':
+            return
         now = datetime.datetime.now()
         #if now.day != self.last_update.day:
         #    print('Cycler - new day: {} {}'.format(now.day, self.last_update.day))

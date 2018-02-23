@@ -20,7 +20,9 @@ class Backend(object):
             filename = os.path.join(subcfg['path'], filename)
         return os.path.join(globalconfig.getpath('path', 'tracker'), filename)
 
-    def print_state(self, state):
+    def print_state(self, state, update_reason):
+        if update_reason!='new_generation.osmtracker':
+            return
         time = state.generation_timestamp.strftime('%Y:%m:%d %H:%M:%S')
         print 'Generation {} @ {}'.format(state.generation, time)
         if self.generation != state.generation:

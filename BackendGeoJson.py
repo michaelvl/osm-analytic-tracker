@@ -30,7 +30,9 @@ class Backend(Backend.Backend):
             self.geojson = None
             self.bbox = None
 
-    def print_state(self, db):
+    def print_state(self, db, update_reason):
+        if update_reason!='new_generation.osmtracker':
+            return
         if self.generation != db.generation:
             self.generation = db.generation
             if self.exptype == 'cset-bbox':
