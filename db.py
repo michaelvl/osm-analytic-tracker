@@ -139,6 +139,10 @@ class DataBase(object):
             sel[timestamp]['$lte'] = datetime.datetime.max
         return sel
     
+    def chgset_get(self, cid):
+        cset = self.csets.find_one({'_id':cid})
+        return  cset
+
     def chgsets_find(self, state=STATE_DONE, before=None, after=None, timestamp='updated', sort=True, cid=None):
         sel = self.chgsets_find_selector(state, before, after, timestamp, cid)
         if sort:

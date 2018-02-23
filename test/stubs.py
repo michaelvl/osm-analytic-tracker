@@ -121,6 +121,12 @@ class testDB(object):
             sel[timestamp]['$lte'] = datetime.datetime.max
         return sel
 
+    def chgset_get(self, cid):
+        for c in self.csets:
+            if cid==c['cid']:
+                return c
+        return None
+        
     def chgsets_find(self, state=STATE_DONE, before=None, after=None, timestamp='updated', sort=True, cid=None):
         found = []
         for c in self.csets:

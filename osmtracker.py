@@ -43,12 +43,14 @@ def fetch_and_process_diff(config, dapi, seqno, ctype):
 # FIXME: Refactor to use db.find with timestamps
 def cset_refresh_meta(config, db, cset, no_delay=False):
     cid = cset['cid']
-    logger.info('Refresh meta for cid {} (no_delay={})'.format(cid, no_delay))
-    c = osm.changeset.Changeset(cid, api=config.get('osm_api_url','tracker'))
-    c.downloadMeta()
-    updated = db.chgset_set_meta(cid, c.meta)
-    db.chgset_processed(cset, state=None, refreshed=True)
-    return updated
+    if no_delay or cset_ready_for_reprocessing(config, db, cid=cid):
+        logger.info('Refresh meta for cid {} (no_delay={})'.format(cid, no_delay))
+        c = osm.changeset.Changeset(cid, api=config.get('osm_api_url','tracker'))
+        c.downloadMeta()
+        updated = db.chgset_set_meta(cid, c.meta)
+        db.chgset_processed(cset, state=None, refreshed=True)
+        return updated
+    return False
 
 def cset_process_local1(config, db, cset, info):
     '''Preprocess cset, i.e. locally compute various information based on meta, tag
@@ -348,8 +350,10 @@ def csets_analyse_initial(config, db, new_cset=None):
             info = cset_process_open(config, db, cset)
             db.chgset_set_info(cid, info)
             meta = db.chgset_get_meta(cset['cid'])
+            logger.info('Cset {} meta={}'.format(cid, meta))
             if meta['open']:
                 logger.debug('Cset {} is open, stopping analysis'.format(cid))
+                logger.info('Cset {} is open, stopping analysis: meta={}'.format(cid, meta))
                 db.chgset_processed(cset, state=db.STATE_OPEN, refreshed=True)
                 return False
             else:
@@ -402,33 +406,58 @@ def cset_check_reprocess_open(amqp, config, db, cset):
         return True
     return False
 
-def cset_check_reprocess_done(amqp, config, db, cset):
-    # Peridic reprocessing of finished changesets
-    # Called functions may have longer delays on e.g. when meta is refreshed
+def cset_ready_for_reprocessing(config, db, cset=None, cid=None):
+    if not cset:
+        cset = db.chgset_get(cid)
+        if not cset:
+            return True
     refresh_period = config.get('refresh_meta_minutes','tracker')
     if refresh_period>0:
         now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
         dt = now-datetime.timedelta(minutes=refresh_period)
         if cset['refreshed']<dt:
-            logger.info('Request refresh of cset {}'.format(cset['cid']))
-            amqp.send(cset2csetmsg(cset), schema_name='cset', schema_version=1,
-                      routing_key='refresh_cset.osmtracker')
+            logger.info('Cset {} ready for refresh, refreshed {}'.format(cset['cid'], HumanTime.date2human(dt)))
             return True
+    logger.debug('Cset {} not ready for refresh, refreshed {}'.format(cset['cid'], cset['refreshed']))
     return False
 
-def csets_analyse_drop_old(args, config, db):
-    # Drop old changesets
-    now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
-    horizon_s = config.get('horizon_hours','tracker')*3600
-    dt = now-datetime.timedelta(seconds=horizon_s)
-    while True:
-        cset = db.chgset_start_processing([db.STATE_DONE, db.STATE_QUARANTINED], db.STATE_REANALYSING, before=dt, timestamp='updated')
-        if not cset:
-            break
-        logger.info('Dropping cset {} due to age'.format(cset['cid']))
-        db.chgset_drop(cset['cid'])
+def cset_check_reprocess_done(amqp, config, db, cset):
+    # Peridic reprocessing of finished changesets
+    # Called functions may have longer delays on e.g. when meta is refreshed
+    if cset_ready_for_reprocessing(config, db, cset=cset):
+        logger.info('Request refresh of cset {}'.format(cset['cid']))
+        amqp.send(cset2csetmsg(cset), schema_name='cset', schema_version=1,
+                  routing_key='refresh_cset.osmtracker')
+        return True
+    return False
 
-    return 0
+# def csets_analyse_drop_old(args, config, db):
+#     # Drop old changesets
+#     now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+#     horizon_s = config.get('horizon_hours','tracker')*3600
+#     dt = now-datetime.timedelta(seconds=horizon_s)
+#     while True:
+#         cset = db.chgset_start_processing([db.STATE_DONE, db.STATE_QUARANTINED], db.STATE_REANALYSING, before=dt, timestamp='updated')
+#         if not cset:
+#             break
+#         logger.info('Dropping cset {} due to age'.format(cset['cid']))
+#         db.chgset_drop(cset['cid'])
+
+#     return 0
+def cset_check_drop_old(config, db, cset=None, cid=None):
+    if not cset:
+        cset = db.chgset_get(cid)
+        if not cset:
+            return True
+    horizon_s = config.get('horizon_hours','tracker')*3600
+    if horizon_s>0:
+        now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+        dt = now-datetime.timedelta(seconds=horizon_s)
+        if cset['updated']<dt:
+            logger.info('Cset {} ready to be dropped, updated {}'.format(cset['cid'], HumanTime.date2human(dt)))
+            return True
+    logger.info('Cset {} not ready to be dropped, updated {}'.format(cset['cid'], cset['updated']))
+    return False
 
 def load_backend(backend, config):
     logger.debug("Loading backend {}".format(backend))
@@ -542,24 +571,33 @@ def supervisor(args, config, db):
 
     while True:
         logger.debug('Starting supervision loop')
+        new_generation = False
+        horizon_s = config.get('horizon_hours','tracker')*3600
         start = time.time()
         cset_cnt = {}
         for state in db.all_states:
             cset_cnt[state] = 0
+        to_drop = []
         for c in db.chgsets_find(state=None):
             logger.debug('Found cid {}, state:{}, refreshed:{}'.format(c['cid'], c['state'], c['refreshed']))
-            if args.metrics:
-                cset_cnt[c['state']] += 1
-            if c['state']==db.STATE_OPEN:
-                if cset_check_reprocess_open(amqp, config, db, c):
-                    m_events.labels('analysis', 'in').inc()
-            elif c['state']==db.STATE_DONE:
-                if cset_check_reprocess_done(amqp, config, db, c):
-                    m_events.labels('refresh', 'in').inc()
+            if cset_check_drop_old(config, db, cid=c['cid']):
+                to_drop.append(c['cid'])
+            else:
+                if args.metrics:
+                    cset_cnt[c['state']] += 1
+                if c['state']==db.STATE_OPEN:
+                    if cset_check_reprocess_open(amqp, config, db, c):
+                        m_events.labels('analysis', 'in').inc()
+                elif c['state']==db.STATE_DONE:
+                    if cset_check_reprocess_done(amqp, config, db, c):
+                        m_events.labels('refresh', 'in').inc()
         if args.metrics:
             for state in db.all_states:
                 m_changesets.labels(state=state).set(cset_cnt[state])
-        #database.reanalyse(args, db)  # FIXME
+        for cid in to_drop:
+            logger.info('Dropping cid {}'.format(cid))
+            db.chgset_drop(cid)
+            # FIXME
         if not args.track:
             break
         logger.info('Supervision loop took {:.2f}s. State stats: {}'.format(time.time()-start, cset_cnt))
