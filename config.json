@@ -64,7 +64,6 @@
             "path": "dynamic",
 	    "exptype": "cset-bbox",
             "filename" : "today.json",
-            "xclick_url": "http://osm.expandable.dk/diffmap.html?cid={cid}",
             "click_url": "diffmap.html?cid={cid}"
         },
         {
@@ -73,7 +72,6 @@
 	    "exptype": "cset-files",
 	    "geojsondiff-filename": "cset-{id}.json",
 	    "bounds-filename": "cset-{id}.bounds",
-            "xclick_url": "http://osm.expandable.dk/diffmap.html?cid={cid}",
             "click_url": "diffmap.html?cid={cid}"
         }
     ]
