@@ -12,7 +12,9 @@ changeset.
 This live service is different from other OpenStreetMap live services in that it
 focus on being analytic and less on being visual.
 
-A running demo can be seen on https://osm.expandable.dk
+A running demo can be seen on https://osm.expandable.dk. Read below for the
+details about the service. For deployment, see the [Kubernetes
+deployment](kubernetes/README.md).
 
 The purpose of this tool is:
 
