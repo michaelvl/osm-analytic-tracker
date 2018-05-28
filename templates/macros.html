@@ -11,7 +11,11 @@
   <!-- cset_head_basic -->
     <li>
       <div class="legend" style="background-color: #{{info.misc.user_colour}}">&#8203;</div>
+      {% if 'bot' in meta.tag and meta.tag.bot == 'yes' %}
+      <div class="user"><div class="icon"><img src="/bot_l.png"></div><a href="http://www.openstreetmap.org/user/{{meta.user}}">{{meta.user|e}}</a> (bot)</div>
+      {% else %}
       <div class="user"><div class="icon"><img src="/user_l.png"></div><a href="http://www.openstreetmap.org/user/{{meta.user}}">{{meta.user|e}}</a></div>
+      {% endif %}
       {% if 'comment' in meta.tag and meta.tag.comment|trim|length != 0 %}
       <div class="changeset"><a href="http://www.openstreetmap.org/changeset/{{meta.id}}">{{meta.tag.comment|e}}</a></div>
       {% else %}
@@ -60,7 +64,10 @@
       {% endif%}
       {% if 'address-node-change' in c.labels %}
       <li><div class="warning"><div class="icon"><img src="/att_l.png"></div>Modifies address node(s)</div></li>
-      {%- endif %}
+      {% endif %}
+      {% if 'review_requested' in meta.tag and meta.tag.review_requested == 'yes' %}
+      <li><div class="warning"><div class="icon"><img src="/att_l.png"></div>Review requested</div></li>
+      {% endif %}
       {% if meta.comments_count>0 %}
         <li><img src="/note.png">
         {% if meta.comments_count==1 %}

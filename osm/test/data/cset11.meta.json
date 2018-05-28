@@ -10,6 +10,8 @@
  "min_lon": 7, "max_lon": 14,
  "tag": {"comment": "Adjustments of foo bar #mapping-event",
          "created_by": "JOSM",
-	 "bot": "no"
+	 "bot": "yes",
+	 "review_requested": "yes",
+	 "source": "Day dreaming"
         }
 }

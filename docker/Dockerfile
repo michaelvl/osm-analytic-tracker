@@ -11,7 +11,7 @@ ADD docker/regions.txt .
 RUN wget --no-verbose -i regions.txt
 
 RUN mkdir -p /html-init/dynamic
-COPY html/addresses.html html/cset_notes.html html/diffmap.html html/styles.css html/att.png html/att_l.png html/csetopen.png html/csetopen_l.png html/dev_work.png html/err.png html/err_l.png html/favicon.png html/gear.png html/gear_l.png html/icon_bw.png html/josm-icon.png html/layers.png html/node.png html/note.png html/note_l.png html/osm-icon.png html/relation.png html/user.png html/user_l.png html/way.png html/leaflet-button.js html/timestamp.js /html-init/
+COPY html/addresses.html html/cset_notes.html html/diffmap.html html/styles.css html/att.png html/att_l.png html/csetopen.png html/csetopen_l.png html/dev_work.png html/err.png html/err_l.png html/favicon.png html/gear.png html/gear_l.png html/icon_bw.png html/josm-icon.png html/layers.png html/node.png html/note.png html/note_l.png html/osm-icon.png html/relation.png html/user.png html/user_l.png html/bot_l.png html/way.png html/leaflet-button.js html/timestamp.js /html-init/
 
 RUN mkdir /html-init/jquery-2.1.3
 ADD https://code.jquery.com/jquery-2.1.3.min.js /html-init/jquery-2.1.3/jquery.min.js

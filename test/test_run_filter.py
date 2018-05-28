@@ -38,7 +38,7 @@ class TestCsetFilter(BaseTest):
     @patch('tempfilewriter.TempFileWriter')
     @patch('osm.poly.Poly')
     @patch('osm.changeset.OsmApi')
-    def test_cset_filter1_and_backend(self, OsmApi, Poly, FileWriter, IsFile, Listdir, Remove, MsgBus):
+    def test_cset_filter1_and_backend_cset10(self, OsmApi, Poly, FileWriter, IsFile, Listdir, Remove, MsgBus):
         IsFile.return_value = True
         Listdir.return_value = self.listdir
         OsmApi.return_value = self.osmapi
@@ -67,8 +67,11 @@ class TestCsetFilter(BaseTest):
         self.assertTrue('html/dynamic/notes.html' in self.files)
 
         self.assertTrue('setView(new L.LatLng(56.0, 11.4),6)' in self.files['html/index.html'])
+
         self.assertTrue('No changesets' not in self.files['html/dynamic/today.html'])
         self.assertTrue('-- Changeset 10 source' in self.files['html/dynamic/today.html'])
+        self.assertTrue('No source attribute' in self.files['html/dynamic/today.html'])
+
         self.assertTrue('Total navigable: 12,888 meters (6,444m/hour)' in self.files['html/dynamic/today-summ.html'])
         self.assertTrue('1 changesets by 1 user' in self.files['html/dynamic/today-summ.html'])
 
@@ -88,6 +91,44 @@ class TestCsetFilter(BaseTest):
         self.assertTrue('html/dynamic/cset-10.bounds' in self.files)
         #self.print_file('html/dynamic/cset-10.bounds')
         self.assertTrue('5,7,10,14' in self.files['html/dynamic/cset-10.bounds'])
+
+    @patch('osmtracker.messagebus.Amqp')
+    @patch('osmtracker.BackendGeoJson.remove')
+    @patch('osmtracker.BackendGeoJson.listdir')
+    @patch('osmtracker.BackendGeoJson.isfile')
+    @patch('tempfilewriter.TempFileWriter')
+    @patch('osm.poly.Poly')
+    @patch('osm.changeset.OsmApi')
+    def test_cset_filter1_and_backend_cset11(self, OsmApi, Poly, FileWriter, IsFile, Listdir, Remove, MsgBus):
+        IsFile.return_value = True
+        Listdir.return_value = self.listdir
+        OsmApi.return_value = self.osmapi
+        Poly.return_value.contains_chgset.return_value = True
+        FileWriter.side_effect = self.fstart
+        new_cset = {'cid': 11, 'source': {'type': 'minute', 'sequenceno': 20000, 'observed': '2018-01-07T19:37:00'}}
+        osmtracker.cset_filter(self.cfg, self.db, new_cset)
+        self.assertEqual(self.db.csets[0]['state'], self.db.STATE_BOUNDS_CHECKED)
+        osmtracker.csets_analyse_initial(self.cfg, self.db, new_cset)
+
+        #print 'DB:{}'.format(pprint.pformat(self.db.csets))
+
+        self.cfg.cfg['backends'][0]['labels'] = ['adjustments']
+        osmtracker.run_backends(self.args, self.cfg, self.db, 'new_generation.osmtracker')
+        #print 'files:', self.files.keys()
+        #print 'xx', FileWriter.mock_calls
+        self.print_file('html/dynamic/today.html')
+        #self.print_file('html/dynamic/dk_addresses.html')
+        #self.print_file('html/dynamic/today-summ.html')
+        #print 'filemocks', self.filemocks[0].mock_calls
+        self.assertTrue('html/index.html' in self.files)
+        self.assertTrue('html/dynamic/dk_addresses.html' in self.files)
+        self.assertTrue('html/dynamic/today-summ.html' in self.files)
+        self.assertTrue('html/dynamic/today.html' in self.files)
+        self.assertTrue('html/dynamic/today.json' in self.files)
+        self.assertTrue('html/dynamic/notes.html' in self.files)
+
+        self.assertTrue('-- Changeset 11 source' in self.files['html/dynamic/today.html'])
+        self.assertFalse('No source attribute' in self.files['html/dynamic/today.html'])
 
     @patch('osmtracker.messagebus.Amqp')
     @patch('osmtracker.BackendGeoJson.remove')
