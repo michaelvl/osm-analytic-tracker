@@ -249,7 +249,7 @@ def diff_fetch(args, config, db):
         except KeyboardInterrupt as e:
             logger.warn('Processing interrupted, exiting...')
             raise e
-        except (requests.exceptions.Timeout, requests.exceptions.HTTPError, socket.error, socket.timeout) as e:
+        except (requests.exceptions.Timeout, requests.exceptions.HTTPError, socket.error, socket.timeout, eventlet.timeout.Timeout) as e:
             logger.error('Error retrieving OSM data: '.format(e))
             logger.error(traceback.format_exc())
             time.sleep(60)

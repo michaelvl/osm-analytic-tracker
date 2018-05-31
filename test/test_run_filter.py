@@ -116,7 +116,7 @@ class TestCsetFilter(BaseTest):
         osmtracker.run_backends(self.args, self.cfg, self.db, 'new_generation.osmtracker')
         #print 'files:', self.files.keys()
         #print 'xx', FileWriter.mock_calls
-        self.print_file('html/dynamic/today.html')
+        #self.print_file('html/dynamic/today.html')
         #self.print_file('html/dynamic/dk_addresses.html')
         #self.print_file('html/dynamic/today-summ.html')
         #print 'filemocks', self.filemocks[0].mock_calls
