@@ -531,7 +531,7 @@ def csets_analysis_worker(args, config, db):
             logger.info('Analyse: {}, key: {}'.format(payload, key))
             start = time.time()
             try:
-                with eventlet.Timeout(600):
+                with eventlet.Timeout(config.get('cset_processing_time_max_s', 'tracker')):
                     if key=='analysis_cset.osmtracker':
                         post_new_generation = csets_analyse_initial(self.config, self.db, payload)
                         if post_new_generation:
