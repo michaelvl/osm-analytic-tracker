@@ -286,9 +286,9 @@ class DataBase(object):
         cset = self.csets.find_one({'_id':cid})
         if not cset or not 'info' in cset:
             if not cset:
-                logger.warn('Cset cid={} not found'.format(cid))
+                logger.warn('Cset {} not found'.format(cid))
             else:
-                logger.warn('Cset has no info, keys: {}'.format(cset.keys()))
+                logger.warn('Cset {} has no info, keys: {}'.format(cid, cset.keys()))
             return None
         return loads(cset['info'])
 

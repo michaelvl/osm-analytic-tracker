@@ -121,10 +121,12 @@ class Backend(BackendHtml.Backend):
                 age_s = (now-c['queued']).total_seconds()
                 if oldest_ts is None or age_s > oldest:
                     oldest = age_s
+                    oldest_cid = c['cid']
                     oldest_ts = c['queued']
                 processing_cnt += 1
             data['processing_outstanding_cset_cnt'] = processing_cnt
             if oldest_ts:
+                logging.info('Processing lag governed by cset {}, timestamp {}'.format(oldest_cid, oldest_ts))
                 data['processing_oldest_outstanding_cset'] = oldest_ts
 
             #if hasattr(state, 'pointer'):   # FIXME
