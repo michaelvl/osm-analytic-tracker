@@ -276,9 +276,12 @@ class DataBase(object):
         _info = dumps(info) # Changeset info may contain unicode
         logger.debug('Setting info for cset {}: {}'.format(cid, pprint.pformat(info)))
         now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc) #FIXME: From cset
-        self.csets.update_one({'_id':cid}, {'$set':
-                                            {'info': _info,
-                                             'updated': now}}, upsert=True)
+        try:
+            self.csets.update_one({'_id':cid}, {'$set':
+                                                {'info': _info,
+                                                 'updated': now}}, upsert=True)
+        except pymongo.errors.DocumentTooLarge as e:
+            logging.error('Document size error, cid {}, size of info: {}'.format(cid, sys.getsizeof(_info)))
         return True
 
     # FIXME: Refactor and remove
