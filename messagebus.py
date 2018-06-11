@@ -7,6 +7,7 @@ import json
 import jsonschema
 import avro.schema, avro.io
 import base64
+import random
 import logging
 
 logger = logging.getLogger('messagebus')
@@ -82,15 +83,21 @@ class Amqp(kombu.mixins.ConsumerProducerMixin):
 
     def message_cb(self, message):
         msg = message.payload
-        jsonschema.validate(msg, ENVELOPE_SCHEMA)
-        schema = self.schema_registry.schema_get(msg['schema'], msg['version'])
-
-        bytes_reader = io.BytesIO(base64.b64decode(msg['message']))
-        decoder = avro.io.BinaryDecoder(bytes_reader)
-        reader = avro.io.DatumReader(schema)
-        msg = reader.read(decoder)
-        
-        self.on_message(msg, message)
+        try:
+            jsonschema.validate(msg, ENVELOPE_SCHEMA)
+            try:
+                schema = self.schema_registry.schema_get(msg['schema'], msg['version'])
+                bytes_reader = io.BytesIO(base64.b64decode(msg['message']))
+                decoder = avro.io.BinaryDecoder(bytes_reader)
+                reader = avro.io.DatumReader(schema)
+                msg = reader.read(decoder)
+                self.on_message(msg, message)
+            except:
+                logging.error('Unable to validate message schema. Message: {}, schema ({}/{}): {}, delivery info: {}'.format(msg, msg['schema'], msg['version'], schema, message.delivery_info))
+                message.ack()
+        except:
+            logging.error('Unable to validate envelope schema. Message: {}, type {}, delivery info: {}'.format(msg, type(msg), message.delivery_info))
+            message.ack()
 
     def on_message(self, payload, message):
         message.ack()
@@ -98,13 +105,24 @@ class Amqp(kombu.mixins.ConsumerProducerMixin):
 
 class TestAmqp(Amqp):
     def on_message(self, payload, message):
-        print 'Routing key:', message.delivery_info['routing_key']
+        print 'Delivery info: {}'.format(message.delivery_info)
         print 'Payload:', payload
         message.ack()
 
 def test_recv(args):
     logging.debug('Entering test_recv(), key={}'.format(args.key))
-    amqp = TestAmqp(args.url, args.exchange, args.exchange_type, [(args.queue, args.key)], [(args.queue, args.key)])
+    if args.queue:
+        qname = args.queue
+    else:
+        qname = 'q-recv-'+str(random.randint(1,1000))
+    amqp = TestAmqp(args.url, args.exchange, args.exchange_type, [(qname, args.key, args.noautodelete)], [(args.queue, args.key, args.noautodelete)])
+    amqp.run()
+
+def test_logs(args):
+    '''Firehose logging. Enable with rabbitmqctl trace_on'''
+    logging.debug('Entering test_logs()')
+    queues = [('firehose', '#', True)]
+    amqp = TestAmqp(args.url, 'amq.rabbitmq.trace', 'topic', queues, queues)
     amqp.run()
 
 
@@ -118,12 +136,16 @@ if __name__ == '__main__':
     parser.add_argument('--url', default='amqp://osmtracker-amqp')
     parser.add_argument('--exchange', default='osmtracker')
     parser.add_argument('--exchange-type', default='topic', choices=['topic', 'fanout'])
+    parser.add_argument('--noautodelete', default=True, action='store_false')
     subparsers = parser.add_subparsers()
 
     parser_recv = subparsers.add_parser('recv')
     parser_recv.set_defaults(func=test_recv)
     parser_recv.add_argument('--key', default='new_cset.osmtracker')
     parser_recv.add_argument('--queue', default=None)
+
+    parser_logs = subparsers.add_parser('logs')
+    parser_logs.set_defaults(func=test_logs)
 
     args = parser.parse_args()
     logging.getLogger('').setLevel(getattr(logging, args.log_level))

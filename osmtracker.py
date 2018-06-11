@@ -29,12 +29,12 @@ logger = logging.getLogger('osmtracker')
 
 AMQP_EXCHANGE_TOPIC = 'osmtracker'     # topic
 AMQP_EXCHANGE_FANOUT = 'osmtracker_bc'  # Fanout
-AMQP_FILTER_QUEUE = ('new_cset', 'new_cset.osmtracker', False) # name,key,auto_delete
-AMQP_ANALYSIS_QUEUE = ('analysis_cset', 'analysis_cset.osmtracker', False)
-AMQP_REFRESH_QUEUE = ('refresh_cset', 'refresh_cset.osmtracker', False)
+AMQP_FILTER_QUEUE = ('new_cset', 'new_cset.osmtracker', True) # name,key,auto_delete
+AMQP_ANALYSIS_QUEUE = ('analysis_cset', 'analysis_cset.osmtracker', True)
+AMQP_REFRESH_QUEUE = ('refresh_cset', 'refresh_cset.osmtracker', True)
 AMQP_NEW_GENERATION_KEY = 'new_generation.osmtracker'
 AMQP_NEW_POINTER_KEY = 'new_replication_pointer.osmtracker'
-AMQP_REPLICATION_POINTER_QUEUE = ('replication_pointer', AMQP_NEW_POINTER_KEY, False)
+AMQP_REPLICATION_POINTER_QUEUE = ('replication_pointer', AMQP_NEW_POINTER_KEY, True)
 AMQP_QUEUES = [AMQP_FILTER_QUEUE, AMQP_ANALYSIS_QUEUE, AMQP_REFRESH_QUEUE]
 
 EVENT_LABELS = ['event', 'action']
