@@ -1,0 +1,12 @@
+{{ if .Values.osmtracker.dashboardConfigMap.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: osmtracker-grafana-dashboard
+  namespace: {{ .Release.Namespace }}
+  labels:
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    grafana_dashboard: '1'
+data:
+{{ (.Files.Glob "dashboards/*.json").AsConfig | indent 2 }}
+{{ end }}
