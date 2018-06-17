@@ -20,7 +20,7 @@ The Kubernetes deployment consists of the following resources
 
 ![Image](architecture.png?raw=true)
 
-The osmtracker cocomponents all use the
+The osmtracker components all use the
 [michaelvl/osmtracker](https://hub.docker.com/r/michaelvl/osmtracker/) Docker
 image. Note that this image is using a non-root user with UID and GID of 1042
 and the helm charts enforce a non-root user together with a read-only
@@ -30,24 +30,24 @@ See the Helm chart [README](helm/osm-analytic-tracker/README.md) for description
 of the parameters available in the Helm chart.
 
 The default worker deployment use two filter pods and two analyzer pods,
-however, for larger regions it might ne necessary with more instance. To scale
-the deployments do e.g.:
+however, for larger regions it might ne necessary with more instances,especially
+for the analyser deployment. To scale the deployments do e.g.:
 
 ```
-kubectl -n osmtracker scale deployment osmtracker-filter-deployment --replicas=3
-```
-
-For debugging you can run the osmtracker image interactively as follows:
-
-```
-kubectl run -it test --image michaelvl/osmtracker --command /bin/bash
+kubectl -n osmtracker scale deployment osmtracker-analyser-deployment --replicas=3
 ```
 
 ## Metrics
 
 The Helm-based deployment enable Prometheus-style metrics and a Grafana
-dashboard are available [here](osmtracker-grafana-dashboard.json?raw=true). The
-dashboard is shown below:
+dashboard is available
+[here](helm/osm-analytic-tracker/dashboards/osmtracker-grafana-dashboard.json?raw=true). The
+dashboard can also be deployed automatically as part of the Helm chart by
+setting the value `osmtracker.dashboardConfigMap.enabled`, however, this
+requires that Grafana has been configured with support for importing dashboards
+from ConfigMaps.
+
+The dashboard is shown below:
 
 ![Image](grafana-dashboard.png?raw=true)
 

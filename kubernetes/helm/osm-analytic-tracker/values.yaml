@@ -67,6 +67,8 @@ osmtracker:
     enabled: true
   metrics:
     enabled: true
+  dashboardConfigMap:
+    enabled: false
 
 # supporting services
 
