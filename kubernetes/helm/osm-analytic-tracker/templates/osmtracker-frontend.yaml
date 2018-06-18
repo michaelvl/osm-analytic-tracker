@@ -1,19 +1,21 @@
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: osmtracker-frontend-deployment
   namespace: {{ .Release.Namespace }}
   labels:
-    app: {{ template "osmtracker.name" . }}
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    release: "{{ .Release.Name }}"
-    heritage: "{{ .Release.Service }}"
+{{ include "osmtracker.labels.standard" . | indent 4}}
+    component: frontend
 spec:
   replicas: {{ .Values.frontend.replicas }}
+  selector:
+    matchLabels:
+{{ include "osmtracker.labels.standard" . | indent 6}}
+      component: frontend
   template:
     metadata:
       labels:
-        app: {{ template "osmtracker.name" . }}
+{{ include "osmtracker.labels.standard" . | indent 8}}
         component: frontend
         metrics: 'true'
       annotations:

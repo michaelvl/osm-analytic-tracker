@@ -4,10 +4,7 @@ metadata:
   name: osmtracker-frontend
   namespace: {{ .Release.Namespace }}
   labels:
-    app: {{ template "osmtracker.name" . }}
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    release: "{{ .Release.Name }}"
-    heritage: "{{ .Release.Service }}"
+{{ include "osmtracker.labels.standard" . | indent 4}}
     component: frontend-service
 spec:
   type: {{ .Values.frontend.service.type }}

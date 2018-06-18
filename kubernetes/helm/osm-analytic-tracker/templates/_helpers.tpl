@@ -15,6 +15,16 @@ We truncate at 24 chars because some Kubernetes name fields are limited to this 
 {{- end -}}
 
 {{/*
+Common osmtracker component labels
+*/}}
+{{- define "osmtracker.labels.standard" -}}
+app: {{ template "osmtracker.name" . }}
+heritage: {{ .Release.Service | quote }}
+release: {{ .Release.Name | quote }}
+chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
 Common osmtracker arguments - common for multiple components.
 */}}
 {{- define "osmtracker.common_args" -}}

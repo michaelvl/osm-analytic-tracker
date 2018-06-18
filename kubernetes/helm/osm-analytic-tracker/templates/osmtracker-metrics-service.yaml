@@ -5,10 +5,7 @@ metadata:
   name: osmtracker-metrics
   namespace: {{ .Release.Namespace }}
   labels:
-    app: {{ template "osmtracker.name" . }}
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    release: "{{ .Release.Name }}"
-    heritage: "{{ .Release.Service }}"
+{{ include "osmtracker.labels.standard" . | indent 4}}
     component: metrics-service
   annotations:
     prometheus.io/scrape: 'true'
