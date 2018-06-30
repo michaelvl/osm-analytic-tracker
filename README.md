@@ -143,8 +143,7 @@ of any element type will match.
 ### Architecture
 
 The general architecture is shown below. See also the [Kubernetes
-architecture](kubernetes/architecture.png?raw=true)
-
+architecture](kubernetes/README.md).
 
 ![Image](doc/architecture.png?raw=true)
 
