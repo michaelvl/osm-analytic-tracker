@@ -1,1509 +1,1673 @@
 {
+  "__inputs": [], 
   "annotations": {
-    "list": [
-      {
-        "builtIn": 1,
-        "datasource": "-- Grafana --",
-        "enable": true,
-        "hide": true,
-        "iconColor": "rgba(0, 211, 255, 1)",
-        "name": "Annotations & Alerts",
-        "type": "dashboard"
-      }
-    ]
-  },
-  "editable": true,
-  "gnetId": null,
-  "graphTooltip": 0,
-  "id": null,
-  "links": [],
-  "panels": [
+    "list": []
+  }, 
+  "editable": true, 
+  "gnetId": null, 
+  "hideControls": false, 
+  "id": null, 
+  "links": [], 
+  "refresh": "10s", 
+  "rows": [
     {
-      "cacheTimeout": null,
-      "colorBackground": false,
-      "colorValue": true,
-      "colors": [
-        "#299c46",
-        "rgba(237, 129, 40, 0.89)",
-        "#bf1b00"
-      ],
-      "datasource": "prometheus",
-      "format": "s",
-      "gauge": {
-        "maxValue": 100,
-        "minValue": 0,
-        "show": false,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 6,
-        "x": 0,
-        "y": 0
-      },
-      "id": 13,
-      "interval": null,
-      "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
+      "collapse": false, 
+      "editable": true, 
+      "height": "250px", 
+      "panels": [
         {
-          "name": "value to text",
-          "value": 1
-        },
-        {
-          "name": "range to text",
-          "value": 2
-        }
-      ],
-      "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "postfix": "",
-      "postfixFontSize": "50%",
-      "prefix": "",
-      "prefixFontSize": "50%",
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
-        }
-      ],
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": false,
-        "lineColor": "rgb(31, 120, 193)",
-        "show": true
-      },
-      "tableColumn": "",
-      "targets": [
-        {
-          "expr": "time()-osmtracker_minutely_diff_timestamp",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "refId": "A"
-        }
-      ],
-      "thresholds": "3:4",
-      "title": "Replication lag",
-      "type": "singlestat",
-      "valueFontSize": "100%",
-      "valueMaps": [
-        {
-          "op": "=",
-          "text": "N/A",
-          "value": "null"
-        }
-      ],
-      "valueName": "avg"
-    },
-    {
-      "cacheTimeout": null,
-      "colorBackground": false,
-      "colorValue": true,
-      "colors": [
-        "rgba(237, 129, 40, 0.89)",
-        "#299c46",
-        "rgba(237, 129, 40, 0.89)"
-      ],
-      "datasource": "prometheus",
-      "format": "none",
-      "gauge": {
-        "maxValue": 100,
-        "minValue": 0,
-        "show": false,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 6,
-        "x": 6,
-        "y": 0
-      },
-      "id": 15,
-      "interval": null,
-      "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
-        {
-          "name": "value to text",
-          "value": 1
-        },
-        {
-          "name": "range to text",
-          "value": 2
-        }
-      ],
-      "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "postfix": "",
-      "postfixFontSize": "50%",
-      "prefix": "",
-      "prefixFontSize": "50%",
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
-        }
-      ],
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": false,
-        "lineColor": "rgb(31, 120, 193)",
-        "show": true
-      },
-      "tableColumn": "",
-      "targets": [
-        {
-          "expr": "irate(osmtracker_minutely_diff_latest_seqno[10m])*60",
-          "format": "time_series",
-          "hide": false,
-          "intervalFactor": 2,
-          "refId": "A"
-        }
-      ],
-      "thresholds": "0.9,1.1",
-      "title": "OpenStreetMap replication sequence number rate",
-      "type": "singlestat",
-      "valueFontSize": "100%",
-      "valueMaps": [
-        {
-          "op": "=",
-          "text": "N/A",
-          "value": "null"
-        }
-      ],
-      "valueName": "avg"
-    },
-    {
-      "cacheTimeout": null,
-      "colorBackground": false,
-      "colorValue": true,
-      "colors": [
-        "#299c46",
-        "#299c46",
-        "#d44a3a"
-      ],
-      "datasource": "prometheus",
-      "format": "none",
-      "gauge": {
-        "maxValue": 100,
-        "minValue": 0,
-        "show": false,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 6,
-        "x": 12,
-        "y": 0
-      },
-      "id": 14,
-      "interval": null,
-      "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
-        {
-          "name": "value to text",
-          "value": 1
-        },
-        {
-          "name": "range to text",
-          "value": 2
-        }
-      ],
-      "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "postfix": "",
-      "postfixFontSize": "50%",
-      "prefix": "",
-      "prefixFontSize": "50%",
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
-        }
-      ],
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": false,
-        "lineColor": "rgb(31, 120, 193)",
-        "show": true
-      },
-      "tableColumn": "",
-      "targets": [
-        {
-          "expr": "rate(osmtracker_minutely_diff_csets_observed[5m])*60",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "refId": "A"
-        }
-      ],
-      "thresholds": "0",
-      "title": "Minutely diff changeset rate",
-      "type": "singlestat",
-      "valueFontSize": "100%",
-      "valueMaps": [
-        {
-          "op": "=",
-          "text": "N/A",
-          "value": "null"
-        }
-      ],
-      "valueName": "current"
-    },
-    {
-      "cacheTimeout": null,
-      "colorBackground": false,
-      "colorValue": true,
-      "colors": [
-        "#299c46",
-        "rgba(237, 129, 40, 0.89)",
-        "#d44a3a"
-      ],
-      "datasource": "prometheus",
-      "format": "none",
-      "gauge": {
-        "maxValue": 100,
-        "minValue": 0,
-        "show": false,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 6,
-        "x": 18,
-        "y": 0
-      },
-      "id": 17,
-      "interval": null,
-      "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
-        {
-          "name": "value to text",
-          "value": 1
-        },
-        {
-          "name": "range to text",
-          "value": 2
-        }
-      ],
-      "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "postfix": "",
-      "postfixFontSize": "50%",
-      "prefix": "",
-      "prefixFontSize": "50%",
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
-        }
-      ],
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": false,
-        "lineColor": "rgb(31, 120, 193)",
-        "show": true
-      },
-      "tableColumn": "",
-      "targets": [
-        {
-          "expr": "sum(rate(osmtracker_changeset_cnt{state=\"DONE\"}[1h]))*60",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "refId": "A"
-        }
-      ],
-      "thresholds": "0 0",
-      "title": "Database changeset rate",
-      "type": "singlestat",
-      "valueFontSize": "80%",
-      "valueMaps": [
-        {
-          "op": "=",
-          "text": "N/A",
-          "value": "null"
-        }
-      ],
-      "valueName": "avg"
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "prometheus",
-      "fill": 0,
-      "gridPos": {
-        "h": 7,
-        "w": 6,
-        "x": 0,
-        "y": 7
-      },
-      "id": 1,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "time()-osmtracker_minutely_diff_processing_timestamp",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "legendFormat": "Diff tracker service lag",
-          "refId": "A",
-          "step": 10
-        },
-        {
-          "expr": "time()-osmtracker_minutely_diff_timestamp",
-          "format": "time_series",
-          "hide": false,
-          "intervalFactor": 2,
-          "legendFormat": "Total database lag",
-          "refId": "B",
-          "step": 10
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "OpenStreetMap Replication Lag",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": "Seconds",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "prometheus",
-      "fill": 1,
-      "gridPos": {
-        "h": 7,
-        "w": 6,
-        "x": 6,
-        "y": 7
-      },
-      "id": 5,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "osmtracker_minutely_diff_head_seqno",
-          "format": "time_series",
-          "hide": false,
-          "intervalFactor": 2,
-          "legendFormat": "Head seqno",
-          "metric": "osmtracker_minutely_diff_head_seqno",
-          "refId": "A",
-          "step": 10
-        },
-        {
-          "expr": "osmtracker_minutely_diff_latest_seqno",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "legendFormat": "Latest processed seqno",
-          "metric": "osmtracker_minutely_diff_latest_seqno",
-          "refId": "B",
-          "step": 10
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Replication sequence number",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "decimals": 0,
-          "format": "short",
-          "label": "",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "prometheus",
-      "fill": 1,
-      "gridPos": {
-        "h": 7,
-        "w": 6,
-        "x": 12,
-        "y": 7
-      },
-      "id": 2,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": true,
-      "targets": [
-        {
-          "expr": "osmtracker_minutely_diff_csets_observed",
-          "format": "time_series",
-          "hide": false,
-          "intervalFactor": 2,
-          "legendFormat": "Changesets per minutely diff",
-          "refId": "A",
-          "step": 10
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Changesets in minutely diffs",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "decimals": 0,
-          "format": "short",
-          "label": "",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "prometheus",
-      "fill": 1,
-      "gridPos": {
-        "h": 7,
-        "w": 6,
-        "x": 18,
-        "y": 7
-      },
-      "id": 4,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sideWidth": 95,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "osmtracker_changeset_cnt",
-          "format": "time_series",
-          "hide": false,
-          "intervalFactor": 2,
-          "legendFormat": "{{state}}",
-          "refId": "A",
-          "step": 10
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Changesets in database",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "decimals": 0,
-          "format": "short",
-          "label": "",
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "prometheus",
-      "fill": 1,
-      "gridPos": {
-        "h": 7,
-        "w": 6,
-        "x": 0,
-        "y": 14
-      },
-      "id": 10,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sideWidth": 90,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "sum(rate(osmtracker_events[5m])) by (event,action)",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "legendFormat": "{{event}} - {{action}}",
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Event rates",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "columns": [],
-      "datasource": "prometheus",
-      "fontSize": "90%",
-      "gridPos": {
-        "h": 7,
-        "w": 6,
-        "x": 6,
-        "y": 14
-      },
-      "id": 11,
-      "links": [],
-      "pageSize": null,
-      "scroll": true,
-      "showHeader": true,
-      "sort": {
-        "col": 2,
-        "desc": false
-      },
-      "styles": [
-        {
-          "alias": "Event type",
-          "colorMode": null,
+          "cacheTimeout": null, 
+          "colorBackground": false, 
+          "colorValue": true, 
           "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "pattern": "event",
-          "thresholds": [],
-          "type": "number",
-          "unit": "short"
-        },
+            "rgba(50, 172, 45, 0.97)", 
+            "rgba(237, 129, 40, 0.89)", 
+            "rgba(245, 54, 54, 0.9)"
+          ], 
+          "datasource": "prometheus", 
+          "decimals": null, 
+          "description": null, 
+          "editable": true, 
+          "format": "s", 
+          "gauge": {
+            "maxValue": 100, 
+            "minValue": 0, 
+            "show": false, 
+            "thresholdLabels": false, 
+            "thresholdMarkers": true
+          }, 
+          "height": null, 
+          "hideTimeOverride": false, 
+          "id": 1, 
+          "interval": null, 
+          "links": [], 
+          "mappingType": 1, 
+          "mappingTypes": [
+            {
+              "name": "value to text", 
+              "value": 1
+            }, 
+            {
+              "name": "range to text", 
+              "value": 2
+            }
+          ], 
+          "maxDataPoints": 100, 
+          "minSpan": null, 
+          "nullPointMode": "connected", 
+          "nullText": null, 
+          "postfix": "", 
+          "postfixFontSize": "50%", 
+          "prefix": "", 
+          "prefixFontSize": "50%", 
+          "rangeMaps": [], 
+          "repeat": null, 
+          "span": 3, 
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)", 
+            "full": false, 
+            "lineColor": "rgb(31, 120, 193)", 
+            "show": true
+          }, 
+          "targets": [
+            {
+              "datasource": "", 
+              "expr": "time()-osmtracker_minutely_diff_timestamp", 
+              "format": "time_series", 
+              "instant": false, 
+              "interval": "", 
+              "intervalFactor": 2, 
+              "legendFormat": "", 
+              "metric": "", 
+              "refId": "A", 
+              "step": 10, 
+              "target": ""
+            }
+          ], 
+          "thresholds": "3:4", 
+          "timeFrom": null, 
+          "title": "Replication Lag", 
+          "transparent": false, 
+          "type": "singlestat", 
+          "valueFontSize": "100%", 
+          "valueMaps": "avg", 
+          "valueName": "avg"
+        }, 
         {
-          "alias": "Direction",
-          "colorMode": null,
+          "cacheTimeout": null, 
+          "colorBackground": false, 
+          "colorValue": true, 
           "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "pattern": "action",
-          "thresholds": [],
-          "type": "number",
-          "unit": "short"
-        },
+            "rgba(237, 129, 40, 0.89)", 
+            "rgba(50, 172, 45, 0.97)", 
+            "rgba(237, 129, 40, 0.89)"
+          ], 
+          "datasource": "prometheus", 
+          "decimals": null, 
+          "description": null, 
+          "editable": true, 
+          "format": "none", 
+          "gauge": {
+            "maxValue": 100, 
+            "minValue": 0, 
+            "show": false, 
+            "thresholdLabels": false, 
+            "thresholdMarkers": true
+          }, 
+          "height": null, 
+          "hideTimeOverride": false, 
+          "id": 2, 
+          "interval": null, 
+          "links": [], 
+          "mappingType": 1, 
+          "mappingTypes": [
+            {
+              "name": "value to text", 
+              "value": 1
+            }, 
+            {
+              "name": "range to text", 
+              "value": 2
+            }
+          ], 
+          "maxDataPoints": 100, 
+          "minSpan": null, 
+          "nullPointMode": "connected", 
+          "nullText": null, 
+          "postfix": "", 
+          "postfixFontSize": "50%", 
+          "prefix": "", 
+          "prefixFontSize": "50%", 
+          "rangeMaps": [], 
+          "repeat": null, 
+          "span": 3, 
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)", 
+            "full": false, 
+            "lineColor": "rgb(31, 120, 193)", 
+            "show": true
+          }, 
+          "targets": [
+            {
+              "datasource": "", 
+              "expr": "irate(osmtracker_minutely_diff_latest_seqno[10m])*60", 
+              "format": "time_series", 
+              "instant": false, 
+              "interval": "", 
+              "intervalFactor": 2, 
+              "legendFormat": "", 
+              "metric": "", 
+              "refId": "A", 
+              "step": 10, 
+              "target": ""
+            }
+          ], 
+          "thresholds": "0.9,1.1", 
+          "timeFrom": null, 
+          "title": "OpenStreetMap Replication SeqNo Rate", 
+          "transparent": false, 
+          "type": "singlestat", 
+          "valueFontSize": "100%", 
+          "valueMaps": "avg", 
+          "valueName": "avg"
+        }, 
         {
-          "alias": "",
-          "colorMode": null,
+          "cacheTimeout": null, 
+          "colorBackground": false, 
+          "colorValue": true, 
           "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 0,
-          "pattern": "Value",
-          "thresholds": [],
-          "type": "number",
-          "unit": "none"
-        },
+            "rgba(50, 172, 45, 0.97)", 
+            "rgba(50, 172, 45, 0.97)", 
+            "rgba(245, 54, 54, 0.9)"
+          ], 
+          "datasource": "prometheus", 
+          "decimals": null, 
+          "description": null, 
+          "editable": true, 
+          "format": "none", 
+          "gauge": {
+            "maxValue": 100, 
+            "minValue": 0, 
+            "show": false, 
+            "thresholdLabels": false, 
+            "thresholdMarkers": true
+          }, 
+          "height": null, 
+          "hideTimeOverride": false, 
+          "id": 3, 
+          "interval": null, 
+          "links": [], 
+          "mappingType": 1, 
+          "mappingTypes": [
+            {
+              "name": "value to text", 
+              "value": 1
+            }, 
+            {
+              "name": "range to text", 
+              "value": 2
+            }
+          ], 
+          "maxDataPoints": 100, 
+          "minSpan": null, 
+          "nullPointMode": "connected", 
+          "nullText": null, 
+          "postfix": "", 
+          "postfixFontSize": "50%", 
+          "prefix": "", 
+          "prefixFontSize": "50%", 
+          "rangeMaps": [], 
+          "repeat": null, 
+          "span": 3, 
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)", 
+            "full": false, 
+            "lineColor": "rgb(31, 120, 193)", 
+            "show": true
+          }, 
+          "targets": [
+            {
+              "datasource": "", 
+              "expr": "rate(osmtracker_minutely_diff_csets_observed[5m])*60", 
+              "format": "time_series", 
+              "instant": false, 
+              "interval": "", 
+              "intervalFactor": 2, 
+              "legendFormat": "", 
+              "metric": "", 
+              "refId": "A", 
+              "step": 10, 
+              "target": ""
+            }
+          ], 
+          "thresholds": "0", 
+          "timeFrom": null, 
+          "title": "Minutely Diff Changeset Rate", 
+          "transparent": false, 
+          "type": "singlestat", 
+          "valueFontSize": "100%", 
+          "valueMaps": "current", 
+          "valueName": "avg"
+        }, 
         {
-          "alias": "",
-          "colorMode": null,
+          "cacheTimeout": null, 
+          "colorBackground": false, 
+          "colorValue": true, 
           "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "pattern": "Time",
-          "thresholds": [],
-          "type": "hidden",
-          "unit": "short"
-        },
-        {
-          "alias": "",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "decimals": 2,
-          "pattern": "/.*/",
-          "thresholds": [],
-          "type": "number",
-          "unit": "short"
+            "rgba(50, 172, 45, 0.97)", 
+            "rgba(237, 129, 40, 0.89)", 
+            "rgba(245, 54, 54, 0.9)"
+          ], 
+          "datasource": "prometheus", 
+          "decimals": null, 
+          "description": null, 
+          "editable": true, 
+          "format": "none", 
+          "gauge": {
+            "maxValue": 100, 
+            "minValue": 0, 
+            "show": false, 
+            "thresholdLabels": false, 
+            "thresholdMarkers": true
+          }, 
+          "height": null, 
+          "hideTimeOverride": false, 
+          "id": 4, 
+          "interval": null, 
+          "links": [], 
+          "mappingType": 1, 
+          "mappingTypes": [
+            {
+              "name": "value to text", 
+              "value": 1
+            }, 
+            {
+              "name": "range to text", 
+              "value": 2
+            }
+          ], 
+          "maxDataPoints": 100, 
+          "minSpan": null, 
+          "nullPointMode": "connected", 
+          "nullText": null, 
+          "postfix": "", 
+          "postfixFontSize": "50%", 
+          "prefix": "", 
+          "prefixFontSize": "50%", 
+          "rangeMaps": [], 
+          "repeat": null, 
+          "span": 3, 
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)", 
+            "full": false, 
+            "lineColor": "rgb(31, 120, 193)", 
+            "show": true
+          }, 
+          "targets": [
+            {
+              "datasource": "", 
+              "expr": "sum(rate(osmtracker_changeset_cnt{state=\"DONE\"}[1h]))*60", 
+              "format": "time_series", 
+              "instant": false, 
+              "interval": "", 
+              "intervalFactor": 2, 
+              "legendFormat": "", 
+              "metric": "", 
+              "refId": "A", 
+              "step": 10, 
+              "target": ""
+            }
+          ], 
+          "thresholds": "0 0", 
+          "timeFrom": null, 
+          "title": "Database Changeset Rate", 
+          "transparent": false, 
+          "type": "singlestat", 
+          "valueFontSize": "100%", 
+          "valueMaps": "avg", 
+          "valueName": "avg"
         }
-      ],
-      "targets": [
-        {
-          "expr": "sum(osmtracker_events) by (event,action)",
-          "format": "table",
-          "instant": true,
-          "intervalFactor": 2,
-          "legendFormat": "{{event}} - {{action}}",
-          "refId": "A"
-        }
-      ],
-      "title": "Events",
-      "transform": "table",
-      "type": "table"
-    },
+      ], 
+      "repeat": null, 
+      "showTitle": false, 
+      "title": "New row"
+    }, 
     {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "prometheus",
-      "fill": 1,
-      "gridPos": {
-        "h": 7,
-        "w": 6,
-        "x": 12,
-        "y": 14
-      },
-      "id": 16,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sideWidth": 85,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
+      "collapse": false, 
+      "editable": true, 
+      "height": "250px", 
+      "panels": [
         {
-          "expr": "label_replace(process_virtual_memory_bytes{app=\"osm-analytic-tracker\"}, \"instance\", \"$1\", \"instance\", \"(.*):.*\")",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "legendFormat": "{{instance}}",
-          "refId": "A"
+          "aliasColors": {}, 
+          "bars": false, 
+          "datasource": "prometheus", 
+          "description": null, 
+          "editable": true, 
+          "error": false, 
+          "fill": 1, 
+          "grid": {
+            "threshold1": null, 
+            "threshold1Color": "rgba(216, 200, 27, 0.27)", 
+            "threshold2": null, 
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          }, 
+          "id": 5, 
+          "isNew": true, 
+          "legend": {
+            "alignAsTable": false, 
+            "avg": false, 
+            "current": false, 
+            "hideEmpty": false, 
+            "hideZero": false, 
+            "max": false, 
+            "min": false, 
+            "rightSide": false, 
+            "show": true, 
+            "sideWidth": null, 
+            "total": false, 
+            "values": false
+          }, 
+          "lines": true, 
+          "linewidth": 2, 
+          "links": [], 
+          "minSpan": null, 
+          "nullPointMode": "connected", 
+          "percentage": false, 
+          "pointradius": 5, 
+          "points": false, 
+          "renderer": "flot", 
+          "repeat": null, 
+          "seriesOverrides": [], 
+          "span": 3.0, 
+          "stack": false, 
+          "steppedLine": false, 
+          "targets": [
+            {
+              "datasource": "", 
+              "expr": "time()-osmtracker_minutely_diff_processing_timestamp", 
+              "format": "time_series", 
+              "instant": false, 
+              "interval": "", 
+              "intervalFactor": 2, 
+              "legendFormat": "Difftracker service lag", 
+              "metric": "", 
+              "refId": "A", 
+              "step": 10, 
+              "target": ""
+            }, 
+            {
+              "datasource": "", 
+              "expr": "time()-osmtracker_minutely_diff_timestamp", 
+              "format": "time_series", 
+              "instant": false, 
+              "interval": "", 
+              "intervalFactor": 2, 
+              "legendFormat": "Total database lag", 
+              "metric": "", 
+              "refId": "B", 
+              "step": 10, 
+              "target": ""
+            }
+          ], 
+          "timeFrom": null, 
+          "timeShift": null, 
+          "title": "OpenStreetMap Replication Lag", 
+          "tooltip": {
+            "msResolution": true, 
+            "shared": true, 
+            "sort": 0, 
+            "value_type": "cumulative"
+          }, 
+          "transparent": false, 
+          "type": "graph", 
+          "xaxis": {
+            "show": true
+          }, 
+          "yaxes": [
+            {
+              "decimals": null, 
+              "format": "s", 
+              "label": null, 
+              "logBase": 1, 
+              "max": null, 
+              "min": 0, 
+              "show": true
+            }, 
+            {
+              "decimals": null, 
+              "format": "short", 
+              "label": null, 
+              "logBase": 1, 
+              "max": null, 
+              "min": 0, 
+              "show": true
+            }
+          ]
+        }, 
+        {
+          "aliasColors": {}, 
+          "bars": false, 
+          "datasource": "prometheus", 
+          "description": null, 
+          "editable": true, 
+          "error": false, 
+          "fill": 1, 
+          "grid": {
+            "threshold1": null, 
+            "threshold1Color": "rgba(216, 200, 27, 0.27)", 
+            "threshold2": null, 
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          }, 
+          "id": 6, 
+          "isNew": true, 
+          "legend": {
+            "alignAsTable": false, 
+            "avg": false, 
+            "current": false, 
+            "hideEmpty": false, 
+            "hideZero": false, 
+            "max": false, 
+            "min": false, 
+            "rightSide": false, 
+            "show": true, 
+            "sideWidth": null, 
+            "total": false, 
+            "values": false
+          }, 
+          "lines": true, 
+          "linewidth": 2, 
+          "links": [], 
+          "minSpan": null, 
+          "nullPointMode": "connected", 
+          "percentage": false, 
+          "pointradius": 5, 
+          "points": false, 
+          "renderer": "flot", 
+          "repeat": null, 
+          "seriesOverrides": [], 
+          "span": 3.0, 
+          "stack": false, 
+          "steppedLine": false, 
+          "targets": [
+            {
+              "datasource": "", 
+              "expr": "osmtracker_minutely_diff_head_seqno", 
+              "format": "time_series", 
+              "instant": false, 
+              "interval": "", 
+              "intervalFactor": 2, 
+              "legendFormat": "Head SeqNo", 
+              "metric": "", 
+              "refId": "A", 
+              "step": 10, 
+              "target": ""
+            }, 
+            {
+              "datasource": "", 
+              "expr": "osmtracker_minutely_diff_latest_seqno", 
+              "format": "time_series", 
+              "instant": false, 
+              "interval": "", 
+              "intervalFactor": 2, 
+              "legendFormat": "Latest Processed SeqNo", 
+              "metric": "", 
+              "refId": "B", 
+              "step": 10, 
+              "target": ""
+            }
+          ], 
+          "timeFrom": null, 
+          "timeShift": null, 
+          "title": "Replication Sequence Number", 
+          "tooltip": {
+            "msResolution": true, 
+            "shared": true, 
+            "sort": 0, 
+            "value_type": "cumulative"
+          }, 
+          "transparent": false, 
+          "type": "graph", 
+          "xaxis": {
+            "show": true
+          }, 
+          "yaxes": [
+            {
+              "decimals": null, 
+              "format": "short", 
+              "label": null, 
+              "logBase": 1, 
+              "max": null, 
+              "min": null, 
+              "show": true
+            }, 
+            {
+              "decimals": null, 
+              "format": "short", 
+              "label": null, 
+              "logBase": 1, 
+              "max": null, 
+              "min": 0, 
+              "show": true
+            }
+          ]
+        }, 
+        {
+          "aliasColors": {}, 
+          "bars": false, 
+          "datasource": "prometheus", 
+          "description": null, 
+          "editable": true, 
+          "error": false, 
+          "fill": 1, 
+          "grid": {
+            "threshold1": null, 
+            "threshold1Color": "rgba(216, 200, 27, 0.27)", 
+            "threshold2": null, 
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          }, 
+          "id": 7, 
+          "isNew": true, 
+          "legend": {
+            "alignAsTable": false, 
+            "avg": false, 
+            "current": false, 
+            "hideEmpty": false, 
+            "hideZero": false, 
+            "max": false, 
+            "min": false, 
+            "rightSide": false, 
+            "show": true, 
+            "sideWidth": null, 
+            "total": false, 
+            "values": false
+          }, 
+          "lines": true, 
+          "linewidth": 2, 
+          "links": [], 
+          "minSpan": null, 
+          "nullPointMode": "connected", 
+          "percentage": false, 
+          "pointradius": 5, 
+          "points": false, 
+          "renderer": "flot", 
+          "repeat": null, 
+          "seriesOverrides": [], 
+          "span": 3.0, 
+          "stack": false, 
+          "steppedLine": false, 
+          "targets": [
+            {
+              "datasource": "", 
+              "expr": "osmtracker_minutely_diff_csets_observed", 
+              "format": "time_series", 
+              "instant": false, 
+              "interval": "", 
+              "intervalFactor": 2, 
+              "legendFormat": "Changesets per minutely diff", 
+              "metric": "", 
+              "refId": "A", 
+              "step": 10, 
+              "target": ""
+            }
+          ], 
+          "timeFrom": null, 
+          "timeShift": null, 
+          "title": "Replication Sequence Number", 
+          "tooltip": {
+            "msResolution": true, 
+            "shared": true, 
+            "sort": 0, 
+            "value_type": "cumulative"
+          }, 
+          "transparent": false, 
+          "type": "graph", 
+          "xaxis": {
+            "show": true
+          }, 
+          "yaxes": [
+            {
+              "decimals": null, 
+              "format": "short", 
+              "label": null, 
+              "logBase": 1, 
+              "max": null, 
+              "min": 0, 
+              "show": true
+            }, 
+            {
+              "decimals": null, 
+              "format": "short", 
+              "label": null, 
+              "logBase": 1, 
+              "max": null, 
+              "min": 0, 
+              "show": true
+            }
+          ]
+        }, 
+        {
+          "aliasColors": {}, 
+          "bars": false, 
+          "datasource": "prometheus", 
+          "description": null, 
+          "editable": true, 
+          "error": false, 
+          "fill": 1, 
+          "grid": {
+            "threshold1": null, 
+            "threshold1Color": "rgba(216, 200, 27, 0.27)", 
+            "threshold2": null, 
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          }, 
+          "id": 8, 
+          "isNew": true, 
+          "legend": {
+            "alignAsTable": false, 
+            "avg": false, 
+            "current": false, 
+            "hideEmpty": false, 
+            "hideZero": false, 
+            "max": false, 
+            "min": false, 
+            "rightSide": true, 
+            "show": true, 
+            "sideWidth": null, 
+            "total": false, 
+            "values": false
+          }, 
+          "lines": true, 
+          "linewidth": 2, 
+          "links": [], 
+          "minSpan": null, 
+          "nullPointMode": "connected", 
+          "percentage": false, 
+          "pointradius": 5, 
+          "points": false, 
+          "renderer": "flot", 
+          "repeat": null, 
+          "seriesOverrides": [], 
+          "span": 3.0, 
+          "stack": false, 
+          "steppedLine": false, 
+          "targets": [
+            {
+              "datasource": "", 
+              "expr": "osmtracker_changeset_cnt", 
+              "format": "time_series", 
+              "instant": false, 
+              "interval": "", 
+              "intervalFactor": 2, 
+              "legendFormat": "{{state}}", 
+              "metric": "", 
+              "refId": "A", 
+              "step": 10, 
+              "target": ""
+            }
+          ], 
+          "timeFrom": null, 
+          "timeShift": null, 
+          "title": "Replication Sequence Number", 
+          "tooltip": {
+            "msResolution": true, 
+            "shared": true, 
+            "sort": 0, 
+            "value_type": "cumulative"
+          }, 
+          "transparent": false, 
+          "type": "graph", 
+          "xaxis": {
+            "show": true
+          }, 
+          "yaxes": [
+            {
+              "decimals": null, 
+              "format": "short", 
+              "label": null, 
+              "logBase": 1, 
+              "max": null, 
+              "min": 0, 
+              "show": true
+            }, 
+            {
+              "decimals": null, 
+              "format": "short", 
+              "label": null, 
+              "logBase": 1, 
+              "max": null, 
+              "min": 0, 
+              "show": true
+            }
+          ]
         }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Component memory usage",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "decbytes",
-          "label": "Memory",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
+      ], 
+      "repeat": null, 
+      "showTitle": false, 
+      "title": "New row"
+    }, 
     {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "prometheus",
-      "fill": 1,
-      "gridPos": {
-        "h": 7,
-        "w": 6,
-        "x": 18,
-        "y": 14
-      },
-      "id": 18,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sideWidth": 85,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
+      "collapse": false, 
+      "editable": true, 
+      "height": "250px", 
+      "panels": [
         {
-          "expr": "label_replace(process_cpu_seconds_total{app=\"osm-analytic-tracker\"}, \"instance\", \"$1\", \"instance\", \"(.*):.*\")",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "legendFormat": "{{instance}}",
-          "refId": "A"
+          "aliasColors": {}, 
+          "bars": false, 
+          "datasource": "prometheus", 
+          "description": null, 
+          "editable": true, 
+          "error": false, 
+          "fill": 1, 
+          "grid": {
+            "threshold1": null, 
+            "threshold1Color": "rgba(216, 200, 27, 0.27)", 
+            "threshold2": null, 
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          }, 
+          "id": 9, 
+          "isNew": true, 
+          "legend": {
+            "alignAsTable": false, 
+            "avg": false, 
+            "current": false, 
+            "hideEmpty": false, 
+            "hideZero": false, 
+            "max": false, 
+            "min": false, 
+            "rightSide": true, 
+            "show": true, 
+            "sideWidth": null, 
+            "total": false, 
+            "values": false
+          }, 
+          "lines": true, 
+          "linewidth": 2, 
+          "links": [], 
+          "minSpan": null, 
+          "nullPointMode": "connected", 
+          "percentage": false, 
+          "pointradius": 5, 
+          "points": false, 
+          "renderer": "flot", 
+          "repeat": null, 
+          "seriesOverrides": [], 
+          "span": 3.0, 
+          "stack": false, 
+          "steppedLine": false, 
+          "targets": [
+            {
+              "datasource": "", 
+              "expr": "sum(rate(osmtracker_events[5m])) by (event,action)", 
+              "format": "time_series", 
+              "instant": false, 
+              "interval": "", 
+              "intervalFactor": 2, 
+              "legendFormat": "{{event}} - {{action}}", 
+              "metric": "", 
+              "refId": "A", 
+              "step": 10, 
+              "target": ""
+            }
+          ], 
+          "timeFrom": null, 
+          "timeShift": null, 
+          "title": "Event Rates", 
+          "tooltip": {
+            "msResolution": true, 
+            "shared": true, 
+            "sort": 0, 
+            "value_type": "cumulative"
+          }, 
+          "transparent": false, 
+          "type": "graph", 
+          "xaxis": {
+            "show": true
+          }, 
+          "yaxes": [
+            {
+              "decimals": null, 
+              "format": "short", 
+              "label": null, 
+              "logBase": 1, 
+              "max": null, 
+              "min": 0, 
+              "show": true
+            }, 
+            {
+              "decimals": null, 
+              "format": "short", 
+              "label": null, 
+              "logBase": 1, 
+              "max": null, 
+              "min": 0, 
+              "show": true
+            }
+          ]
+        }, 
+        {
+          "columns": [], 
+          "datasource": "prometheus", 
+          "description": null, 
+          "editable": true, 
+          "fontSize": "90%", 
+          "height": null, 
+          "hideTimeOverride": false, 
+          "id": 10, 
+          "links": [], 
+          "minSpan": null, 
+          "pageSize": null, 
+          "repeat": null, 
+          "scroll": true, 
+          "showHeader": true, 
+          "sort": {
+            "col": 2, 
+            "desc": false
+          }, 
+          "span": 3, 
+          "styles": [
+            {
+              "alias": "Event Type", 
+              "colorMode": null, 
+              "colors": [
+                "rgba(50, 172, 45, 0.97)", 
+                "rgba(237, 129, 40, 0.89)", 
+                "rgba(245, 54, 54, 0.9)"
+              ], 
+              "decimals": 2, 
+              "pattern": "event", 
+              "thresholds": [], 
+              "type": "number", 
+              "unit": "short"
+            }, 
+            {
+              "alias": "Direction", 
+              "colorMode": null, 
+              "colors": [
+                "rgba(50, 172, 45, 0.97)", 
+                "rgba(237, 129, 40, 0.89)", 
+                "rgba(245, 54, 54, 0.9)"
+              ], 
+              "decimals": 2, 
+              "pattern": "action", 
+              "thresholds": [], 
+              "type": "number", 
+              "unit": "short"
+            }, 
+            {
+              "alias": "Value", 
+              "colorMode": null, 
+              "colors": [
+                "rgba(50, 172, 45, 0.97)", 
+                "rgba(237, 129, 40, 0.89)", 
+                "rgba(245, 54, 54, 0.9)"
+              ], 
+              "decimals": 0, 
+              "pattern": "Value", 
+              "thresholds": [], 
+              "type": "number", 
+              "unit": "short"
+            }, 
+            {
+              "alias": "", 
+              "pattern": "Time", 
+              "type": "hidden"
+            }, 
+            {
+              "alias": "", 
+              "colorMode": null, 
+              "colors": [
+                "rgba(50, 172, 45, 0.97)", 
+                "rgba(237, 129, 40, 0.89)", 
+                "rgba(245, 54, 54, 0.9)"
+              ], 
+              "decimals": 2, 
+              "pattern": "/.*/", 
+              "thresholds": [], 
+              "type": "number", 
+              "unit": "short"
+            }
+          ], 
+          "targets": [
+            {
+              "datasource": "", 
+              "expr": "sum(osmtracker_events) by (event,action)", 
+              "format": "table", 
+              "instant": true, 
+              "interval": "", 
+              "intervalFactor": 2, 
+              "legendFormat": "{{event}} - {{action}}", 
+              "metric": "", 
+              "refId": "A", 
+              "step": 10, 
+              "target": ""
+            }
+          ], 
+          "title": "Events", 
+          "transform": "table", 
+          "transparent": false, 
+          "type": "table"
+        }, 
+        {
+          "aliasColors": {}, 
+          "bars": false, 
+          "datasource": "prometheus", 
+          "description": null, 
+          "editable": true, 
+          "error": false, 
+          "fill": 1, 
+          "grid": {
+            "threshold1": null, 
+            "threshold1Color": "rgba(216, 200, 27, 0.27)", 
+            "threshold2": null, 
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          }, 
+          "id": 11, 
+          "isNew": true, 
+          "legend": {
+            "alignAsTable": false, 
+            "avg": false, 
+            "current": false, 
+            "hideEmpty": false, 
+            "hideZero": false, 
+            "max": false, 
+            "min": false, 
+            "rightSide": true, 
+            "show": true, 
+            "sideWidth": null, 
+            "total": false, 
+            "values": false
+          }, 
+          "lines": true, 
+          "linewidth": 2, 
+          "links": [], 
+          "minSpan": null, 
+          "nullPointMode": "connected", 
+          "percentage": false, 
+          "pointradius": 5, 
+          "points": false, 
+          "renderer": "flot", 
+          "repeat": null, 
+          "seriesOverrides": [], 
+          "span": 3.0, 
+          "stack": false, 
+          "steppedLine": false, 
+          "targets": [
+            {
+              "datasource": "", 
+              "expr": "label_replace(process_virtual_memory_bytes{app=\"osm-analytic-tracker\"}, \"instance\", \"$1\", \"instance\", \"(.*):.*\")", 
+              "format": "time_series", 
+              "instant": false, 
+              "interval": "", 
+              "intervalFactor": 2, 
+              "legendFormat": "{{instance}}", 
+              "metric": "", 
+              "refId": "A", 
+              "step": 10, 
+              "target": ""
+            }
+          ], 
+          "timeFrom": null, 
+          "timeShift": null, 
+          "title": "Component Memory Usage", 
+          "tooltip": {
+            "msResolution": true, 
+            "shared": true, 
+            "sort": 0, 
+            "value_type": "cumulative"
+          }, 
+          "transparent": false, 
+          "type": "graph", 
+          "xaxis": {
+            "show": true
+          }, 
+          "yaxes": [
+            {
+              "decimals": null, 
+              "format": "bytes", 
+              "label": null, 
+              "logBase": 1, 
+              "max": null, 
+              "min": null, 
+              "show": true
+            }, 
+            {
+              "decimals": null, 
+              "format": "short", 
+              "label": null, 
+              "logBase": 1, 
+              "max": null, 
+              "min": 0, 
+              "show": true
+            }
+          ]
+        }, 
+        {
+          "aliasColors": {}, 
+          "bars": false, 
+          "datasource": "prometheus", 
+          "description": null, 
+          "editable": true, 
+          "error": false, 
+          "fill": 1, 
+          "grid": {
+            "threshold1": null, 
+            "threshold1Color": "rgba(216, 200, 27, 0.27)", 
+            "threshold2": null, 
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          }, 
+          "id": 12, 
+          "isNew": true, 
+          "legend": {
+            "alignAsTable": false, 
+            "avg": false, 
+            "current": false, 
+            "hideEmpty": false, 
+            "hideZero": false, 
+            "max": false, 
+            "min": false, 
+            "rightSide": true, 
+            "show": true, 
+            "sideWidth": null, 
+            "total": false, 
+            "values": false
+          }, 
+          "lines": true, 
+          "linewidth": 2, 
+          "links": [], 
+          "minSpan": null, 
+          "nullPointMode": "connected", 
+          "percentage": false, 
+          "pointradius": 5, 
+          "points": false, 
+          "renderer": "flot", 
+          "repeat": null, 
+          "seriesOverrides": [], 
+          "span": 3.0, 
+          "stack": false, 
+          "steppedLine": false, 
+          "targets": [
+            {
+              "datasource": "", 
+              "expr": "label_replace(process_cpu_seconds_total{app=\"osm-analytic-tracker\"}, \"instance\", \"$1\", \"instance\", \"(.*):.*\")", 
+              "format": "time_series", 
+              "instant": false, 
+              "interval": "", 
+              "intervalFactor": 2, 
+              "legendFormat": "{{instance}}", 
+              "metric": "", 
+              "refId": "A", 
+              "step": 10, 
+              "target": ""
+            }
+          ], 
+          "timeFrom": null, 
+          "timeShift": null, 
+          "title": "Component CPU Usage", 
+          "tooltip": {
+            "msResolution": true, 
+            "shared": true, 
+            "sort": 0, 
+            "value_type": "cumulative"
+          }, 
+          "transparent": false, 
+          "type": "graph", 
+          "xaxis": {
+            "show": true
+          }, 
+          "yaxes": [
+            {
+              "decimals": null, 
+              "format": "s", 
+              "label": null, 
+              "logBase": 1, 
+              "max": null, 
+              "min": 0, 
+              "show": true
+            }, 
+            {
+              "decimals": null, 
+              "format": "short", 
+              "label": null, 
+              "logBase": 1, 
+              "max": null, 
+              "min": 0, 
+              "show": true
+            }
+          ]
         }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Component CPU usage total",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "s",
-          "label": "Seconds",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
+      ], 
+      "repeat": null, 
+      "showTitle": false, 
+      "title": "New row"
+    }, 
     {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "prometheus",
-      "fill": 1,
-      "gridPos": {
-        "h": 7,
-        "w": 6,
-        "x": 0,
-        "y": 21
-      },
-      "id": 7,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
+      "collapse": false, 
+      "editable": true, 
+      "height": "250px", 
+      "panels": [
         {
-          "expr": "histogram_quantile(0.95, rate(osmtracker_changeset_filter_processing_time_seconds_bucket[10m]))",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "legendFormat": ".95 quantile",
-          "refId": "A"
-        },
+          "aliasColors": {}, 
+          "bars": false, 
+          "datasource": "prometheus", 
+          "description": null, 
+          "editable": true, 
+          "error": false, 
+          "fill": 1, 
+          "grid": {
+            "threshold1": null, 
+            "threshold1Color": "rgba(216, 200, 27, 0.27)", 
+            "threshold2": null, 
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          }, 
+          "id": 13, 
+          "isNew": true, 
+          "legend": {
+            "alignAsTable": false, 
+            "avg": false, 
+            "current": false, 
+            "hideEmpty": false, 
+            "hideZero": false, 
+            "max": false, 
+            "min": false, 
+            "rightSide": false, 
+            "show": true, 
+            "sideWidth": null, 
+            "total": false, 
+            "values": false
+          }, 
+          "lines": true, 
+          "linewidth": 2, 
+          "links": [], 
+          "minSpan": null, 
+          "nullPointMode": "connected", 
+          "percentage": false, 
+          "pointradius": 5, 
+          "points": false, 
+          "renderer": "flot", 
+          "repeat": null, 
+          "seriesOverrides": [], 
+          "span": 3.0, 
+          "stack": false, 
+          "steppedLine": false, 
+          "targets": [
+            {
+              "datasource": "", 
+              "expr": "histogram_quantile(0.95, rate(osmtracker_changeset_filter_processing_time_seconds_bucket[10m]))", 
+              "format": "time_series", 
+              "instant": false, 
+              "interval": "", 
+              "intervalFactor": 2, 
+              "legendFormat": ".95 quantile", 
+              "metric": "", 
+              "refId": "A", 
+              "step": 10, 
+              "target": ""
+            }, 
+            {
+              "datasource": "", 
+              "expr": "histogram_quantile(0.90, rate(osmtracker_changeset_filter_processing_time_seconds_bucket[10m]))", 
+              "format": "time_series", 
+              "instant": false, 
+              "interval": "", 
+              "intervalFactor": 2, 
+              "legendFormat": ".90 quantile", 
+              "metric": "", 
+              "refId": "B", 
+              "step": 10, 
+              "target": ""
+            }, 
+            {
+              "datasource": "", 
+              "expr": "histogram_quantile(0.80, rate(osmtracker_changeset_filter_processing_time_seconds_bucket[10m]))", 
+              "format": "time_series", 
+              "instant": false, 
+              "interval": "", 
+              "intervalFactor": 2, 
+              "legendFormat": ".80 quantile", 
+              "metric": "", 
+              "refId": "C", 
+              "step": 10, 
+              "target": ""
+            }
+          ], 
+          "timeFrom": null, 
+          "timeShift": null, 
+          "title": "Changeset Filtering Processing Time", 
+          "tooltip": {
+            "msResolution": true, 
+            "shared": true, 
+            "sort": 0, 
+            "value_type": "cumulative"
+          }, 
+          "transparent": false, 
+          "type": "graph", 
+          "xaxis": {
+            "show": true
+          }, 
+          "yaxes": [
+            {
+              "decimals": null, 
+              "format": "s", 
+              "label": null, 
+              "logBase": 1, 
+              "max": null, 
+              "min": 0, 
+              "show": true
+            }, 
+            {
+              "decimals": null, 
+              "format": "short", 
+              "label": null, 
+              "logBase": 1, 
+              "max": null, 
+              "min": 0, 
+              "show": true
+            }
+          ]
+        }, 
         {
-          "expr": "histogram_quantile(0.90, rate(osmtracker_changeset_filter_processing_time_seconds_bucket[10m]))",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "legendFormat": ".90 quantile",
-          "refId": "B"
-        },
+          "aliasColors": {}, 
+          "bars": false, 
+          "datasource": "prometheus", 
+          "description": null, 
+          "editable": true, 
+          "error": false, 
+          "fill": 1, 
+          "grid": {
+            "threshold1": null, 
+            "threshold1Color": "rgba(216, 200, 27, 0.27)", 
+            "threshold2": null, 
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          }, 
+          "id": 14, 
+          "isNew": true, 
+          "legend": {
+            "alignAsTable": false, 
+            "avg": false, 
+            "current": false, 
+            "hideEmpty": false, 
+            "hideZero": false, 
+            "max": false, 
+            "min": false, 
+            "rightSide": false, 
+            "show": true, 
+            "sideWidth": null, 
+            "total": false, 
+            "values": false
+          }, 
+          "lines": true, 
+          "linewidth": 2, 
+          "links": [], 
+          "minSpan": null, 
+          "nullPointMode": "connected", 
+          "percentage": false, 
+          "pointradius": 5, 
+          "points": false, 
+          "renderer": "flot", 
+          "repeat": null, 
+          "seriesOverrides": [], 
+          "span": 3.0, 
+          "stack": false, 
+          "steppedLine": false, 
+          "targets": [
+            {
+              "datasource": "", 
+              "expr": "histogram_quantile(0.95, rate(osmtracker_changeset_refresh_processing_time_seconds_bucket[10m]))", 
+              "format": "time_series", 
+              "instant": false, 
+              "interval": "", 
+              "intervalFactor": 2, 
+              "legendFormat": ".95 quantile", 
+              "metric": "", 
+              "refId": "A", 
+              "step": 10, 
+              "target": ""
+            }, 
+            {
+              "datasource": "", 
+              "expr": "histogram_quantile(0.90, rate(osmtracker_changeset_refresh_processing_time_seconds_bucket[10m]))", 
+              "format": "time_series", 
+              "instant": false, 
+              "interval": "", 
+              "intervalFactor": 2, 
+              "legendFormat": ".90 quantile", 
+              "metric": "", 
+              "refId": "B", 
+              "step": 10, 
+              "target": ""
+            }, 
+            {
+              "datasource": "", 
+              "expr": "histogram_quantile(0.80, rate(osmtracker_changeset_refresh_processing_time_seconds_bucket[10m]))", 
+              "format": "time_series", 
+              "instant": false, 
+              "interval": "", 
+              "intervalFactor": 2, 
+              "legendFormat": ".80 quantile", 
+              "metric": "", 
+              "refId": "C", 
+              "step": 10, 
+              "target": ""
+            }
+          ], 
+          "timeFrom": null, 
+          "timeShift": null, 
+          "title": "Changeset Refresh Processing Time", 
+          "tooltip": {
+            "msResolution": true, 
+            "shared": true, 
+            "sort": 0, 
+            "value_type": "cumulative"
+          }, 
+          "transparent": false, 
+          "type": "graph", 
+          "xaxis": {
+            "show": true
+          }, 
+          "yaxes": [
+            {
+              "decimals": null, 
+              "format": "s", 
+              "label": null, 
+              "logBase": 1, 
+              "max": null, 
+              "min": 0, 
+              "show": true
+            }, 
+            {
+              "decimals": null, 
+              "format": "short", 
+              "label": null, 
+              "logBase": 1, 
+              "max": null, 
+              "min": 0, 
+              "show": true
+            }
+          ]
+        }, 
         {
-          "expr": "histogram_quantile(0.80, rate(osmtracker_changeset_filter_processing_time_seconds_bucket[10m]))",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "legendFormat": ".80 quantile",
-          "refId": "C"
+          "aliasColors": {}, 
+          "bars": false, 
+          "datasource": "prometheus", 
+          "description": null, 
+          "editable": true, 
+          "error": false, 
+          "fill": 1, 
+          "grid": {
+            "threshold1": null, 
+            "threshold1Color": "rgba(216, 200, 27, 0.27)", 
+            "threshold2": null, 
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          }, 
+          "id": 15, 
+          "isNew": true, 
+          "legend": {
+            "alignAsTable": false, 
+            "avg": false, 
+            "current": false, 
+            "hideEmpty": false, 
+            "hideZero": false, 
+            "max": false, 
+            "min": false, 
+            "rightSide": false, 
+            "show": true, 
+            "sideWidth": null, 
+            "total": false, 
+            "values": false
+          }, 
+          "lines": true, 
+          "linewidth": 2, 
+          "links": [], 
+          "minSpan": null, 
+          "nullPointMode": "connected", 
+          "percentage": false, 
+          "pointradius": 5, 
+          "points": false, 
+          "renderer": "flot", 
+          "repeat": null, 
+          "seriesOverrides": [], 
+          "span": 3.0, 
+          "stack": false, 
+          "steppedLine": false, 
+          "targets": [
+            {
+              "datasource": "", 
+              "expr": "histogram_quantile(0.95, rate(osmtracker_changeset_analysis_processing_time_seconds_bucket[10m]))", 
+              "format": "time_series", 
+              "instant": false, 
+              "interval": "", 
+              "intervalFactor": 2, 
+              "legendFormat": ".95 quantile", 
+              "metric": "", 
+              "refId": "A", 
+              "step": 10, 
+              "target": ""
+            }, 
+            {
+              "datasource": "", 
+              "expr": "histogram_quantile(0.90, rate(osmtracker_changeset_analysis_processing_time_seconds_bucket[10m]))", 
+              "format": "time_series", 
+              "instant": false, 
+              "interval": "", 
+              "intervalFactor": 2, 
+              "legendFormat": ".90 quantile", 
+              "metric": "", 
+              "refId": "B", 
+              "step": 10, 
+              "target": ""
+            }, 
+            {
+              "datasource": "", 
+              "expr": "histogram_quantile(0.80, rate(osmtracker_changeset_analysis_processing_time_seconds_bucket[10m]))", 
+              "format": "time_series", 
+              "instant": false, 
+              "interval": "", 
+              "intervalFactor": 2, 
+              "legendFormat": ".80 quantile", 
+              "metric": "", 
+              "refId": "C", 
+              "step": 10, 
+              "target": ""
+            }
+          ], 
+          "timeFrom": null, 
+          "timeShift": null, 
+          "title": "Changeset Analysis Processing Time", 
+          "tooltip": {
+            "msResolution": true, 
+            "shared": true, 
+            "sort": 0, 
+            "value_type": "cumulative"
+          }, 
+          "transparent": false, 
+          "type": "graph", 
+          "xaxis": {
+            "show": true
+          }, 
+          "yaxes": [
+            {
+              "decimals": null, 
+              "format": "s", 
+              "label": null, 
+              "logBase": 1, 
+              "max": null, 
+              "min": 0, 
+              "show": true
+            }, 
+            {
+              "decimals": null, 
+              "format": "short", 
+              "label": null, 
+              "logBase": 1, 
+              "max": null, 
+              "min": 0, 
+              "show": true
+            }
+          ]
+        }, 
+        {
+          "aliasColors": {}, 
+          "bars": false, 
+          "datasource": "prometheus", 
+          "description": null, 
+          "editable": true, 
+          "error": false, 
+          "fill": 1, 
+          "grid": {
+            "threshold1": null, 
+            "threshold1Color": "rgba(216, 200, 27, 0.27)", 
+            "threshold2": null, 
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          }, 
+          "id": 16, 
+          "isNew": true, 
+          "legend": {
+            "alignAsTable": false, 
+            "avg": false, 
+            "current": false, 
+            "hideEmpty": false, 
+            "hideZero": false, 
+            "max": false, 
+            "min": false, 
+            "rightSide": false, 
+            "show": true, 
+            "sideWidth": null, 
+            "total": false, 
+            "values": false
+          }, 
+          "lines": true, 
+          "linewidth": 2, 
+          "links": [], 
+          "minSpan": null, 
+          "nullPointMode": "connected", 
+          "percentage": false, 
+          "pointradius": 5, 
+          "points": false, 
+          "renderer": "flot", 
+          "repeat": null, 
+          "seriesOverrides": [], 
+          "span": 3.0, 
+          "stack": false, 
+          "steppedLine": false, 
+          "targets": [
+            {
+              "datasource": "", 
+              "expr": "histogram_quantile(0.95, rate(osmtracker_backend_processing_time_seconds_bucket[10m]))", 
+              "format": "time_series", 
+              "instant": false, 
+              "interval": "", 
+              "intervalFactor": 2, 
+              "legendFormat": ".95 quantile", 
+              "metric": "", 
+              "refId": "A", 
+              "step": 10, 
+              "target": ""
+            }, 
+            {
+              "datasource": "", 
+              "expr": "histogram_quantile(0.90, rate(osmtracker_backend_processing_time_seconds_bucket[10m]))", 
+              "format": "time_series", 
+              "instant": false, 
+              "interval": "", 
+              "intervalFactor": 2, 
+              "legendFormat": ".90 quantile", 
+              "metric": "", 
+              "refId": "B", 
+              "step": 10, 
+              "target": ""
+            }, 
+            {
+              "datasource": "", 
+              "expr": "histogram_quantile(0.80, rate(osmtracker_backend_processing_time_seconds_bucket[10m]))", 
+              "format": "time_series", 
+              "instant": false, 
+              "interval": "", 
+              "intervalFactor": 2, 
+              "legendFormat": ".80 quantile", 
+              "metric": "", 
+              "refId": "C", 
+              "step": 10, 
+              "target": ""
+            }
+          ], 
+          "timeFrom": null, 
+          "timeShift": null, 
+          "title": "Changeset Backend Refresh Processing Time", 
+          "tooltip": {
+            "msResolution": true, 
+            "shared": true, 
+            "sort": 0, 
+            "value_type": "cumulative"
+          }, 
+          "transparent": false, 
+          "type": "graph", 
+          "xaxis": {
+            "show": true
+          }, 
+          "yaxes": [
+            {
+              "decimals": null, 
+              "format": "s", 
+              "label": null, 
+              "logBase": 1, 
+              "max": null, 
+              "min": 0, 
+              "show": true
+            }, 
+            {
+              "decimals": null, 
+              "format": "short", 
+              "label": null, 
+              "logBase": 1, 
+              "max": null, 
+              "min": 0, 
+              "show": true
+            }
+          ]
         }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Changeset filtering processing time",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": "Seconds",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "prometheus",
-      "fill": 1,
-      "gridPos": {
-        "h": 7,
-        "w": 6,
-        "x": 6,
-        "y": 21
-      },
-      "id": 9,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "histogram_quantile(0.95, rate(osmtracker_changeset_refresh_processing_time_seconds_bucket[10m]))",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "legendFormat": ".95 quantile",
-          "refId": "A"
-        },
-        {
-          "expr": "histogram_quantile(0.90, rate(osmtracker_changeset_refresh_processing_time_seconds_bucket[10m]))",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "legendFormat": ".90 quantile",
-          "refId": "B"
-        },
-        {
-          "expr": "histogram_quantile(0.80, rate(osmtracker_changeset_refresh_processing_time_seconds_bucket[10m]))",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "legendFormat": ".80 quantile",
-          "refId": "C"
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Changeset refresh processing time",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": "Seconds",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "prometheus",
-      "fill": 1,
-      "gridPos": {
-        "h": 7,
-        "w": 6,
-        "x": 12,
-        "y": 21
-      },
-      "id": 8,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "histogram_quantile(0.95, rate(osmtracker_changeset_analysis_processing_time_seconds_bucket[10m]))",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "legendFormat": ".95 quantile",
-          "refId": "A"
-        },
-        {
-          "expr": "histogram_quantile(0.90, rate(osmtracker_changeset_analysis_processing_time_seconds_bucket[10m]))",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "legendFormat": ".90 quantile",
-          "refId": "B"
-        },
-        {
-          "expr": "histogram_quantile(0.80, rate(osmtracker_changeset_analysis_processing_time_seconds_bucket[10m]))",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "legendFormat": ".80 quantile",
-          "refId": "C"
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Changeset analysis processing time",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": "Seconds",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "prometheus",
-      "fill": 1,
-      "gridPos": {
-        "h": 7,
-        "w": 6,
-        "x": 18,
-        "y": 21
-      },
-      "id": 12,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "histogram_quantile(0.95, rate(osmtracker_backend_processing_time_seconds_bucket[10m]))",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "legendFormat": ".95 quantile",
-          "refId": "A"
-        },
-        {
-          "expr": "histogram_quantile(0.90, rate(osmtracker_backend_processing_time_seconds_bucket[10m]))",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "legendFormat": ".90 quantile",
-          "refId": "B"
-        },
-        {
-          "expr": "histogram_quantile(0.80, rate(osmtracker_backend_processing_time_seconds_bucket[10m]))",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "legendFormat": ".80 quantile",
-          "refId": "C"
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Backend refresh processing time",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": "Seconds",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
+      ], 
+      "repeat": null, 
+      "showTitle": false, 
+      "title": "New row"
     }
-  ],
-  "refresh": "10s",
-  "schemaVersion": 16,
-  "style": "dark",
-  "tags": [],
+  ], 
+  "schemaVersion": 12, 
+  "sharedCrosshair": false, 
+  "style": "dark", 
+  "tags": [], 
   "templating": {
     "list": []
-  },
+  }, 
   "time": {
-    "from": "now-1h",
+    "from": "now-1h", 
     "to": "now"
-  },
+  }, 
   "timepicker": {
     "refresh_intervals": [
-      "5s",
-      "10s",
-      "30s",
-      "1m",
-      "5m",
-      "15m",
-      "30m",
-      "1h",
-      "2h",
+      "5s", 
+      "10s", 
+      "30s", 
+      "1m", 
+      "5m", 
+      "15m", 
+      "30m", 
+      "1h", 
+      "2h", 
       "1d"
-    ],
+    ], 
     "time_options": [
-      "5m",
-      "15m",
-      "1h",
-      "6h",
-      "12h",
-      "24h",
-      "2d",
-      "7d",
+      "5m", 
+      "15m", 
+      "1h", 
+      "6h", 
+      "12h", 
+      "24h", 
+      "2d", 
+      "7d", 
       "30d"
     ]
-  },
-  "timezone": "browser",
-  "title": "OSMTracker",
-  "uid": "3cqdtSNiz",
-  "version": 1
+  }, 
+  "timezone": "utc", 
+  "title": "OpenStreetMap Analytic Tracker Stats", 
+  "uid": null, 
+  "version": 0
 }
