@@ -84,7 +84,7 @@ amqp:
 web:
   image:
     image: nginx
-    tag: 1.11-alpine
+    tag: 1.15.2-alpine
     pullPolicy: IfNotPresent
 
 db:
