@@ -67,7 +67,7 @@ spec:
         - mountPath: /html
           name: html-volume
       - name: nginx
-        image: {{ .Values.web.image.image }}
+        image: "{{ .Values.web.image.image }}:{{ .Values.web.image.tag }}"
         imagePullPolicy: {{ .Values.web.image.pullPolicy }}
         ports:
         - containerPort: 80
