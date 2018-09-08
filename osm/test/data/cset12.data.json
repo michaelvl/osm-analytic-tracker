@@ -1,0 +1,10 @@
+[{"action": "delete",
+  "data": {"changeset": 1212,
+           "id": 10102,
+           "timestamp": "2016-05-01T16:19:37Z",
+           "uid": 2345678,
+           "user": "Deleter",
+           "version": 2,
+           "visible": false},
+  "type": "node"}
+]

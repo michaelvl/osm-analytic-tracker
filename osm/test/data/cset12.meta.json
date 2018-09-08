@@ -1,0 +1,15 @@
+{"uid": 1000,
+ "id": 12,
+ "user": "testuser",
+ "open": false,
+ "comments_count": 0,
+ "discussion": [],
+ "created_at": "2015-05-01T16:09:37Z",
+ "closed_at":  "2015-05-01T16:09:47Z",
+ "min_lat": 5, "max_lat": 10,
+ "min_lon": 7, "max_lon": 14,
+ "tag": {"comment": "Single node delete",
+         "created_by": "JOSM",
+	 "bot": "no"
+        }
+}

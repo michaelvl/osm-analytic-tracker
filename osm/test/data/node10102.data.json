@@ -1,0 +1,21 @@
+{
+    "1": {"changeset": 10,
+          "id": 10102,
+          "lat": 54.1,
+          "lon": 10.1,
+          "tag": {"osak:identifier": "1234"},
+          "timestamp": "2015-05-01T16:19:37Z",
+          "uid": 2345678,
+          "user": "Ronny the Rover",
+          "version": 1,
+	  "visible": true},
+    "2": {"changeset": 12,
+          "id": 10102,
+          "tag": {"osak:identifier": "1234567"},
+          "timestamp": "2016-05-01T16:19:37Z",
+          "uid": 2345679,
+          "user": "Cleaner bot",
+          "version": 2,
+	  "visible": false}
+}
+    
