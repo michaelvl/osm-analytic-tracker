@@ -55,9 +55,23 @@ class TestLabelFilter(unittest.TestCase):
                                        "timestamp":  "2016-05-01T16:19:37Z",
                                        "uid": 1000,
                                        "user": "Karl Koder",
-                                       "version": 1,
+                                       "version": 2,
                                        "visible": True},
                               "type": "node"}]
+        self.cset.hist = {"node": {
+            10000: {
+                1: {"changeset": 9,
+                    "id": 10000,
+                    "lat": 54.1,
+                    "lon": 10.1,
+                    "tag": {"osak:identifier": "1234"},
+                    "timestamp": "2015-05-01T16:19:37Z",
+                    "uid": 2345678,
+                    "user": "Ronny the Rover",
+                    "version": 1,
+	            "visible": True}
+            }
+        }}
         labels = [
 	    {"regex": [{".meta.tag.comment": "^Adjustments",
                         ".changes.modify.node.tag.some-tag-identifier": ""}], "label": "a-change"}

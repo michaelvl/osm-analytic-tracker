@@ -867,18 +867,35 @@ class Changeset(object):
         if rg[0] in ['node', 'way', 'relation']:
             elemtype = rg.pop(0)
         logger.debug("Action: '{}', element type '{}'".format(action, elemtype))
+        logger.debug('Changes: {}'.format(self.changes))
         for modif in self.changes:
             if action and action!=modif['action']:
                 continue
             if elemtype and elemtype!=modif['type']:
                 continue
             data = modif['data']
-            logger.debug('Modif {}'.format(data))
+            etype = modif['type']
+            id = data['id']
+            version = data['version']
+            action = modif['action']
+            #diff = self.getTagDiff(etype, id, version)
+            if action=='create':
+                e_old = None
+            else:
+                e_old = self.old(etype,id,version-1, only_visible=False)
+            e = data
+            logger.debug('Evaluate change: {}'.format(data))
+            logger.debug('e_old: {}'.format(e_old))
+            logger.debug('e: {}'.format(e))
             field = '.'+'.'.join(rg)
-            e = self.get_elem_elem(data, field)
-            logger.debug("regex: field '{}'='{}', regex '{}'".format(field,e,v))
-            if e:
-                return re.match(v, e)
+            ee_old = self.get_elem_elem(e_old, field)
+            ee = self.get_elem_elem(e, field)
+            logger.debug("regex: field '{}'='{}', regex '{}'".format(field,ee,v))
+            if ee and re.match(v, ee):
+                return True
+            logger.debug("regex(old): field '{}'='{}', regex '{}'".format(field,ee_old,v))
+            if ee_old and re.match(v, ee_old):
+                return True
         return False
 
     def build_labels(self, label_rules):
@@ -913,6 +930,7 @@ class Changeset(object):
                                                                             (float(self.meta['min_lat'])+float(self.meta['max_lat']))/2):
                     logger.debug('Area test OK, changeset center')
                 else:
+                    logger.debug('Area test failed: {}'.format(dd))
                     match = False
             if match:
                 logger.debug("Adding label '{}'".format(dd['label']))
