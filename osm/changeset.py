@@ -877,14 +877,14 @@ class Changeset(object):
             etype = modif['type']
             id = data['id']
             version = data['version']
-            action = modif['action']
+            mod_action = modif['action']
             #diff = self.getTagDiff(etype, id, version)
-            if action=='create':
+            if mod_action=='create':
                 e_old = None
             else:
                 e_old = self.old(etype,id,version-1, only_visible=False)
             e = data
-            logger.debug('Evaluate change: {}'.format(data))
+            logger.debug('Evaluate change, type:{} id:{} action:{} data:{}'.format(etype, id, mod_action, data))
             logger.debug('e_old: {}'.format(e_old))
             logger.debug('e: {}'.format(e))
             field = '.'+'.'.join(rg)
