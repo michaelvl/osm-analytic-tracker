@@ -114,7 +114,7 @@ replication_seqno = Graph(
 )
 
 chgsets_in_minutely_diff = Graph(
-    title="Replication Sequence Number",
+    title="Changesets in minutely diffs",
     dataSource=datasource,
     targets=[
         Target(
@@ -127,7 +127,7 @@ chgsets_in_minutely_diff = Graph(
 )
 
 chgsets_in_db = Graph(
-    title="Replication Sequence Number",
+    title="Changesets in database",
     dataSource=datasource,
     targets=[
         Target(
