@@ -306,6 +306,34 @@ chgset_backend_refresh_processing_time = Graph(
     yAxes=single_y_axis(format=SECONDS_FORMAT),
 )
 
+osmapi_event_rates = Graph(
+    title="OpenStreetMap API Event Rates [/hour]",
+    dataSource=datasource,
+    targets=[
+        Target(
+            expr='rate(openstreetmap_api_events[1h])**3600',
+            legendFormat='{{operation}}',
+            refId='A',
+        ),
+    ],
+    yAxes=single_y_axis(format=SHORT_FORMAT),
+    legend=Legend(rightSide=True),
+)
+
+osmapi_bytes_rates = Graph(
+    title="OpenStreetMap API Bytes Rates [/hour]",
+    dataSource=datasource,
+    targets=[
+        Target(
+            expr='rate(openstreetmap_api_bytes[1h])*3600',
+            legendFormat='{{operation}} - {{direction}}',
+            refId='A',
+        ),
+    ],
+    yAxes=single_y_axis(format=SHORT_FORMAT),
+    legend=Legend(rightSide=True),
+)
+
 dashboard = Dashboard(
   title="OpenStreetMap Analytic Tracker Stats",
   rows=[
@@ -320,6 +348,9 @@ dashboard = Dashboard(
       ]),
       Row(panels=[
           chgset_filtering_time, chgset_refresh_processing_time, chgset_analysis_processing_time, chgset_backend_refresh_processing_time,
+      ]),
+      Row(panels=[
+          osmapi_event_rates, osmapi_bytes_rates
       ]),
   ],
 ).auto_panel_ids()

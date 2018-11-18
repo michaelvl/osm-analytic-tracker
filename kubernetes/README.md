@@ -116,6 +116,10 @@ The metrics exported are:
 - *osmtracker_backend_processing_time_seconds* - histogram with processing time
    for backend refresh events.
 
+- *openstreetmap_api_events* - number of requests towards the OpenStreetMap API, labelled according to operation.
+
+- *openstreetmap_api_bytes* - number of bytes to/from OpenStreetMap API, labelled according to operation and direction.
+
 ## Kubernetes Network Policies
 
 The Helm-based deployment supports deploying Kubernetes network policies to
