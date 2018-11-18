@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: osmtracker-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "osmtracker.labels.standard" . | indent 4}}
+data:
+  config.yaml: |
+    backends:
+    - type: BackendHtml
+      filename: index.html
+      init_only: true
+      map_center:
+        area_file: /osm-regions/denmark.poly
+        area_file_conversion_type: area_center
+      map_scale: '6'
+      path: ''
+      template: index.html
+    - type: BackendHtml
+      filename: today.html
+      page_title: Recent Changesets
+      path: dynamic
+      show_comments: true
+      show_details: true
+      template: changeset.html
+    - type: BackendHtml
+      filename: notes.html
+      path: dynamic
+      template: notes.html
+    - type: BackendHtml
+      filename: dk_addresses.html
+      labels:
+      - address-node-change
+      page_title: Recent Changesets Which Modifies Address Nodes
+      path: dynamic
+      template: changeset.html
+    - type: BackendHtmlSummary
+      filename: today-summ.html
+      path: dynamic
+      template: summary.html
+    - type: BackendGeoJson
+      click_url: diffmap.html?cid={cid}
+      exptype: cset-bbox
+      filename: today.json
+      path: dynamic
+    - type: BackendGeoJson
+      bounds-filename: cset-{id}.bounds
+      click_url: diffmap.html?cid={cid}
+      exptype: cset-files
+      geojsondiff-filename: cset-{id}.json
+      path: dynamic
+    path: '/html'
+    tracker:
+      cset_processing_time_max_s: 1200
+      history: 5 minutes ago
+      horizon_hours: 24
+      horizon_type: sliding
+      osm_api_url: https://api.openstreetmap.org
+      post_labels:
+      - label: address-node-change
+        regex:
+        - .changes.tag.osak:identifier: ''
+      pre_labels:
+      - area_check_type: cset-bbox
+        area_file: /osm-regions/denmark.poly
+        label: inside-area
+      - area_check_type: cset-center
+        area_file: /osm-regions/denmark.poly
+        label: center-inside-area
+      - __unused_example_regex:
+        - .meta.comment: ^Adjustments
+        label: adjustment
+      prefilter_labels:
+      - - inside-area
+        - center-inside-area
+      refresh_meta_minutes: 15
+      refresh_open_minutes: 5
+      template_path: templates
