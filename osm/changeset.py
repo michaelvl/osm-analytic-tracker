@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os, sys, time
-from osmapi import OsmApi
+from osmapi_prom import OsmApi
 import diff
 import pprint
 import geojson as gj
