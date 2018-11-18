@@ -20,6 +20,8 @@ class Backend(Backend.Backend):
         super(Backend, self).__init__(globalconfig, subcfg)
         self.list_fname = self.build_filename(globalconfig, subcfg)
         self.template_name = subcfg['template']
+        logger.debug("list_fname={}".format( self.list_fname))
+        logger.debug("template_name={}".format( self.template_name))
         self.cfg = subcfg
         # Interpret special keys
         if 'map_center' in self.cfg and type(self.cfg['map_center']) is dict:
