@@ -48,4 +48,8 @@ spec:
           value: {{ .Values.elasticsearch_gw.elasticsearch_index }}
         resources:
 {{ toYaml .Values.elasticsearch_gw.resources | indent 10 }}
+        volumeMounts:
+{{ include "osmtracker.configmount" . | indent 8 }}
+      volumes:
+{{ include "osmtracker.configvolume" . | indent 6 }}
 {{ end }}

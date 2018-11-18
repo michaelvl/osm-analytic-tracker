@@ -29,7 +29,7 @@ Common osmtracker arguments - common for multiple components.
 */}}
 {{- define "osmtracker.common_args" -}}
 "--db", "mongodb://$(DBUSER):$(DBPASSWD)@{{ .Values.db.service.name }}/{{ .Values.db.mongodbDatabase }}",
-"--configdir", "/osmtracker-config",
+"--configfile", "/osmtracker-config/config.yaml",
 "--amqp", "{{ .Values.amqp.service.name }}",
 {{- if .Values.osmtracker.metrics.enabled }}
 "--metrics",
@@ -37,4 +37,21 @@ Common osmtracker arguments - common for multiple components.
 {{- if .Values.osmtracker.debug }}
 "-lDEBUG",
 {{- end }}
+{{- end -}}
+
+{{/*
+Common osmtracker config volume
+*/}}
+{{- define "osmtracker.configvolume" -}}
+- name: config-volume
+  configMap:
+    name: osmtracker-config
+{{- end -}}
+
+{{/*
+Common osmtracker config volume mount
+*/}}
+{{- define "osmtracker.configmount" -}}
+- name: config-volume
+  mountPath: /osmtracker-config
 {{- end -}}

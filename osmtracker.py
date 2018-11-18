@@ -634,8 +634,8 @@ def main():
     parser.add_argument('-l', dest='log_level', default='INFO',
                         choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
                         help='Set the log level')
-    parser.add_argument('--configdir', dest='configdir', default='.',
-                        help='Set path to config file')
+    parser.add_argument('--configfile', dest='configfile', default='./config.json',
+                        help='Set config file')
     parser.add_argument('--db', dest='db_url', default='mongodb://localhost:27017/',
                         help='Set url for database')
     parser.add_argument('--metrics', dest='metrics', action='store_true', default=False,
@@ -673,7 +673,7 @@ def main():
     logging.getLogger('').setLevel(getattr(logging, args.log_level))
 
     config = configfile.Config()
-    config.load(path=args.configdir)
+    config.load(file=args.configfile)
 
     if args.metrics:
         prometheus_client.start_http_server(args.metricsport)

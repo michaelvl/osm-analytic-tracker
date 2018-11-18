@@ -26,8 +26,8 @@ if __name__ == "__main__":
                         help='Enable metrics through Prometheus client API')
     parser.add_argument('--metricsport', dest='metricsport', type=int, default=8000,
                         help='Port through which to serve metrics')
-    parser.add_argument('--configdir', dest='configdir', default='.',
-                        help='Set path to config file')
+    parser.add_argument('--configfile', dest='configfile', default='./config.json',
+                        help='Set config file')
 
     args = parser.parse_args()
     logging.getLogger('').setLevel(getattr(logging, args.log_level))

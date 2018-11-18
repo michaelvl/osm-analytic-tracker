@@ -3,6 +3,9 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: default-deny
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "osmtracker.labels.standard" . | indent 4}}
 spec:
   policyTypes:
   - Ingress
@@ -12,6 +15,9 @@ kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
 metadata:
   name: access-db
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "osmtracker.labels.standard" . | indent 4}}
 spec:
   policyTypes:
   - Ingress
@@ -32,6 +38,9 @@ kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
 metadata:
   name: access-frontend
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "osmtracker.labels.standard" . | indent 4}}
 spec:
   policyTypes:
   - Ingress
@@ -49,6 +58,9 @@ kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
 metadata:
   name: access-amqp
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "osmtracker.labels.standard" . | indent 4}}
 spec:
   policyTypes:
   - Ingress
@@ -67,6 +79,9 @@ kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
 metadata:
   name: access-metrics
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "osmtracker.labels.standard" . | indent 4}}
 spec:
   policyTypes:
   - Ingress

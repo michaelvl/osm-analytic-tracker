@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import json
+import json, yaml
 import sys
 import logging
 
@@ -10,9 +10,14 @@ class Config(object):
     def __init__(self):
         self.cfg = None
 
-    def load(self, filename='config.json', path=''):
-        with open(path+'/'+filename) as f:
-            self.cfg = json.load(f)
+    def load(self, file):
+        with open(file) as f:
+            if file.endswith('.json'):
+                logger.debug('Loading {} as json'.format(file))
+                self.cfg = json.load(f)
+            else:
+                logger.debug('Loading {} as yaml'.format(file))
+                self.cfg = yaml.load(f)
 
     def get(self, what, who=None, default=None):
         '''Get config setting - first look in subconfig, if attribute is not there, look in global settings'''

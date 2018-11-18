@@ -66,6 +66,7 @@ spec:
         volumeMounts:
         - mountPath: /html
           name: html-volume
+{{ include "osmtracker.configmount" . | indent 8 }}
       - name: nginx
         image: "{{ .Values.web.image.image }}:{{ .Values.web.image.tag }}"
         imagePullPolicy: {{ .Values.web.image.pullPolicy }}
@@ -79,3 +80,4 @@ spec:
       - name: html-volume
         emptyDir:
           medium: "Memory"
+{{ include "osmtracker.configvolume" . | indent 6 }}

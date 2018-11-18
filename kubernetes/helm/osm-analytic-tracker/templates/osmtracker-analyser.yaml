@@ -48,3 +48,7 @@ spec:
               key: dbuser_rw_pass
         resources:
 {{ toYaml .Values.analyser.resources | indent 10 }}
+        volumeMounts:
+{{ include "osmtracker.configmount" . | indent 8 }}
+      volumes:
+{{ include "osmtracker.configvolume" . | indent 6 }}
