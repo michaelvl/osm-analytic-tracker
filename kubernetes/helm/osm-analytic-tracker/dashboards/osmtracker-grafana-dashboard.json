@@ -1706,7 +1706,7 @@
           "targets": [
             {
               "datasource": "",
-              "expr": "rate(openstreetmap_api_events[1h])*60",
+              "expr": "rate(openstreetmap_api_events[1h])**3600",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -1802,7 +1802,7 @@
           "targets": [
             {
               "datasource": "",
-              "expr": "rate(openstreetmap_api_bytes[1h])",
+              "expr": "rate(openstreetmap_api_bytes[1h])*3600",
               "format": "time_series",
               "instant": false,
               "interval": "",
