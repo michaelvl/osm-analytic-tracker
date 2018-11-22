@@ -56,7 +56,7 @@ data:
       history: 5 minutes ago
       horizon_hours: 24
       horizon_type: sliding
-      osm_api_url: https://api.openstreetmap.org
+      osm_api_url: http://{{ .Values.openstreetmap.externalApiService.name }}
       post_labels:
       - label: address-node-change
         regex:

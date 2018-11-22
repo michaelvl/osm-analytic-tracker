@@ -1,7 +1,5 @@
 # Default values for osm-analytic-tracker.
 
-# osm-analytic-tracker pods
-
 difftracker:
   replicas: 1
   resources:
@@ -127,3 +125,9 @@ elasticsearch_gw:
     requests:
       cpu: 50m
       memory: 512Mi
+
+openstreetmap:
+  externalApiService:
+    enabled: true
+    name: 'openstreetmap-api'
+    extname: 'api.openstreetmap.org'

@@ -72,12 +72,14 @@ The following table lists the configurable parameters of OpenStreetMap Analytic 
 | `db.image.image` | Database image name | michaelvl/mongo |
 | `db.image.tag` | Database image tag | 3.4.1-1 |
 | `db.image.pullPolicy` | Database image pull policy | IfNotPresent |
-| `elasticsearch_gw.enabled | Elasticsearch gateway enable | false |
-| `elasticsearch_gw.elasticsearch_url | URL for Elasticssearch service | 'http://elastic:changeme@osmtracker-elasticsearch:9200' |
-| `elasticsearch_gw.elasticsearch_index | Elasticsearch index to use for pushing changeset info | 'osmtracker' |
-| `elasticsearch_gw.resources.limits | Elasticsearch gateway resource limits | { cpu: 500m, memory: 1Gi } |
-| `elasticsearch_gw.resources.requests | Elasticsearch gateway resource requests | { cpu: 50m, memory: 512Mi } |
-
+| `elasticsearch_gw.enabled` | Elasticsearch gateway enable | false |
+| `elasticsearch_gw.elasticsearch_url` | URL for Elasticssearch service | 'http://elastic:changeme@osmtracker-elasticsearch:9200' |
+| `elasticsearch_gw.elasticsearch_index` | Elasticsearch index to use for pushing changeset info | 'osmtracker' |
+| `elasticsearch_gw.resources.limits` | Elasticsearch gateway resource limits | { cpu: 500m, memory: 1Gi } |
+| `elasticsearch_gw.resources.requests` | Elasticsearch gateway resource requests | { cpu: 50m, memory: 512Mi } |
+| `openstreetmap.externalApiService.enabled` | Enable service for external OSM API | true |
+| `openstreetmap.externalApiService.name` | Name of service referencing external OSM API | 'openstreetmap-api' |
+| `openstreetmap.externalApiService.url` | URL for external OSM API | 'https://api.openstreetmap.org' | 
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm
 install`. For example,
