@@ -311,7 +311,7 @@ osmapi_event_rates = Graph(
     dataSource=datasource,
     targets=[
         Target(
-            expr='rate(openstreetmap_api_events[1h])**3600',
+            expr='rate(openstreetmap_api_events[24h])*3600',
             legendFormat='{{operation}}',
             refId='A',
         ),
@@ -325,7 +325,7 @@ osmapi_bytes_rates = Graph(
     dataSource=datasource,
     targets=[
         Target(
-            expr='rate(openstreetmap_api_bytes[1h])*3600',
+            expr='rate(openstreetmap_api_bytes[24h])*3600',
             legendFormat='{{operation}} - {{direction}}',
             refId='A',
         ),
