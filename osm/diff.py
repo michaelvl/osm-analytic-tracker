@@ -6,6 +6,7 @@ from StringIO import StringIO
 import xml.etree.ElementTree as etree
 import logging
 import eventlet
+import poly
 
 eventlet.monkey_patch()
 
@@ -142,8 +143,8 @@ class Diff(Base):
         return self.repl_url+'/'+self.type+'/'+self._path_frag()+'.osc.gz'
 
     def get_csets(self, timeout=50):
-        '''Fetch and parse diff to fetch changeset IDs only. More memory efficient than get()'''
-        csets = []
+        '''Fetch and parse diff to fetch changeset. More memory efficient than get()'''
+        csets = {}
         url = self._data_url()
         logger.debug('Fetching url {}'.format(url))
         with eventlet.Timeout(timeout):
@@ -153,11 +154,28 @@ class Diff(Base):
             resp = req.content
             dfile = gzip.GzipFile(fileobj=StringIO(resp))
         logging.debug('Parsing diff {}, url {} (logger {})'.format(self.sequenceno, url, logger))
+        now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
         for event, element in etree.iterparse(dfile):
+            if element.tag == 'node':
+                lat = float(element.attrib['lat'])
+                lon = float(element.attrib['lon'])
+            else:
+                lat, lon = None, None
             if element.tag in ['node', 'way', 'relation']:
                 cid = int(element.attrib['changeset'])
-                if cid not in csets:
-                    csets.append(cid)
+                if cid in csets:
+                    if lat and lon:
+                        csets[cid]['points_bbox'].add_point(lon, lat)
+                else:
+                    if lat and lon:
+                        bbox = poly.BBox(lon, lat)
+                    else:
+                        bbox = poly.BBox()
+                    csets[cid] = {'cid': cid,
+                                  'source': {'type': self.type,
+                                             'sequenceno': self.sequenceno,
+                                             'observed': now},
+                                  'points_bbox': bbox}
         return csets
 
     def get_data(self):

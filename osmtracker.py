@@ -40,8 +40,7 @@ AMQP_QUEUES = [AMQP_FILTER_QUEUE, AMQP_ANALYSIS_QUEUE, AMQP_REFRESH_QUEUE]
 EVENT_LABELS = ['event', 'action']
 
 def fetch_and_process_diff(config, dapi, seqno, ctype):
-    chgsets = dapi.get_diff_csets(seqno, ctype)
-    return chgsets
+    return dapi.get_diff_csets(seqno, ctype)
 
 # FIXME: Refactor to use db.find with timestamps
 def cset_refresh_meta(config, db, cset, no_delay=False):
@@ -214,20 +213,19 @@ def diff_fetch(args, config, db):
             ptr = db.pointer['seqno']
             head = dapi.get_state('minute', seqno=None)
             start = None
-            now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
             if ptr <= head.sequenceno:
                 logger.debug('Fetching diff, ptr={}, head={}'.format(ptr, head))
                 start = time.time()
                 chgsets = fetch_and_process_diff(config, dapi, ptr, 'minute')
                 logger.debug('{} changesets: {}'.format(len(chgsets), chgsets))
-                for cid in chgsets:
-                    source = {'type': 'minute',
-                              'sequenceno': ptr,
-                              'observed': now}
-                    source['observed'] = source['observed'].isoformat()
-                    msg = {'cid': cid, 'source': source}
-                    logger.debug('Sending to messagebus: {}'.format(msg))
-                    r = amqp.send(msg, schema_name='cset', schema_version=1,
+                for cid,cset in chgsets.iteritems():
+                    msg = cset
+                    msg['source']['observed'] = cset['source']['observed'].isoformat()
+                    msg['points_bbox'] = cset['points_bbox'].to_dict()
+                    if not msg['points_bbox']:
+                        del msg['points_bbox']
+                    logger.debug('Sending to messagebus: {}'.format(cset))
+                    r = amqp.send(cset, schema_name='cset', schema_version=1,
                               routing_key='new_cset.osmtracker')
                     logger.debug('Send result: {}'.format(r))
                     m_events.labels('filter', 'in').inc()
