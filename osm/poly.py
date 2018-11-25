@@ -56,14 +56,22 @@ class Poly(object):
             y1 = float(chg['min_lat'])
             x2 = float(chg['max_lon'])
             y2 = float(chg['max_lat'])
-            box = geometry.box(x1, y1, x2, y2)
-            if self.poly.intersects(box):
-                return True
-            small = 0.000001
-            if abs(x1-x2)<small or abs(y1-y2)<small:
-                # Point-sized box does not intersect with anything
-                return self.poly.intersects(geometry.Point(x1, y1))
-        return None
+            return self.contains(x1 ,y1, x2, y2)
+        return False
+
+    def contains_bbox(self, bbox):
+        return self.contains(bbox['lon_min'], bbox['lat_min'], bbox['lon_max'], bbox['lat_max'])
+
+    def contains(self, x1, y1, x2, y2):
+        '''Test against bbox from points (x1,y1) and (x2,y2)'''
+        box = geometry.box(x1, y1, x2, y2)
+        if self.poly.intersects(box):
+            return True
+        small = 0.000001
+        if abs(x1-x2)<small or abs(y1-y2)<small:
+            # Point-sized box does not intersect with anything
+            return self.poly.intersects(geometry.Point(x1, y1))
+        return False
 
     def bbox(self):
         return self.poly.bounds

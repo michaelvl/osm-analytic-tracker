@@ -898,9 +898,9 @@ class Changeset(object):
                 return True
         return False
 
-    def build_labels(self, label_rules):
+    def build_labels(self, label_rules, points_bbox=None):
         '''Build list of labels based on regex and area check.  Note that both regex and
-           area check can be defined with and AND rule between then, i.e. both
+           area check can be defined with an AND rule between then, i.e. both
            must match if both are defined.
         '''
         labels = []
@@ -909,13 +909,18 @@ class Changeset(object):
                 logger.debug('Label already set: {}'.format(dd['label']))
                 continue # duplicate label
             match = True
+            if not ('regex' in dd or 'area_file' in dd):
+                continue
             if 'regex' in dd:
+                self.downloadMeta()
                 logger.debug('regex test, rule={}'.format(dd))
                 if self.regex_test(dd['regex']):
                     logger.debug('Regex test OK')
                 else:
                     match = False
             if 'area_file' in dd:
+                if 'area_check_type' in dd and dd['area_check_type'] in ['cset-center', 'cset-bbox']:
+                    self.downloadMeta()
                 logger.debug('area test, rule={}'.format(dd))
                 area = poly.Poly()
                 if 'OSMTRACKER_REGION' in os.environ:
@@ -926,9 +931,11 @@ class Changeset(object):
                 logger.debug("Loaded area polygon from '{}' with {} points".format(area_file, len(area)))
                 if ('area_check_type' not in dd or dd['area_check_type']=='cset-bbox') and area.contains_chgset(self.meta):
                     logger.debug('Area test OK, changeset bbox')
-                elif set(['min_lon', 'min_lat', 'max_lon', 'max_lat']).issubset(self.meta.keys()) and ('area_check_type' in dd and dd['area_check_type']=='cset-center') and area.contains((float(self.meta['min_lon'])+float(self.meta['max_lon']))/2,
+                elif ('area_check_type' in dd and dd['area_check_type']=='cset-center') and set(['min_lon', 'min_lat', 'max_lon', 'max_lat']).issubset(self.meta.keys()) and area.contains((float(self.meta['min_lon'])+float(self.meta['max_lon']))/2,
                                                                             (float(self.meta['min_lat'])+float(self.meta['max_lat']))/2):
                     logger.debug('Area test OK, changeset center')
+                elif ('area_check_type' in dd and dd['area_check_type']=='points-bbox') and points_bbox and area.contains_bbox(points_bbox):
+                    logger.debug('Area test OK, points bbox')
                 else:
                     logger.debug('Area test failed: {}'.format(dd))
                     match = False

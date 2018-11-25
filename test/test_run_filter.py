@@ -99,6 +99,28 @@ class TestCsetFilter(BaseTest):
     @patch('tempfilewriter.TempFileWriter')
     @patch('osm.poly.Poly')
     @patch('osm.changeset.OsmApi')
+    def test_cset_filter1_w_points_bbox_cset10(self, OsmApi, Poly, FileWriter, IsFile, Listdir, Remove, MsgBus):
+        IsFile.return_value = True
+        Listdir.return_value = self.listdir
+        OsmApi.return_value = self.osmapi
+        Poly.return_value.contains_chgset.return_value = True
+        FileWriter.side_effect = self.fstart
+        self.cfg.cfg['tracker']['prefilter_labels'] = [["inside-area"]]
+        self.cfg.cfg['tracker']['pre_labels'] = [{"area_file": "region.poly", "area_check_type": "points-bbox", "label": "inside-area"}]
+        new_cset = {'cid': 10,
+                    'points_bbox': {'lat_min': 54.0, 'lat_max': 54.1, 'lon_min': 10.0, 'lon_max': 10.1},
+                    'source': {'type': 'minute', 'sequenceno': 20000, 'observed': '2018-01-07T19:37:00'}}
+        osmtracker.cset_filter(self.cfg, self.db, new_cset)
+        #print 'DB:{}'.format(pprint.pformat(self.db.csets))
+        self.assertTrue(len(self.db.csets)==1)
+
+    @patch('osmtracker.messagebus.Amqp')
+    @patch('osmtracker.BackendGeoJson.remove')
+    @patch('osmtracker.BackendGeoJson.listdir')
+    @patch('osmtracker.BackendGeoJson.isfile')
+    @patch('tempfilewriter.TempFileWriter')
+    @patch('osm.poly.Poly')
+    @patch('osm.changeset.OsmApi')
     def test_cset_filter1_and_backend_cset11(self, OsmApi, Poly, FileWriter, IsFile, Listdir, Remove, MsgBus):
         IsFile.return_value = True
         Listdir.return_value = self.listdir

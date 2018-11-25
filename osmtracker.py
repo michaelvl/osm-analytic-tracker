@@ -224,8 +224,8 @@ def diff_fetch(args, config, db):
                     msg['points_bbox'] = cset['points_bbox'].to_dict()
                     if not msg['points_bbox']:
                         del msg['points_bbox']
-                    logger.debug('Sending to messagebus: {}'.format(cset))
-                    r = amqp.send(cset, schema_name='cset', schema_version=1,
+                    logger.debug('Sending to messagebus: {}'.format(msg))
+                    r = amqp.send(msg, schema_name='cset', schema_version=1,
                               routing_key='new_cset.osmtracker')
                     logger.debug('Send result: {}'.format(r))
                     m_events.labels('filter', 'in').inc()
@@ -278,12 +278,9 @@ def cset_filter(config, db, new_cset):
         try:
             with eventlet.Timeout(10):
                 start = time.time()
-                logger.debug('Downloading cset {}'.format(cid))
+                logger.debug('Begin filtering cset {}'.format(cid))
                 c = osm.changeset.Changeset(cid, api=config.get('osm_api_url','tracker'))
-                logger.debug('Downloading meta for cset {}'.format(cid))
-                c.downloadMeta()
-                logger.debug('Downloading took {:.2f}s'.format(time.time()-start))
-                clabels = c.build_labels(labelrules)
+                clabels = c.build_labels(labelrules, points_bbox=new_cset.get('points_bbox', None))
                 logger.debug('Added labels to cid {}: {}'.format(cid, clabels))
         except (osmapi.ApiError, eventlet.timeout.Timeout) as e:
             logger.error('Failed reading changeset {}: {}'.format(cid, e))
@@ -308,6 +305,13 @@ def cset_filter(config, db, new_cset):
                        'observed': dateutil.parser.parse(new_cset['source']['observed'])}
             cset = db.chgset_append(cid, source)
             cset['labels'] = clabels
+            try:
+                with eventlet.Timeout(10):
+                    c.downloadMeta()
+            except (osmapi.ApiError, eventlet.timeout.Timeout) as e:
+                logger.error('Failed reading changeset {}: {}'.format(cid, e))
+                #db.chgset_processed(cset, state=db.STATE_QUARANTINED, failed=True)
+                return False
             db.chgset_set_meta(cid, c.meta)
             db.chgset_processed(cset, state=db.STATE_BOUNDS_CHECKED)
             return True
