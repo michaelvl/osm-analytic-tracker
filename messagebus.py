@@ -92,11 +92,11 @@ class Amqp(kombu.mixins.ConsumerProducerMixin):
                 reader = avro.io.DatumReader(schema)
                 msg = reader.read(decoder)
                 self.on_message(msg, message)
-            except:
-                logging.error('Unable to validate message schema. Message: {}, schema ({}/{}): {}, delivery info: {}'.format(msg, msg['schema'], msg['version'], schema, message.delivery_info))
+            except avro.schema.AvroException as e:
+                logging.error('Unable to validate message schema. Message: {}, schema ({}/{}): {}, delivery info: {}, exception: {}'.format(msg, msg['schema'], msg['version'], schema, message.delivery_info, e))
                 message.ack()
-        except:
-            logging.error('Unable to validate envelope schema. Message: {}, type {}, delivery info: {}'.format(msg, type(msg), message.delivery_info))
+        except jsonschema.ValidationError as e:
+            logging.error('Unable to validate envelope schema. Message: {}, type {}, delivery info: {}, exception: {}'.format(msg, type(msg), message.delivery_info, e))
             message.ack()
 
     def on_message(self, payload, message):
