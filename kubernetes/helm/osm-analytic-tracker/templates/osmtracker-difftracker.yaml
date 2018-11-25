@@ -29,9 +29,6 @@ spec:
         command: ["python", "/osmtracker/osm-analytic-tracker/osmtracker.py"]
         args: [
 {{- template "osmtracker.common_args" . }}
-{{- if .Values.osmtracker.metrics.enabled }}
-               "--metrics",
-{{- end }}
                "diff-fetch", "--track"]
         imagePullPolicy: {{ .Values.osmtracker.image.pullPolicy }}
         securityContext:
