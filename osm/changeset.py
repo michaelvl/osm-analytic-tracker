@@ -192,7 +192,6 @@ class Changeset(object):
         return (list(d2), list(d1))
 
     def downloadMeta(self, set_tz=True):
-        print '** Download META'
         if not self.meta:
             if self.apidebug:
                 logger.debug('osmapi.ChangesetGet({}, include_discussion=True)'.format(self.id))

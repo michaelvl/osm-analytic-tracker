@@ -303,10 +303,8 @@ class State(Base):
                 raise OsmDiffException('Error fetching URL {}: {}:{}'.format(url,req.status_code,req.text))
             resp = req.content
         for line in resp.splitlines():
-            logger.debug('line {}'.format(line))
             if len(line.split(self.state_txt_kv_split)) >= 2:
                 k, v = line.split(self.state_txt_kv_split, 1)
-                logger.debug('k {}, v {}'.format(k,v))
                 if k == 'sequenceNumber' or k == 'sequence':
                     seq = int(v)
                     state[k] = seq
