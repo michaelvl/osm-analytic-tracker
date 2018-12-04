@@ -28,6 +28,7 @@ class BaseTest(unittest.TestCase, stubs.FileWriter_Mixin):
         self.filewritersetup()
         self.listdir = ['today.html', 'cset-10.json', 'cset-10.bounds', 'cset-3.json', 'cset-3.bounds']
         self.args = Args()
+        self.bbox = {'min_lon':0.0, 'min_lat':0.0, 'max_lon':90.0, 'max_lat': 90.0}
         
 class TestCsetFilter(BaseTest):
 
@@ -42,9 +43,9 @@ class TestCsetFilter(BaseTest):
         IsFile.return_value = True
         Listdir.return_value = self.listdir
         OsmApi.return_value = self.osmapi
-        Poly.return_value.contains_chgset.return_value = True
+        Poly.return_value.contains_bbox.return_value = True
         FileWriter.side_effect = self.fstart
-        new_cset = {'cid': 10, 'source': {'type': 'minute', 'sequenceno': 20000, 'observed': '2018-01-07T19:37:00'}}
+        new_cset = {'cid': 10, 'bbox': self.bbox, 'source': {'type': 'minute', 'sequenceno': 20000, 'observed': '2018-01-07T19:37:00'}}
         osmtracker.cset_filter(self.cfg, self.db, new_cset)
         self.assertEqual(self.db.csets[0]['state'], self.db.STATE_BOUNDS_CHECKED)
         osmtracker.csets_analyse_initial(self.cfg, self.db, new_cset)
@@ -103,12 +104,12 @@ class TestCsetFilter(BaseTest):
         IsFile.return_value = True
         Listdir.return_value = self.listdir
         OsmApi.return_value = self.osmapi
-        Poly.return_value.contains_chgset.return_value = True
+        Poly.return_value.contains_bbox.return_value = True
         FileWriter.side_effect = self.fstart
         self.cfg.cfg['tracker']['prefilter_labels'] = [["inside-area"]]
-        self.cfg.cfg['tracker']['pre_labels'] = [{"area_file": "region.poly", "area_check_type": "points-bbox", "label": "inside-area"}]
+        self.cfg.cfg['tracker']['pre_labels'] = [{"area_file": "region.poly", "area_check_type": "cset-bbox", "label": "inside-area"}]
         new_cset = {'cid': 10,
-                    'points_bbox': {'lat_min': 54.0, 'lat_max': 54.1, 'lon_min': 10.0, 'lon_max': 10.1},
+                    'bbox': {'min_lat': 54.0, 'max_lat': 54.1, 'min_lon': 10.0, 'max_lon': 10.1},
                     'source': {'type': 'minute', 'sequenceno': 20000, 'observed': '2018-01-07T19:37:00'}}
         osmtracker.cset_filter(self.cfg, self.db, new_cset)
         #print 'DB:{}'.format(pprint.pformat(self.db.csets))
@@ -125,9 +126,9 @@ class TestCsetFilter(BaseTest):
         IsFile.return_value = True
         Listdir.return_value = self.listdir
         OsmApi.return_value = self.osmapi
-        Poly.return_value.contains_chgset.return_value = True
+        Poly.return_value.contains_bbox.return_value = True
         FileWriter.side_effect = self.fstart
-        new_cset = {'cid': 11, 'source': {'type': 'minute', 'sequenceno': 20000, 'observed': '2018-01-07T19:37:00'}}
+        new_cset = {'cid': 11, 'bbox': self.bbox, 'source': {'type': 'minute', 'sequenceno': 20000, 'observed': '2018-01-07T19:37:00'}}
         osmtracker.cset_filter(self.cfg, self.db, new_cset)
         self.assertEqual(self.db.csets[0]['state'], self.db.STATE_BOUNDS_CHECKED)
         osmtracker.csets_analyse_initial(self.cfg, self.db, new_cset)
@@ -166,7 +167,7 @@ class TestCsetFilter(BaseTest):
         IsFile.return_value = True
         Listdir.return_value = self.listdir
         OsmApi.return_value = self.osmapi
-        Poly.return_value.contains_chgset.return_value = True
+        Poly.return_value.contains_bbox.return_value = True
         Poly.return_value.center.return_value = (11,56)
         FileWriter.side_effect = self.fstart
         new_cset = {'cid': 10, 'source': {'type': 'minute', 'sequenceno': 20000, 'observed': '2018-01-07T19:37:00'}}
@@ -198,7 +199,7 @@ class TestCsetFilter(BaseTest):
         IsFile.return_value = True
         Listdir.return_value = self.listdir
         OsmApi.return_value = self.osmapi
-        Poly.return_value.contains_chgset.return_value = True
+        Poly.return_value.contains_bbox.return_value = True
         Poly.return_value.center.return_value = (11,56)
         FileWriter.side_effect = self.fstart
         Os.environ = {'OSMTRACKER_REGION': 'region-from-env.poly',
@@ -227,7 +228,7 @@ class TestCsetFilter(BaseTest):
            dropped since it does not have both from filter list
         '''
         OsmApi.return_value = self.osmapi
-        Poly.return_value.contains_chgset.return_value = False
+        Poly.return_value.contains_bbox.return_value = False
         osmtracker.cset_filter(self.cfg, self.db, {'cid': 10, 'source': {'sequenceno': 20000}})
         self.assertTrue(len(self.db.csets)==0) # Filtered out since list is logical AND
 
@@ -238,7 +239,7 @@ class TestCsetFilter(BaseTest):
            kept.
         '''
         OsmApi.return_value = self.osmapi
-        Poly.return_value.contains_chgset.return_value = False
+        Poly.return_value.contains_bbox.return_value = False
         self.cfg.cfg['tracker']['prefilter_labels'] = [["adjustments"]]
         new_cset = {'cid': 10, 'source': {'type': 'minute', 'sequenceno': 20000, 'observed': '2018-01-07T19:37:00'}}
         osmtracker.cset_filter(self.cfg, self.db, new_cset)
@@ -251,7 +252,7 @@ class TestCsetFilter(BaseTest):
            kept.
         '''
         OsmApi.return_value = self.osmapi
-        Poly.return_value.contains_chgset.return_value = False
+        Poly.return_value.contains_bbox.return_value = False
         self.cfg.cfg['tracker']['prefilter_labels'] = [["adjustmentsxx"], ['mapping-event']]
         self.cfg.cfg['tracker']['pre_labels'].append({"regex": [{".meta.tag.comment": ".*#\\w+"}], "label": "mapping-event"})
         new_cset = {'cid': 10, 'source': {'type': 'minute', 'sequenceno': 20000, 'observed': '2018-01-07T19:37:00'}}
@@ -271,14 +272,14 @@ class TestCsetFilter(BaseTest):
         '''Cset has single node deletion with Danish address node specifics.
         '''
         OsmApi.return_value = self.osmapi
-        Poly.return_value.contains_chgset.return_value = True
+        Poly.return_value.contains_bbox.return_value = True
         FileWriter.side_effect = self.fstart
         Os.environ = {'OSMTRACKER_REGION': 'region-from-env.poly',
                       'OSMTRACKER_MAP_SCALE': '4'}
         OsCset.environ = {'OSMTRACKER_REGION': 'region-from-env2.poly'}
         self.cfg.cfg['tracker']['prefilter_labels'] = [["inside-area"]]
         self.cfg.cfg['tracker']['post_labels'] = [{"regex": [{".changes.tag.osak:identifier": ""}], "label": "address-node-change"}]
-        new_cset = {'cid': 12, 'source': {'type': 'minute', 'sequenceno': 20000, 'observed': '2018-01-07T19:37:00'}}
+        new_cset = {'cid': 12, 'bbox': self.bbox, 'source': {'type': 'minute', 'sequenceno': 20000, 'observed': '2018-01-07T19:37:00'}}
         osmtracker.cset_filter(self.cfg, self.db, new_cset)
         self.assertTrue(len(self.db.csets)==1)
         osmtracker.csets_analyse_initial(self.cfg, self.db, new_cset)

@@ -63,7 +63,7 @@ data:
         - .changes.tag.osak:identifier: ''
       pre_labels:
       - area_file: /osm-regions/denmark.poly
-        area_check_type: points-bbox
+        area_check_type: cset-bbox
         label: inside-area
       - __unused_example_area_file: /osm-regions/denmark.poly
         area_check_type: cset-center

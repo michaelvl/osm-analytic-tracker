@@ -40,7 +40,10 @@ AMQP_QUEUES = [AMQP_FILTER_QUEUE, AMQP_ANALYSIS_QUEUE, AMQP_REFRESH_QUEUE]
 EVENT_LABELS = ['event', 'action']
 
 def fetch_and_process_diff(config, dapi, seqno, ctype):
-    return dapi.get_diff_csets(seqno, ctype)
+    return dapi.get_diff(seqno, ctype)
+
+def fetch_and_process_cset_diff(config, dapi, seqno, ctype):
+    return dapi.get_cset_diff(seqno)
 
 # FIXME: Refactor to use db.find with timestamps
 def cset_refresh_meta(config, db, cset, no_delay=False):
@@ -161,12 +164,28 @@ def cset_reprocess(config, db, cset):
     cset_process_local1(config, db, cset, info)
     return info
 
+def diff_fetch_single(args, config, dapi, db, amqp, ptr):
+    start = time.time()
+    chgsets = fetch_and_process_cset_diff(config, dapi, ptr, 'changesets')
+    logger.debug('Found {} changesets: {}'.format(len(chgsets), chgsets.keys()))
+    for cid,cset in chgsets.iteritems():
+        msg = cset              # 
+        msg['source']['observed'] = cset['source']['observed'].isoformat()
+        msg['bbox'] = cset['bbox'].to_dict()
+        if not msg['bbox']:
+            del msg['bbox']
+        logger.debug('Sending to messagebus: {}'.format(msg))
+        r = amqp.send(msg, schema_name='cset', schema_version=1,
+                  routing_key='new_cset.osmtracker')
+        logger.debug('Send result: {}'.format(r))
+    return chgsets
+
 def diff_fetch(args, config, db):
     logger.debug('Fetching minutely diff')
 
     if args and args.simulate:
         cid = args.simulate
-        source = {'type': 'minute',
+        source = {'type': 'changesets',
                   'sequenceno': 123456789,
                   'observed': datetime.datetime.utcnow().replace(tzinfo=pytz.utc)}
         db.chgset_append(cid, source)
@@ -199,11 +218,11 @@ def diff_fetch(args, config, db):
 
         if args.history:
             history = HumanTime.human2date(args.history)
-            head = dapi.get_state('minute')
-            pointer = dapi.get_seqno_le_timestamp('minute', history, head)
+            head = dapi.get_state('changesets')
+            pointer = dapi.get_seqno_le_timestamp('changesets', history, head)
             db.pointer = pointer
         elif args.initptr or not ptr:
-            head = dapi.get_state('minute', seqno=None)
+            head = dapi.get_state('changesets', seqno=None)
             head.sequenceno_advance(offset=-1)
             db.pointer = head
             logger.debug('Initialized pointer to:{}'.format(db.pointer))
@@ -211,29 +230,18 @@ def diff_fetch(args, config, db):
     while True:
         try:
             ptr = db.pointer['seqno']
-            head = dapi.get_state('minute', seqno=None)
+            head = dapi.get_state('changesets', seqno=None)
             start = None
             if ptr <= head.sequenceno:
                 logger.debug('Fetching diff, ptr={}, head={}'.format(ptr, head))
-                start = time.time()
-                chgsets = fetch_and_process_diff(config, dapi, ptr, 'minute')
-                logger.debug('{} changesets: {}'.format(len(chgsets), chgsets))
-                for cid,cset in chgsets.iteritems():
-                    msg = cset
-                    msg['source']['observed'] = cset['source']['observed'].isoformat()
-                    msg['points_bbox'] = cset['points_bbox'].to_dict()
-                    if not msg['points_bbox']:
-                        del msg['points_bbox']
-                    logger.debug('Sending to messagebus: {}'.format(msg))
-                    r = amqp.send(msg, schema_name='cset', schema_version=1,
-                              routing_key='new_cset.osmtracker')
-                    logger.debug('Send result: {}'.format(r))
-                    m_events.labels('filter', 'in').inc()
+                chgsets = diff_fetch_single(args, config, dapi, db, amqp, ptr)
+                m_events.labels('filter', 'in').inc(len(chgsets))
                 # Set timestamp from old seqno as new seqno might not yet exist
                 seqno = db.pointer['seqno']
-                nptr = dapi.get_state('minute', seqno=seqno)
+                nptr = dapi.get_state('changesets', seqno=seqno)
                 db.pointer_meta_update({'timestamp': nptr.timestamp()})
                 db.pointer_advance()
+
                 m_diff_ts.set(time.mktime(nptr.timestamp().timetuple())+nptr.timestamp().microsecond/1E6)
                 m_diff_proc_ts.set_to_current_time()
                 m_seqno.set(seqno)
@@ -280,7 +288,7 @@ def cset_filter(config, db, new_cset):
                 start = time.time()
                 logger.debug('Begin filtering cset {}'.format(cid))
                 c = osm.changeset.Changeset(cid, api=config.get('osm_api_url','tracker'))
-                clabels = c.build_labels(labelrules, points_bbox=new_cset.get('points_bbox', None))
+                clabels = c.build_labels(labelrules, bbox=new_cset.get('bbox', None))
                 logger.debug('Added labels to cid {}: {}'.format(cid, clabels))
         except (osmapi.ApiError, eventlet.timeout.Timeout) as e:
             logger.error('Failed reading changeset {}: {}'.format(cid, e))

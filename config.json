@@ -8,7 +8,7 @@
 	    {"__unused_example_area_file": "/osm-regions/denmark.poly", "area_check_type": "cset-center", "label": "center-inside-area"},
 	    {"__unused_example_regex": [{".meta.comment": "^Adjustments"}], "label": "adjustment"}
 	],
-	"prefilter_labels": [["inside-area"],
+	"prefilter_labels": [["inside-area"]],
 	"post_labels": [
 	    {"regex": [{".changes.tag.osak:identifier": ""}], "label": "address-node-change"}
 	],

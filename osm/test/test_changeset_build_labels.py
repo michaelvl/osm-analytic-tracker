@@ -16,16 +16,18 @@ class TestLabelFilter(unittest.TestCase):
         self.cset = changeset.Changeset(id=10)
         self.cset.meta = {}
         self.osmapi = stubs.testOsmApi()
+        self.bbox = 'bboxstub'
 
     @patch('poly.Poly')
     def test_1(self, Poly):
         self.cset.meta = {'user': 'useruser', 'tag': {'comment': 'Adjustments at somewhere'}}
         labels = [
-	    {"area_file": "region.poly", "label": "inside-area"},
+	    {'area_check_type': 'cset-bbox', 'area_file': 'region.poly', 'label': 'inside-area'},
 	    {"regex": [{".meta.tag.comment": "^Adjustments"}], "label": "adjustment"}
 	]
         Poly.return_value.contains_chgset.return_value = True
-        labels = self.cset.build_labels(labels)
+        Poly.return_value.contains_bbox.return_value = True
+        labels = self.cset.build_labels(labels, self.bbox)
         self.assertTrue('adjustment' in labels)
         self.assertTrue('inside-area' in labels)
 
@@ -119,7 +121,7 @@ class TestLabelFilter(unittest.TestCase):
     @patch('poly.Poly')
     def test_1_area_fail(self, Poly):
         labels = [
-	    {"area_file": "region.poly", "label": "inside-area"},
+	    {'area_check_type': 'cset-bbox', "area_file": "region.poly", "label": "inside-area"},
 	]
         Poly.return_value.contains_chgset.return_value = False
         labels = self.cset.build_labels(labels)

@@ -75,9 +75,9 @@ class testOsmApi(object):
 class testUrlToBeRead(object):
     def __init__(self, parent, url):
         self.parent = parent
-        self.url = url
+        self.url = url.replace('http://', 'urls/')
         self.status_code = 200
-        with open(self.parent.datapath+'/urls/{}'.format(self.url)) as f:
+        with open(self.parent.datapath+'/{}'.format(self.url)) as f:
             self.content = f.read()
 
 class testRequests(object):

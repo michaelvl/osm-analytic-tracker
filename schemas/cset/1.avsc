@@ -11,7 +11,7 @@
                       }
              ]
     },
-    {"name": "points_bbox",
+    {"name": "bbox",
      "type": ["null", {"type": "record", "name": "pointsBBoxRecord",
                        "fields": [{"name": "lat_min", "type": "double"},
                                   {"name": "lat_max", "type": "double"},
