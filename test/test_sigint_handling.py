@@ -41,11 +41,13 @@ class TestSigInt(BaseTest):
         newptr = self.db.pointer['seqno']
         self.assertEqual(oldptr, newptr)
 
+    @patch('osm.poly.Poly')
     @patch('osm.diff.requests.get')
     @patch('osm.changeset.OsmApi')
-    def test_cset_filter(self, OsmApi, UrlGet):
+    def test_cset_filter(self, OsmApi, UrlGet, Poly):
         UrlGet.side_effect = self.requests.get
         OsmApi.return_value = self.osmapi
+        Poly.return_value.contains_bbox.return_value = True
         self.db.test_add_cid(10, state=self.db.STATE_NEW, append=False)
 
         self.osmapi.sigint_on = ['ChangesetGet']
@@ -64,11 +66,13 @@ class TestSigInt(BaseTest):
         self.assertRaises(KeyboardInterrupt, osmtracker.csets_analyse_initial, self.cfg, self.db, {'cid': 10, 'source': {'sequenceno': 20000}})
         self.assertEqual(self.db.csets[0]['state'], self.db.STATE_BOUNDS_CHECKED)
 
+    @patch('osm.poly.Poly')
     @patch('osm.diff.requests.get')
     @patch('osm.changeset.OsmApi')
-    def test_worker(self, OsmApi, UrlGet):
+    def test_worker(self, OsmApi, UrlGet, Poly):
         UrlGet.side_effect = self.requests.get
         OsmApi.return_value = self.osmapi
+        Poly.return_value.contains_bbox.return_value = True
         self.db.test_add_cid(10, append=False)
 
         self.db.sigint_on = ['chgset_get_meta']
