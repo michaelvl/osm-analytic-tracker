@@ -37,6 +37,8 @@ class Backend(Backend.Backend):
                 self.cfg['map_center'] = '{},{}'.format(c[1], c[0])
         if 'OSMTRACKER_MAP_SCALE' in os.environ:
             self.cfg['map_scale'] = os.environ['OSMTRACKER_MAP_SCALE']
+        if 'dev_notes'in self.cfg and self.cfg['dev_notes'] != None and len(self.cfg['dev_notes'])>0:
+            self.cfg['dev_notes'] = self.cfg['dev_notes']
 
         self.labels = subcfg.get('labels', None)
 

@@ -17,6 +17,7 @@ data:
       map_scale: '6'
       path: ''
       template: index.html
+      dev_notes: {{ .Values.frontend.dev_notes }}
     - type: BackendHtml
       filename: today.html
       page_title: Recent Changesets

@@ -51,6 +51,7 @@ The following table lists the configurable parameters of OpenStreetMap Analytic 
 | `frontend.service.type` | Frontend service type | NodePort |
 | `frontend.service.externalPort` | If frontend service type is NodePort, this port is used | 30000 |
 | `frontend.service.internalPort` | Internal port number. Points to internal web server | 80 |
+| `frontend.dev_notes` | Notes to display for e.g. development versions | '' |
 | `apiserver.enabled` | API server enable. | false |
 | `apiserver.replicas` | Number of API server instances. Two recommended for HA during upgrade. | 1 |
 | `apiserver.service.name` | Name of API server Kubernetes service | osmtracker-apiserver |

@@ -47,6 +47,7 @@ frontend:
     type: NodePort
     externalPort: 30000
     internalPort: 80
+  dev_notes: ""
 
 # shared between multiple osm-analytic-tracker pods
 
