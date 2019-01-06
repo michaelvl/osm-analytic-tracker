@@ -2,6 +2,7 @@
 
 import os, sys, time
 from osmapi_prom import OsmApi
+import prometheus_client
 import diff
 import pprint
 import geojson as gj
@@ -11,16 +12,27 @@ import logging
 import datetime, pytz
 import requests
 import re
+import json
 
 logger = logging.getLogger(__name__)
+
+m_alt_source_downloads = prometheus_client.Counter('openstreetmap_api_alt_source_downloads',
+                                                   'OpenStreetMap API Alternative Source Downloads')
+m_alt_source_download_bytes = prometheus_client.Counter('openstreetmap_api_alt_source_download_bytes',
+                                                        'OpenStreetMap API Alternative Source Downloaded Bytes')
 
 class Timeout(Exception):
     pass
 
 class Changeset(object):
-    def __init__(self, id, api='https://api.openstreetmap.org'):
+    def __init__(self, id, api='https://api.openstreetmap.org', alt_source=None):
         self.id = id
-        logger.debug('Using api={}'.format(api))
+        self.alt_source = alt_source
+        if alt_source:
+            logger.debug('Using alternative source={}'.format(alt_source))
+            self.alt_source_data = None
+        else:
+            logger.debug('Using api={}'.format(api))
         if api:
             self.osmapi = OsmApi(api=api)
         else:
@@ -191,23 +203,144 @@ class Changeset(object):
             return None
         return (list(d2), list(d1))
 
+    def downloadFromAltSource(self):
+        if self.alt_source_data:
+            return
+        url = self.alt_source['url'].format(cid=self.id)
+        logger.debug('Alt source URL {}'.format(url))
+        for retries in range(120, -1, -1): # Generally, governed by setting 'cset_processing_time_max_s'
+            r = requests.get(url)
+            if r.status_code==403 and retries!=0:
+                logger.warn('Cset {} not available - retrying in 60s'.format(self.id))
+                print('Cset {} not available - retrying in 60s'.format(self.id))
+                time.sleep(60)
+                continue
+            if r.status_code!=200:
+                raise Exception('Alt source error:{}:{}:{}'.format(r.status_code,r.text,url))
+            self.alt_source_data = json.loads(r.content)
+            m_alt_source_downloads.inc()
+            m_alt_source_download_bytes.inc(len(r.content))
+            return
+
+    def parseAltSource(self):
+        logger.debug('Alt source data {}'.format(pprint.pformat(self.alt_source_data)))
+        if self.alt_source['schema'] == 1:
+            # https://www.openstreetmap.org/user/geohacker/diary/40846
+            m = self.alt_source_data['metadata']
+            self.meta = {}
+            for k in m.keys():
+                self.meta[k] = m[k]
+            self.meta['tag'] = {}
+            for tg in self.alt_source_data['metadata']['tag']:
+                self.meta['tag'][tg['k']] = tg['v']
+
+            self.changes = []
+            nodes_found = {}
+            def to_elem(elem, default_visible):
+                '''Convert element from schema format to OSM format'''
+                to_cp = ['action', 'type']
+                to_data = ['changeset', 'id', 'lat', 'lon', 'tags', 'timestamp', 'uid', 'user', 'version', 'visible', 'nodes', 'members']
+                to_data_rename = {'tags': 'tag', 'nodes': 'nd', 'members': 'member'}
+                to_int = ['id', 'uid', 'version']
+                to_float = ['lat', 'lon']
+                to_bool = ['visible']
+                to_timestamp = ['timestamp']
+                must_have = {'node': ['id', 'version', 'lat', 'lon'], # FIXME deleted nodes have no lat/lon
+                             'way': ['id', 'version', 'nodes'],
+                             'relation': ['id', 'version', 'members']}
+                ee = {'data': {}}
+                for k in elem.keys():
+                    if k in to_cp:
+                        ee[k] = elem[k]
+                    if k in to_data:
+                        val = elem[k]
+                        if k in to_data_rename:
+                            kk = to_data_rename[k]
+                        else:
+                            kk = k
+                        if k=='nodes':
+                            ee['data'][kk] = []
+                            for nn in val:
+                                nid = int(nn['ref'])
+                                ee['data'][kk].append(nid)
+                                nodes_found[nid] = nn
+                        elif k in to_timestamp:
+                            ee['data'][kk] = diff.OsmDiffApi.timetxt2datetime(val)
+                        elif k in to_int:
+                            ee['data'][kk] = int(val)
+                        elif k in to_float:
+                            ee['data'][kk] = float(val)
+                        elif k in to_bool:
+                            if val=='false':
+                                ee['data'][kk] = False
+                            else:
+                                ee['data'][kk] = True
+                        else:
+                            ee['data'][kk] = val
+                if not 'visible' in ee['data']:
+                    if default_visible:
+                        ee['data']['visible'] = default_visible
+                    else:
+                        if ee['action']=='delete':
+                            ee['data']['visible'] = False
+                        else:
+                            ee['data']['visible'] = True
+                for kk in must_have[ee['type']]:
+                    if kk not in ee['data']:
+                        logger.error('Element missing key {}: {}'.format(kk, ee))
+                return ee
+
+            for elem in self.alt_source_data['elements']:
+                logger.debug('Found {}'.format(elem))
+                ee = to_elem(elem, default_visible=False)
+                eid = int(ee['data']['id'])
+                if ee['type']=='node' and eid in nodes_found:
+                    del nodes_found[eid]
+                self.changes.append(ee)
+                if eid not in self.hist[ee['type']]:
+                    self.hist[ee['type']][eid] = {}
+                self.hist[ee['type']][eid][ee['data']['version']] = ee['data']
+                # Handle old version
+                if ee['action'] != 'create':
+                    ee2 = to_elem(elem['old'], default_visible=True)
+                    self.hist[ee['type']][ee2['data']['id']][ee2['data']['version']] = ee2['data']
+            # Fill in partial node information using version '1' and old timestamp
+            old_dt = datetime.datetime(year=1971, month=1, day=1).replace(tzinfo=pytz.utc)
+            for nid in nodes_found:
+                if nid not in self.hist['node']:
+                    self.hist['node'][nid] = {}
+                self.hist['node'][nid][1] = {'id': nid, 'lat': float(nodes_found[nid]['lat']), 'lon': float(nodes_found[nid]['lon']), 'visible': True, 'tag': {}, 'timestamp': old_dt, '_source': 'nodes_found'}
+
     def downloadMeta(self, set_tz=True):
-        if not self.meta:
+        if self.meta:
+            return
+        if self.alt_source:
+            self.downloadFromAltSource()
+            self.parseAltSource()
+        else:
             if self.apidebug:
                 logger.debug('osmapi.ChangesetGet({}, include_discussion=True)'.format(self.id))
             self.meta = self.osmapi.ChangesetGet(self.id, include_discussion=True)
-            if set_tz:
-                for ts in ['created_at', 'closed_at']:
-                    if ts in self.meta:
+        if set_tz:
+            for ts in ['created_at', 'closed_at']:
+                if ts in self.meta:
+                    if type(self.meta[ts]) is datetime.datetime:
                         self.meta[ts] = self.meta[ts].replace(tzinfo=pytz.utc)
-                if 'discussion' in self.meta:
-                    for disc in self.meta['discussion']:
-                        disc['date'] = disc['date'].replace(tzinfo=pytz.utc)
-            if self.datadebug:
-                logger.debug(u'meta({})={}'.format(self.id, self.meta))
+                    else:
+                        self.meta[ts] = diff.OsmDiffApi.timetxt2datetime(self.meta[ts])
+            if 'discussion' in self.meta:
+                for disc in self.meta['discussion']:
+                    disc['date'] = disc['date'].replace(tzinfo=pytz.utc)
+        if self.datadebug:
+            logger.debug(u'meta({})={}'.format(self.id, self.meta))
 
     def downloadData(self):
-        if not self.changes:
+        if self.changes:
+            return
+        if self.alt_source:
+            self.downloadFromAltSource()
+            self.parseAltSource()
+        else:
             if self.apidebug:
                 logger.debug('osmapi.ChangesetDownload({})'.format(self.id))
             self.changes = self.osmapi.ChangesetDownload(self.id)
@@ -230,6 +363,8 @@ class Changeset(object):
         #r.raw.decode_content = True
 
     def downloadGeometry(self, maxtime=None, way_nodes=True):
+        if self.alt_source:
+            return
         self.startProcessing(maxtime)
         for mod in self.changes:
             self.checkProcessingLimits()
@@ -328,7 +463,7 @@ class Changeset(object):
                     tags = data['tag']
                 else:
                     # For deleted ways, we take the previous version
-                    nv = old['timestamp']
+                    nv = -2 #old['timestamp']
                     nd = old['nd']
                     tags = old['tag']
                 d = 0
@@ -480,7 +615,7 @@ class Changeset(object):
             logger.debug('{} id {} history: {}'.format(etype, eid, h))
 
     def old(self, etype, eid, version, only_visible=True):
-        logger.debug('Get old {} id {} version {}'.format(etype, eid, version))
+        logger.debug('Get element {} id {} version {}'.format(etype, eid, version))
         if not isinstance(version, int):
             '''Support timestamp versioning. Ways and relations refer un-versioned
                nodes/ways/relations, i.e. the only way to find the relevant node
@@ -525,14 +660,18 @@ class Changeset(object):
                     version = e['version']
                     break;
 
-        if version==-1:
-            # Latest version we already have
+        if version<0:
+            # -1 is Latest version we already have
             if eid in self.hist[etype].keys():
                 ks = self.hist[etype][eid].keys()
                 ks.sort()
-                version = ks[-1]
-                logger.debug('version -1 changed to {} (ks={})'.format(version, ks))
-                for v in range(version, 1, -1):
+                if abs(version)>len(ks):
+                    logger.debug('version {} truncated to 0 (ks={})'.format(version, ks))
+                    version = ks[0]
+                else:
+                    logger.debug('version {} changed to {} (ks={})'.format(version, ks[version], ks))
+                    version = ks[version]
+                for v in range(version, 0, -1):
                     if not only_visible or self.hist[etype][eid][version]['visible']:
                         return self.hist[etype][eid][version]
             logger.debug('Did not find existing history on {} id {} version {}'.format(etype, eid, version))
@@ -721,7 +860,7 @@ class Changeset(object):
                     # Using timestamp here means we draw the old way. If
                     # existing points have been moved and new ones added, we
                     # will draw the old way but show points as being moved.
-                    n = self.old('node', nid, e['timestamp'])
+                    n = self.old('node', nid, -2)  #e['timestamp'])
                     g.addLineStringPoint(f, n['lon'], n['lat'])
 
             if f:

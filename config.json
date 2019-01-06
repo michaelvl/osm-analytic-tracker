@@ -17,6 +17,7 @@
 	"horizon_hours": 24,
 	"refresh_open_minutes": 5,
 	"refresh_meta_minutes": 15,
+	"retry_processing_minutes": 30,
 	"cset_processing_time_max_s": 1200,
 	"template_path": "templates"
     },

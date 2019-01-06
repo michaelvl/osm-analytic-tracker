@@ -1706,7 +1706,7 @@
           "targets": [
             {
               "datasource": "",
-              "expr": "rate(openstreetmap_api_events[1h])*3600",
+              "expr": "rate(openstreetmap_api_events[24h])*3600",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -1714,6 +1714,19 @@
               "legendFormat": "{{operation}}",
               "metric": "",
               "refId": "A",
+              "step": 10,
+              "target": ""
+            },
+            {
+              "datasource": "",
+              "expr": "rate(openstreetmap_api_alt_source_downloads[24h])*3600",
+              "format": "time_series",
+              "instant": false,
+              "interval": "",
+              "intervalFactor": 2,
+              "legendFormat": "{{instance}}",
+              "metric": "",
+              "refId": "B",
               "step": 10,
               "target": ""
             }
@@ -1802,7 +1815,7 @@
           "targets": [
             {
               "datasource": "",
-              "expr": "rate(openstreetmap_api_bytes[1h])*3600",
+              "expr": "rate(openstreetmap_api_bytes[24h])*3600",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -1810,6 +1823,19 @@
               "legendFormat": "{{operation}} - {{direction}}",
               "metric": "",
               "refId": "A",
+              "step": 10,
+              "target": ""
+            },
+            {
+              "datasource": "",
+              "expr": "rate(openstreetmap_api_alt_source_download_bytes[24h])*3600",
+              "format": "time_series",
+              "instant": false,
+              "interval": "",
+              "intervalFactor": 2,
+              "legendFormat": "{{instance}}",
+              "metric": "",
+              "refId": "B",
               "step": 10,
               "target": ""
             }

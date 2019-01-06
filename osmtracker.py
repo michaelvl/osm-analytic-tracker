@@ -125,7 +125,8 @@ def cset_process(config, db, cset, debug=0):
     truncated = None
     diffs = None
     try:
-        c = osm.changeset.Changeset(cid, api=config.get('osm_api_url','tracker'))
+        c = osm.changeset.Changeset(cid, api=config.get('osm_api_url','tracker'),
+                                    alt_source=config.get('osm_alt_source','tracker', default=None))
         c.apidebug = debug
         c.datadebug = debug
         c.downloadMeta() # FIXME: Use data from db
@@ -318,7 +319,7 @@ def cset_filter(config, db, new_cset):
                     c.downloadMeta()
             except (osmapi.ApiError, eventlet.timeout.Timeout) as e:
                 logger.error('Failed reading changeset {}: {}'.format(cid, e))
-                #db.chgset_processed(cset, state=db.STATE_QUARANTINED, failed=True)
+                db.chgset_processed(cset, state=db.STATE_QUARANTINED, failed=True)
                 return False
             db.chgset_set_meta(cid, c.meta)
             db.chgset_processed(cset, state=db.STATE_BOUNDS_CHECKED)
@@ -426,25 +427,24 @@ def cset_check_reprocess_open(amqp, config, db, cset):
         return True
     return False
 
-def cset_ready_for_reprocessing(config, db, cset=None, cid=None):
+def cset_ready_for_reprocessing(config, db, cset=None, cid=None, refresh_period=0):
     if not cset:
         cset = db.chgset_get(cid)
         if not cset:
             return True
-    refresh_period = config.get('refresh_meta_minutes','tracker')
     if refresh_period>0:
         now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
         dt = now-datetime.timedelta(minutes=refresh_period)
         if cset['refreshed']<dt:
             logger.debug('Cset {} ready for refresh, refreshed {}'.format(cset['cid'], HumanTime.date2human(dt)))
             return True
-    logger.debug('Cset {} not ready for refresh, refreshed {}'.format(cset['cid'], cset['refreshed']))
+    logger.debug('Cset {} not ready for refresh, refreshed {}, refresh period {}'.format(cset['cid'], cset['refreshed'], refresh_period))
     return False
 
-def cset_check_reprocess_done(config, db, cset):
+def cset_check_reprocess_done(config, db, cset, refresh_period=0):
     # Peridic reprocessing of finished changesets
     # Called functions may have longer delays on e.g. when meta is refreshed
-    if cset_ready_for_reprocessing(config, db, cset=cset):
+    if cset_ready_for_reprocessing(config, db, cset=cset, refresh_period=refresh_period):
         logger.info('Request refresh of cset {}'.format(cset['cid']))
         return True
     return False
@@ -579,6 +579,9 @@ def csets_analysis_worker(args, config, db):
                                                      'Changeset refresh time (seconds)')
 
     logger.debug('Starting analysis worker, queue/routing-key: {}'.format(queues))
+    alt_source=config.get('osm_alt_source','tracker', default=None)
+    if alt_source:
+        logger.info('Using alternative source: {}'.format(alt_source))
     amqp.run()
 
 def supervisor(args, config, db):
@@ -615,17 +618,17 @@ def supervisor(args, config, db):
                         if cset_check_reprocess_open(amqp, config, db, c):
                             m_events.labels('analysis', 'in').inc()
                     elif c['state']==db.STATE_DONE:
-                        if cset_check_reprocess_done(config, db, c):
+                        if cset_check_reprocess_done(config, db, c, config.get('refresh_meta_minutes','tracker')):
                             amqp.send(cset2csetmsg(c), schema_name='cset', schema_version=1,
                                       routing_key='refresh_cset.osmtracker')
                             m_events.labels('refresh', 'in').inc()
                     elif c['state']==db.STATE_ANALYSING2:
-                        if cset_check_reprocess_done(config, db, c):
-                            #amqp.send(cset2csetmsg(c), schema_name='cset', schema_version=1,
-                            #          routing_key='analysis_cset.osmtracker')
-                            #m_events.labels('analysis', 'in').inc()
-                            logging.error('Dropping reprocess-ready changeset from state ANALYSING2')
-                            to_drop.append(c['cid'])
+                        if cset_check_reprocess_done(config, db, c, config.get('retry_processing_minutes','tracker')):
+                            amqp.send(cset2csetmsg(c), schema_name='cset', schema_version=1,
+                                      routing_key='analysis_cset.osmtracker')
+                            m_events.labels('analysis', 'in').inc()
+                            #logging.error('Dropping reprocess-ready changeset from state ANALYSING2')
+                            #to_drop.append(c['cid'])
         if args.metrics:
             for state in db.all_states:
                 m_changesets.labels(state=state).set(cset_cnt[state])

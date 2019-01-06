@@ -54,10 +54,13 @@ data:
     path: '/html'
     tracker:
       cset_processing_time_max_s: 1200
-      history: 5 minutes ago
+      history: 60 minutes ago
       horizon_hours: 24
       horizon_type: sliding
       osm_api_url: http://{{ .Values.openstreetmap.externalApiService.name }}
+      osm_alt_source:
+        url: https://s3.amazonaws.com/mapbox/real-changesets/production/{cid}.json
+        schema: 1
       post_labels:
       - label: address-node-change
         regex:
@@ -74,6 +77,7 @@ data:
         label: adjustment
       prefilter_labels:
       - - inside-area
-      refresh_meta_minutes: 15
+      refresh_meta_minutes: 0
+      retry_processing_minutes: 30
       refresh_open_minutes: 5
       template_path: templates

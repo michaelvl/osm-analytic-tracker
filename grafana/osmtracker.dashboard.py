@@ -315,6 +315,11 @@ osmapi_event_rates = Graph(
             legendFormat='{{operation}}',
             refId='A',
         ),
+        Target(
+            expr='rate(openstreetmap_api_alt_source_downloads[24h])*3600',
+            legendFormat='{{instance}}',
+            refId='B',
+        ),
     ],
     yAxes=single_y_axis(format=SHORT_FORMAT),
     legend=Legend(rightSide=True),
@@ -328,6 +333,11 @@ osmapi_bytes_rates = Graph(
             expr='rate(openstreetmap_api_bytes[24h])*3600',
             legendFormat='{{operation}} - {{direction}}',
             refId='A',
+        ),
+        Target(
+            expr='rate(openstreetmap_api_alt_source_download_bytes[24h])*3600',
+            legendFormat='{{instance}}',
+            refId='B',
         ),
     ],
     yAxes=single_y_axis(format=SHORT_FORMAT),
