@@ -622,8 +622,9 @@ def supervisor(args, config, db):
                             amqp.send(cset2csetmsg(c), schema_name='cset', schema_version=1,
                                       routing_key='refresh_cset.osmtracker')
                             m_events.labels('refresh', 'in').inc()
-                    else:
+                    elif c['state']!=db.STATE_REANALYSING:
                         if cset_check_reprocess_done(config, db, c, config.get('retry_processing_minutes','tracker')):
+                            db.chgset_processed(c, state=db.STATE_REANALYSING, failed=True)
                             amqp.send(cset2csetmsg(c), schema_name='cset', schema_version=1,
                                       routing_key='analysis_cset.osmtracker')
                             m_events.labels('analysis', 'in').inc()
