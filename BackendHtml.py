@@ -99,7 +99,6 @@ class Backend(Backend.Backend):
                 if self.labels and not set(c['labels']).intersection(self.labels):
                     continue
                 cid = c['cid']
-                ctx['csets'].append(c)
                 info = db.chgset_get_info(cid)
                 meta = db.chgset_get_meta(cid)
                 ctx['csetmeta'][cid] = meta
@@ -108,6 +107,7 @@ class Backend(Backend.Backend):
                 else:
                     logger.error('No info for cid {}: {}'.format(cid, c))
                     continue
+                ctx['csets'].append(c)
                 if meta['open'] or (info and 'truncated' in info['state']):
                     continue
                 notecnt = int(meta['comments_count'])  # FIXME: This is duplicate w. BackendHtmlSummary.py
