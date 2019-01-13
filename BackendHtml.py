@@ -102,11 +102,10 @@ class Backend(Backend.Backend):
                 info = db.chgset_get_info(cid)
                 meta = db.chgset_get_meta(cid)
                 ctx['csetmeta'][cid] = meta
-                if info:
-                    ctx['csetinfo'][cid] = info
-                else:
-                    logger.error('No info for cid {}: {}'.format(cid, c))
+                if not info or 'summary' not in info:
+                    logger.error('Invalid info for cid {}: {}'.format(cid, c))
                     continue
+                ctx['csetinfo'][cid] = info
                 ctx['csets'].append(c)
                 if meta['open'] or (info and 'truncated' in info['state']):
                     continue
