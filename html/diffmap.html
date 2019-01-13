@@ -97,13 +97,13 @@ L.control.layers(baseMaps).addTo(map);
 
 map.attributionControl.setPrefix(''); // Dont show 'powered by..'
 
-L.easyButton('josmicon', openInJOSM ,"Open in JOSM. You need to have JOSM running locally, listening for HTTPS remote control commands. See also JOSM ticket 10033 (https://josm.openstreetmap.de/ticket/10033)", map);
+L.easyButton('josmicon', openInJOSM ,"Open in JOSM. You need to have JOSM running locally, listening for HTTP remote control commands.", map);
 L.easyButton('osmicon', openOSM ,"Open changeset on openstreetmap.org", map);
 
 function openInJOSM() {
   var mb = map.getBounds();
   var vbox = [mb.getSouth(), mb.getWest(), mb.getNorth(), mb.getEast()];
-  var url = "https://127.0.0.1:8112/load_and_zoom?left="+vbox[1]+"&right="+vbox[3]+"&top="+vbox[2]+"&bottom="+vbox[0];
+  var url = "http://127.0.0.1:8111/load_and_zoom?left="+vbox[1]+"&right="+vbox[3]+"&top="+vbox[2]+"&bottom="+vbox[0];
   var request = new XMLHttpRequest();
   request.open('GET', url, true);
   request.send();
