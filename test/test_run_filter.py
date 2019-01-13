@@ -297,6 +297,52 @@ class TestCsetFilter(BaseTest):
         #self.print_file('html/dynamic/dk_addresses.html')
         self.assertTrue('-- Changeset 12 source' in self.files['html/dynamic/dk_addresses.html'])
 
+    @patch('osmtracker.BackendHtml.os')
+    @patch('osm.changeset.os')
+    @patch('osmtracker.messagebus.Amqp')
+    @patch('osmtracker.BackendGeoJson.remove')
+    @patch('osmtracker.BackendGeoJson.listdir')
+    @patch('osmtracker.BackendGeoJson.isfile')
+    @patch('tempfilewriter.TempFileWriter')
+    @patch('osm.poly.Poly')
+    @patch('osm.changeset.OsmApi')
+    @patch('osmtracker.osm.changeset.Changeset.downloadGeometry')
+    def test_render_timeout(self, dlGeom, OsmApi, Poly, FileWriter, IsFile, Listdir, Remove, MsgBus, OsCset, Os):
+        '''Rendering of timeout events on changeset processing.
+        '''
+        def dlGeometry(maxtime=None, waynodes=False):
+            print 'Raising timeout'
+            raise osm.changeset.Timeout('Timeout from test')
+        dlGeom.side_effect = dlGeometry
+        OsmApi.return_value = self.osmapi
+        Poly.return_value.contains_bbox.return_value = True
+        FileWriter.side_effect = self.fstart
+        Os.environ = {'OSMTRACKER_REGION': 'region-from-env.poly',
+                      'OSMTRACKER_MAP_SCALE': '4'}
+        OsCset.environ = {'OSMTRACKER_REGION': 'region-from-env2.poly'}
+        self.cfg.cfg['tracker']['prefilter_labels'] = [["inside-area"]]
+        self.cfg.cfg['tracker']['post_labels'] = [{"regex": [{".changes.tag.osak:identifier": ""}], "label": "address-node-change"}]
+        new_cset = {'cid': 12, 'bbox': self.bbox, 'source': {'type': 'minute', 'sequenceno': 20000, 'observed': '2018-01-07T19:37:00'}}
+        osmtracker.cset_filter(self.cfg, self.db, new_cset)
+        self.assertTrue(len(self.db.csets)==1)
+        osmtracker.csets_analyse_initial(self.cfg, self.db, new_cset)
+        osmtracker.csets_analyse_on_close(self.cfg, self.db, new_cset)
+
+        self.cfg.cfg['backends'][6]['map_center'] = {'area_file_conversion_type': 'area_center',
+                                                     'area_file': 'region-not-used.poly'}
+
+        self.assertTrue('address-node-change' in self.db.csets[0]['labels'])
+
+        osmtracker.run_backends(self.args, self.cfg, self.db, 'new_generation.osmtracker')
+        self.assertTrue('html/index.html' in self.files)
+        self.assertTrue('html/dynamic/today.html' in self.files)
+        #self.print_file('html/dynamic/today.html')
+        self.assertTrue('-- Changeset 12 source' in self.files['html/dynamic/today.html'])
+        self.assertTrue('Error occured while processing:Timeout' in self.files['html/dynamic/today.html'])
+        self.assertTrue('html/dynamic/dk_addresses.html' in self.files)
+        #self.print_file('html/dynamic/dk_addresses.html')
+        self.assertTrue('-- Changeset 12 source' in self.files['html/dynamic/dk_addresses.html'])
+
 # class TestCsetFilter(BaseTest):
 
 #     #@patch('config.Config')
