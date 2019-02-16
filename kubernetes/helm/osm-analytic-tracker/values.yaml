@@ -77,8 +77,9 @@ amqp:
   # RabbitMQ chart specific settings below
   persistence:
     enabled: false
-  rabbitmqUsername: user
-  rabbitmqPassword: rabbitpw
+  rabbitmq:
+    username: user
+    password: rabbitpw
 
 web:
   image:
