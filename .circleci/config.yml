@@ -5,6 +5,7 @@ jobs:
       - image: circleci/python:3.7.1
     environment:
       DOCKER_REPO: michaelvl/osmtracker
+      DOCKER_TESTER_REPO: michaelvl/osmtracker-tester
     steps:
       - checkout
       - setup_remote_docker
@@ -12,13 +13,19 @@ jobs:
           name: Setup environment variables
           command: |
             echo "DOCKER_REPO=$DOCKER_REPO" >> $BASH_ENV
-            echo 'GITCOMMIT=${CIRCLE_SHA1::7}' >> $BASH_ENV
             GITCOMMIT=${CIRCLE_SHA1::7}
-            NOW=$(date +%Y%m%d-%H%M)
-            FULLNAME="$DOCKER_REPO:git-$NOW-$GITCOMMIT"
+            echo 'GITCOMMIT=$GITCOMMIT' >> $BASH_ENV
+            FULLNAME="$DOCKER_REPO:git-$GITCOMMIT"
             echo "FULLNAME=$FULLNAME" >> $BASH_ENV
-            echo "Branch $CIRCLE_BRANCH"
-            echo "Using full name $FULLNAME"
+            FULLNAME_TESTER="$DOCKER_TESTER_REPO:git-$GITCOMMIT"
+            echo "FULLNAME_TESTER=$FULLNAME_TESTER" >> $BASH_ENV
+      - run:
+          name: Build tester container image
+          command: |
+            docker build -t $FULLNAME_TESTER --file docker/Dockerfile-test-framework .
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              docker tag $FULLNAME $DOCKER_REPO:latest
+            fi
       - run:
           name: Build container image
           command: |
@@ -26,47 +33,8 @@ jobs:
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               docker tag $FULLNAME $DOCKER_REPO:latest
             fi
-      # - run:
-      #     name: Push container image
-      #     command: |
-      #       echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-      #       docker push $DOCKER_REPO
-
-  build_tester:
-    docker:
-      - image: circleci/python:3.7.1
-    environment:
-      DOCKER_REPO: michaelvl/osmtracker-tester
-    steps:
-      - checkout
-      - setup_remote_docker
       - run:
-          name: Setup environment variables
+          name: Push container image
           command: |
-            echo "DOCKER_REPO=$DOCKER_REPO" >> $BASH_ENV
-            echo 'GITCOMMIT=${CIRCLE_SHA1::7}' >> $BASH_ENV
-            GITCOMMIT=${CIRCLE_SHA1::7}
-            NOW=$(date +%Y%m%d-%H%M)
-            FULLNAME="$DOCKER_REPO:git-$NOW-$GITCOMMIT"
-            echo "FULLNAME=$FULLNAME" >> $BASH_ENV
-            echo "Branch $CIRCLE_BRANCH"
-            echo "Using full name $FULLNAME"
-      - run:
-          name: Build container image
-          command: |
-            docker build -t $FULLNAME --file docker/Dockerfile-test-framework .
-            if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              docker tag $FULLNAME $DOCKER_REPO:latest
-            fi
-      # - run:
-      #     name: Push container image
-      #     command: |
-      #       echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-      #       docker push $DOCKER_REPO
-
-workflows:
-  version: 2
-  building:
-    jobs:
-      - build
-      - build_tester
+            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+            docker push $DOCKER_REPO
