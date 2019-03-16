@@ -1,6 +1,6 @@
 ## OpenStreetMap Analytic Difference Engine
 
-[![Build Status](https://travis-ci.org/MichaelVL/osm-analytic-tracker.svg?branch=master)](https://travis-ci.org/MichaelVL/osm-analytic-tracker)
+[![CircleCI](https://circleci.com/gh/MichaelVL/osm-analytic-tracker.svg?style=svg)](https://circleci.com/gh/MichaelVL/osm-analytic-tracker)
 
 OpenStreetMap Analytic Difference Engine is an analytic live (web) service for
 OpenStreetMap (OSM) edits.  Edits are analysed and presented with a concise
