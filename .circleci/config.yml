@@ -24,7 +24,7 @@ jobs:
           command: |
             docker build -t $FULLNAME_TESTER --file docker/Dockerfile-test-framework .
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              docker tag $FULLNAME $DOCKER_TESTER_REPO:latest
+              docker tag $FULLNAME_TESTER $DOCKER_TESTER_REPO:latest
             fi
       - run:
           name: Build container image
