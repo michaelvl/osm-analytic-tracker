@@ -29,10 +29,12 @@ jobs:
       - run:
           name: Test osm tracker
           command: |
-            docker run --rm -it -v ${PWD}:/osmtracker:ro $FULLNAME_TESTER /bin/bash -c "cd /osmtracker && ls"
-            docker run --rm -it -v ${PWD}:/osmtracker:ro $FULLNAME_TESTER /bin/bash -c "cd /osmtracker && python -m unittest discover -s /osmtracker-test/test"
-            docker run --rm -it -v ${PWD}:/osmtracker:ro $FULLNAME_TESTER /bin/bash -c "cd /osmtracker/osm && python -m unittest discover -s /osmtracker-test/osm-test"
-            docker run --rm -it -v ${PWD}:/osmtracker:ro $FULLNAME_TESTER /bin/bash -c "cd /osmtracker && python -m pytest --tb=long /osmtracker-test/apiserver-test"
+            # Mounting local paths as volumes are not possible with remote docker
+            docker create -v /osmtracker --name osmsrc alpine:3.4 /bin/true
+            docker cp . osmsrc:/osmtracker
+            docker run --rm --volumes-from osmsrc $FULLNAME_TESTER /bin/bash -c "cd /osmtracker && python -m unittest discover -s /osmtracker-test/test"
+            docker run --rm --volumes-from osmsrc $FULLNAME_TESTER /bin/bash -c "cd /osmtracker/osm && python -m unittest discover -s /osmtracker-test/osm-test"
+            docker run --rm --volumes-from osmsrc $FULLNAME_TESTER /bin/bash -c "cd /osmtracker && python -m pytest --tb=long /osmtracker-test/apiserver-test"
       - run:
           name: Build container image
           command: |
