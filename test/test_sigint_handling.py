@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 import unittest
 import mock
 from mock import patch, call
@@ -12,15 +13,15 @@ import datetime, pytz
 import pprint
 
 logger = logging.getLogger('')
-
+cwd = os.path.dirname(os.path.abspath(__file__))+'/'
 
 class BaseTest(unittest.TestCase, stubs.FileWriter_Mixin):
     def setUp(self):
         #logging.basicConfig(level=logging.DEBUG)
         self.db = stubs.testDB()
         self.cfg = stubs.testConfig()
-        self.osmapi = osm.test.stubs.testOsmApi(datapath='osm/test/data')
-        self.requests = osm.test.stubs.testRequests(datapath='osm/test/data',
+        self.osmapi = osm.test.stubs.testOsmApi(datapath=cwd+'../osm/test/data')
+        self.requests = osm.test.stubs.testRequests(datapath=cwd+'../osm/test/data',
                                                     sigint_on=[])
 
 class TestSigInt(BaseTest):

@@ -1,3 +1,4 @@
+import os
 import unittest
 import mock
 from mock import patch, call
@@ -11,6 +12,7 @@ import datetime
 import pprint
 
 logger = logging.getLogger('')
+cwd = os.path.dirname(os.path.abspath(__file__))+'/'
 
 class Args:
     def __init__(self):
@@ -22,9 +24,9 @@ class BaseTest(unittest.TestCase, stubs.FileWriter_Mixin):
         logging.basicConfig(level=logging.DEBUG)
         self.db = stubs.testDB()
         self.cfg = stubs.testConfig()
-        self.osmapi = osm.test.stubs.testOsmApi(datapath='osm/test/data')
+        self.osmapi = osm.test.stubs.testOsmApi(datapath=cwd+'../osm/test/data')
         self.args = Args()
-        self.requests = osm.test.stubs.testRequests(datapath='osm/test/data')
+        self.requests = osm.test.stubs.testRequests(datapath=cwd+'../osm/test/data')
         self.dapi = osmdiff.OsmDiffApi()
         self.dapi.api = 'stub'
         self.amqp = mock.MagicMock()

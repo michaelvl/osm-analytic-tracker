@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 import unittest
 import mock
 from mock import patch, call
@@ -12,6 +13,7 @@ import datetime
 import pprint
 
 logger = logging.getLogger('')
+cwd = os.path.dirname(os.path.abspath(__file__))+'/'
 
 class Args:
     def __init__(self):
@@ -24,7 +26,7 @@ class BaseTest(unittest.TestCase, stubs.FileWriter_Mixin):
         #logging.basicConfig(level=logging.DEBUG)
         self.db = stubs.testDB()
         self.cfg = stubs.testConfig()
-        self.osmapi = osm.test.stubs.testOsmApi(datapath='osm/test/data')
+        self.osmapi = osm.test.stubs.testOsmApi(datapath=cwd+'../osm/test/data')
         self.filewritersetup()
         self.listdir = ['today.html', 'cset-10.json', 'cset-10.bounds', 'cset-3.json', 'cset-3.bounds']
         self.args = Args()

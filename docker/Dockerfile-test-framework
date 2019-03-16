@@ -12,6 +12,10 @@ ADD test-requirements.txt .
 RUN pip install -r ./requirements.txt
 RUN pip install -r ./test-requirements.txt
 
+WORKDIR /osmtracker-test
 ADD test ./test/
-ADD osm/test ./osm-test/
-ADD apiserver/test ./apiserver-test/
+ADD osm/test ./osm/test/
+ADD apiserver/test ./apiserver/test/
+
+ADD osm/test/data/urls/planet.osm.org/replication/changesets/000/001/234.osm osm/test/data/urls/planet.osm.org/replication/changesets/000/001/234.osm
+RUN gzip -c osm/test/data/urls/planet.osm.org/replication/changesets/000/001/234.osm > osm/test/data/urls/planet.osm.org/replication/changesets/000/001/234.osm.gz
