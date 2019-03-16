@@ -1,2 +1,4 @@
 *.pyc
 *~
+osm/test/data/urls/planet.osm.org/replication/changesets/*/*/*.osm.gz
+osm/test/data/urls/planet.osm.org/replication/changesets/*/*/*.osc.gz
