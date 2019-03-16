@@ -3,11 +3,16 @@
 import datetime, pytz
 import connexion
 from connexion import NoContent
+from flask import current_app, g
 import logging, logging.config
 
 logger = logging.getLogger('osmtracker-api')
 
+def get_app():
+    return g.app
+
 def get_changesets(limit, state=None):
+    app = get_app()
     csets = []
     for c in app.db.chgsets_find(state=state):
         logger.debug('cset={}'.format(c))
@@ -28,6 +33,7 @@ def get_changesets(limit, state=None):
             'timestamp': datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat()}
 
 def get_changeset(cset_id):
+    app = get_app()
     csets = app.db.chgsets_find(cid=cset_id, state=None)
     if csets:
         for c in csets:
