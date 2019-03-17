@@ -29,6 +29,14 @@ jobs:
       - image: circleci/python:3.7.1
     working_directory: ~/source
     steps:
+      - run:
+          name: Build tester container image
+          command: |
+            echo "FULLNAME_TESTER is $FULLNAME_TESTER"
+            echo "BASH_ENV is $BASH_ENV"
+	    cat $BASH_ENV
+	    source $BASH_ENV
+            echo "2 FULLNAME_TESTER is $FULLNAME_TESTER"
       - restore_cache:
           key: base-{{ .Environment.CIRCLE_SHA1 }}
       - setup_remote_docker
