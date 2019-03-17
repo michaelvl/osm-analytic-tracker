@@ -34,8 +34,8 @@ jobs:
           command: |
             echo "FULLNAME_TESTER is $FULLNAME_TESTER"
             echo "BASH_ENV is $BASH_ENV"
-	    cat $BASH_ENV
-	    source $BASH_ENV
+           cat $BASH_ENV
+            source $BASH_ENV
             echo "2 FULLNAME_TESTER is $FULLNAME_TESTER"
       - restore_cache:
           key: base-{{ .Environment.CIRCLE_SHA1 }}
