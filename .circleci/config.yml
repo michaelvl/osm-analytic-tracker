@@ -17,13 +17,11 @@ jobs:
             echo "DOCKER_REPO=$DOCKER_REPO" >> ~/$BASH_ENV
             echo "DOCKER_TESTER_REPO=$DOCKER_TESTER_REPO" >> ~/$BASH_ENV
             GITCOMMIT=${CIRCLE_SHA1::7}
-            echo 'GITCOMMIT=$GITCOMMIT' >> ~/$BASH_ENV
+            echo "GITCOMMIT=$GITCOMMIT" >> ~/$BASH_ENV
             FULLNAME="$DOCKER_REPO:git-$GITCOMMIT"
             echo "FULLNAME=$FULLNAME" >> ~/$BASH_ENV
             FULLNAME_TESTER="$DOCKER_TESTER_REPO:git-$GITCOMMIT"
             echo "FULLNAME_TESTER=$FULLNAME_TESTER" >> ~/$BASH_ENV
-            pwd
-            cat ~/$BASH_ENV
       - save_cache:
           key: base-{{ .Environment.CIRCLE_SHA1 }}
           paths:
@@ -33,22 +31,18 @@ jobs:
     docker:
       - image: circleci/python:3.7.1
     working_directory: ~/source
-    environment:
-      BASH_ENV: bash.env
     steps:
       - restore_cache:
           key: base-{{ .Environment.CIRCLE_SHA1 }}
       - run:
-          name: Setup environment variables
+          name: Setup environment variables for job
           command: |
-            ls -la
-            cat ~/$BASH_ENV
-            source ~/$BASH_ENV
-            echo "FULLNAME_TESTER is $FULLNAME_TESTER"
+            echo "source ~/bash.env" >> $BASH_ENV
       - setup_remote_docker
       - run:
           name: Build tester container image
           command: |
+            echo "FULLNAME_TESTER is $FULLNAME_TESTER"
             docker build -t $FULLNAME_TESTER --file docker/Dockerfile-test-framework .
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               docker tag $FULLNAME_TESTER $DOCKER_TESTER_REPO:latest
