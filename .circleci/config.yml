@@ -7,42 +7,42 @@ jobs:
     environment:
       DOCKER_REPO: michaelvl/osmtracker
       DOCKER_TESTER_REPO: michaelvl/osmtracker-tester
-      BASH_ENV: ~/bash.env
+      BASH_ENV: bash.env
     steps:
       - checkout
       - run:
           name: Setup environment variables
           command: |
             touch $BASH_ENV
-            echo "DOCKER_REPO=$DOCKER_REPO" >> $BASH_ENV
-            echo "DOCKER_TESTER_REPO=$DOCKER_TESTER_REPO" >> $BASH_ENV
+            echo "DOCKER_REPO=$DOCKER_REPO" >> ~/$BASH_ENV
+            echo "DOCKER_TESTER_REPO=$DOCKER_TESTER_REPO" >> ~/$BASH_ENV
             GITCOMMIT=${CIRCLE_SHA1::7}
-            echo 'GITCOMMIT=$GITCOMMIT' >> $BASH_ENV
+            echo 'GITCOMMIT=$GITCOMMIT' >> ~/$BASH_ENV
             FULLNAME="$DOCKER_REPO:git-$GITCOMMIT"
-            echo "FULLNAME=$FULLNAME" >> $BASH_ENV
+            echo "FULLNAME=$FULLNAME" >> ~/$BASH_ENV
             FULLNAME_TESTER="$DOCKER_TESTER_REPO:git-$GITCOMMIT"
-            echo "FULLNAME_TESTER=$FULLNAME_TESTER" >> $BASH_ENV
+            echo "FULLNAME_TESTER=$FULLNAME_TESTER" >> ~/$BASH_ENV
             pwd
-            cat $BASH_ENV
+            cat ~/$BASH_ENV
       - save_cache:
           key: base-{{ .Environment.CIRCLE_SHA1 }}
           paths:
             - ~/source
-            - $BASH_ENV
+            - ~/$BASH_ENV
   build:
     docker:
       - image: circleci/python:3.7.1
     working_directory: ~/source
     environment:
-      BASH_ENV: ~/bash.env
+      BASH_ENV: bash.env
     steps:
       - run:
           name: Setup environment variables
           command: |
             echo "FULLNAME_TESTER is $FULLNAME_TESTER"
             echo "BASH_ENV is $BASH_ENV"
-            cat $BASH_ENV
-            source $BASH_ENV
+            cat ~/$BASH_ENV
+            source ~/$BASH_ENV
             echo "2 FULLNAME_TESTER is $FULLNAME_TESTER"
       - restore_cache:
           key: base-{{ .Environment.CIRCLE_SHA1 }}
