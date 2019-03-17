@@ -27,7 +27,7 @@ jobs:
           paths:
             - ~/source
             - ~/bash.env
-  build:
+  build_tester_and_test:
     docker:
       - image: circleci/python:3.7.1
     working_directory: ~/source
@@ -42,7 +42,6 @@ jobs:
       - run:
           name: Build tester container image
           command: |
-            echo "FULLNAME_TESTER is $FULLNAME_TESTER"
             docker build -t $FULLNAME_TESTER --file docker/Dockerfile-test-framework .
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               docker tag $FULLNAME_TESTER $DOCKER_TESTER_REPO:latest
@@ -56,6 +55,19 @@ jobs:
             docker run --rm --volumes-from osmsrc $FULLNAME_TESTER /bin/bash -c "cd /osmtracker && python -m unittest discover -s /osmtracker-test/test"
             docker run --rm --volumes-from osmsrc $FULLNAME_TESTER /bin/bash -c "cd /osmtracker/osm && python -m unittest discover -s /osmtracker-test/osm/test"
             docker run --rm --volumes-from osmsrc $FULLNAME_TESTER /bin/bash -c "cd /osmtracker && python -m pytest --tb=long /osmtracker-test/apiserver/test"
+
+  build:
+    docker:
+      - image: circleci/python:3.7.1
+    working_directory: ~/source
+    steps:
+      - restore_cache:
+          key: base-{{ .Environment.CIRCLE_SHA1 }}
+      - run:
+          name: Setup environment variables for job
+          command: |
+            echo "source ~/bash.env" >> $BASH_ENV
+      - setup_remote_docker
       - run:
           name: Build container image
           command: |
@@ -74,6 +86,9 @@ workflows:
   build-and-test:
     jobs:
       - checkout_code
-      - build:
+      - build_tester_and_test:
           requires:
             - checkout_code
+      - build:
+          requires:
+            - build_tester_and_test
