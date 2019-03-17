@@ -7,7 +7,7 @@ jobs:
     environment:
       DOCKER_REPO: michaelvl/osmtracker
       DOCKER_TESTER_REPO: michaelvl/osmtracker-tester
-      BASH_ENV: bash.env
+      BASH_ENV: ~/bash.env
     steps:
       - checkout
       - run:
@@ -26,13 +26,13 @@ jobs:
           key: base-{{ .Environment.CIRCLE_SHA1 }}
           paths:
             - ~/source
-            - ~/$BASH_ENV
+            - $BASH_ENV
   build:
     docker:
       - image: circleci/python:3.7.1
     working_directory: ~/source
     environment:
-      BASH_ENV: bash.env
+      BASH_ENV: ~/bash.env
     steps:
       - run:
           name: Setup environment variables
