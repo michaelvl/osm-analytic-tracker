@@ -28,7 +28,7 @@ jobs:
           key: base-{{ .Environment.CIRCLE_SHA1 }}
           paths:
             - ~/source
-            - ~/$BASH_ENV
+            - ~/bash.env
   build:
     docker:
       - image: circleci/python:3.7.1
@@ -41,6 +41,7 @@ jobs:
       - run:
           name: Setup environment variables
           command: |
+            ls -la
             cat ~/$BASH_ENV
             source ~/$BASH_ENV
             echo "FULLNAME_TESTER is $FULLNAME_TESTER"
