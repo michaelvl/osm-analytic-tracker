@@ -13,7 +13,9 @@ jobs:
       - run:
           name: Setup environment variables
           command: |
+            touch $BASH_ENV
             echo "DOCKER_REPO=$DOCKER_REPO" >> $BASH_ENV
+            echo "DOCKER_TESTER_REPO=$DOCKER_TESTER_REPO" >> $BASH_ENV
             GITCOMMIT=${CIRCLE_SHA1::7}
             echo 'GITCOMMIT=$GITCOMMIT' >> $BASH_ENV
             FULLNAME="$DOCKER_REPO:git-$GITCOMMIT"
