@@ -20,11 +20,13 @@ jobs:
             echo "FULLNAME=$FULLNAME" >> $BASH_ENV
             FULLNAME_TESTER="$DOCKER_TESTER_REPO:git-$GITCOMMIT"
             echo "FULLNAME_TESTER=$FULLNAME_TESTER" >> $BASH_ENV
+            pwd
+            cat $BASH_ENV
       - save_cache:
           key: base-{{ .Environment.CIRCLE_SHA1 }}
           paths:
             - ~/source
-            - $BASH_ENV
+            - ~/$BASH_ENV
   build:
     docker:
       - image: circleci/python:3.7.1
