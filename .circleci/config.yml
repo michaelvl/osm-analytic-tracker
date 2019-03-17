@@ -7,6 +7,7 @@ jobs:
     environment:
       DOCKER_REPO: michaelvl/osmtracker
       DOCKER_TESTER_REPO: michaelvl/osmtracker-tester
+      BASH_ENV: bash.env
     steps:
       - checkout
       - run:
@@ -28,9 +29,11 @@ jobs:
     docker:
       - image: circleci/python:3.7.1
     working_directory: ~/source
+    environment:
+      BASH_ENV: bash.env
     steps:
       - run:
-          name: Build tester container image
+          name: Setup environment variables
           command: |
             echo "FULLNAME_TESTER is $FULLNAME_TESTER"
             echo "BASH_ENV is $BASH_ENV"
