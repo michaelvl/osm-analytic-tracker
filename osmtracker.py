@@ -560,7 +560,14 @@ def csets_analysis_worker(args, config, db):
                         m_refresh_time.observe(elapsed)
                     logger.info('Analysis of cid {} took {:.2f}s'.format(payload['cid'], elapsed))
             except eventlet.timeout.Timeout as e:
-                logger.error('Failed analysing changeset {}: {}'.format(payload['cid'], e))
+                cid = payload['cid']
+                logger.error('Failed analysing changeset {}: {}'.format(cid, e))
+                cset = db.chgset_get(cid)
+                db.chgset_processed(cset, db.STATE_QUARANTINED, failed=True)
+                gen = db.generation_advance()
+                msg = {'generation': gen}
+                amqp_gen.send(msg, schema_name='generation', schema_version=1,
+                              routing_key=AMQP_NEW_GENERATION_KEY)
             message.ack()
 
     queues = [AMQP_ANALYSIS_QUEUE, AMQP_REFRESH_QUEUE]

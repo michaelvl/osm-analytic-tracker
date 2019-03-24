@@ -8,6 +8,7 @@ import logging
 import jinja2
 import tempfilewriter
 from os.path import join
+import schemacheck
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +57,7 @@ class Backend(BackendHtml.Backend):
                 cid = c['cid']
                 meta = db.chgset_get_meta(cid)
                 info = db.chgset_get_info(cid)
+                meta, info = schemacheck.check(c, meta, info)
                 user = meta['user']
                 users[user] = users.get(user,0) + 1
                 if meta['open'] or (info and 'truncated' in info['state']):
@@ -80,6 +82,7 @@ class Backend(BackendHtml.Backend):
             for c in db.chgsets_find(state=db.STATE_DONE, sort=False):
                 cid = c['cid']
                 info = db.chgset_get_info(cid)
+                _, info = schemacheck.check(c, None, info)
                 if 'truncated' in info['state']:
                     continue
                 summary = info['summary']

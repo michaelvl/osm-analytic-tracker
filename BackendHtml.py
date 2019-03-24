@@ -11,6 +11,7 @@ import operator
 import logging
 import jinja2
 import tempfilewriter
+import schemacheck
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +65,7 @@ class Backend(Backend.Backend):
 
     def print_state(self, db, update_reason):
         if update_reason!='new_generation.osmtracker':
+            logger.debug('Not updating, reason {}'.format(update_reason))
             return
         now = datetime.datetime.now()
         #if now.day != self.last_update.day:
@@ -92,29 +94,32 @@ class Backend(Backend.Backend):
             csets_w_notes = 0
             csets_w_addr_changes = 0
             for c in db.chgsets_find(state=[db.STATE_CLOSED, db.STATE_OPEN, db.STATE_ANALYSING2,
-                                            db.STATE_REANALYSING, db.STATE_DONE]):
-                logger.debug('Cset={}'.format(c))
-                logger.debug('Backend labels {}, cset labels {}'.format(self.labels, c['labels']))
-                csets_total += 1
-                if self.labels and not set(c['labels']).intersection(self.labels):
-                    continue
+                                            db.STATE_REANALYSING, db.STATE_DONE, db.STATE_NEW]):
                 cid = c['cid']
+                logger.debug('Cset {}={}'.format(cid, c))
+                logger.debug('Backend labels {}, cset labels {}'.format(self.labels, c['labels']))
+                if self.labels and not set(c['labels']).intersection(self.labels):
+                    logger.warn('Skipping cid {}, labels {}/{}'.format(cid, self.labels, c['labels']))
+                    continue
                 info = db.chgset_get_info(cid)
                 meta = db.chgset_get_meta(cid)
+                meta, info = schemacheck.check(c, meta, info)
                 ctx['csetmeta'][cid] = meta
-                if not info or 'summary' not in info:
-                    logger.error('Invalid info for cid {}: {}'.format(cid, c))
-                    continue
                 ctx['csetinfo'][cid] = info
-                ctx['csets'].append(c)
-                if meta['open'] or (info and 'truncated' in info['state']):
-                    continue
+                if c['state'] == db.STATE_QUARANTINED:
+                    ctx['csets_err'].append(c)
+                else:
+                    ctx['csets'].append(c)
+                csets_total += 1
+                #if meta['open'] or (info and 'truncated' in info['state']):
+                #    logger.warn('Skipping cid {}'.format(cid))
+                #    continue
                 notecnt = int(meta['comments_count'])  # FIXME: This is duplicate w. BackendHtmlSummary.py
                 if notecnt > 0:
                     notes += int(meta['comments_count'])
                     csets_w_notes += 1
-                if c['state'] != db.STATE_DONE:
-                    continue
+                #if c['state'] != db.STATE_DONE:
+                #    continue
 
                 if 'address-node-change' in c['labels']: #FIXME: does not belong here - this is configuration
                     csets_w_addr_changes += 1
