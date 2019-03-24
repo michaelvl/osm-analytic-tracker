@@ -12,8 +12,8 @@ def check(cset, meta, info):
     if not info or 'summary' not in info:
         logger.error('Invalid info for cid {}: {}'.format(cid, cset))
         # Dummy data
-        if cset and 'updated' in cset:
-            ts = cset['updated']
+        if cset and 'queued' in cset:
+            ts = cset['queued']
         else:
             ts = datetime.datetime.now()
         colours = ColourScheme.ColourScheme(seed=0)
