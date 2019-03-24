@@ -1,4 +1,5 @@
 import datetime, pytz
+import ColourScheme as col
 import logging
 
 logger = logging.getLogger(__name__)
@@ -15,7 +16,12 @@ def check(cset, meta, info):
             ts = cset['updated']
         else:
             ts = datetime.datetime.now()
-        info = {'state': '-', 'misc':{'state': '', 'timestamp': ts, 'timestamp_type_txt': ''},
+        colours = col.ColourScheme(seed=0)
+        if 'user' in cset:
+            col = colours.get_colour(cset['user'])
+        else:
+            col = colours.get_colour('anonymous')
+        info = {'state': '-', 'misc':{'state': '', 'timestamp': ts, 'timestamp_type_txt': '', 'user_colour': col},
                 'summary': {'create' : { 'node': 0, 'way':0, 'relation':0, 'relation_tags':{}},
                             'modify' : { 'node': 0, 'way':0, 'relation':0, 'relation_tags':{}},
                             'delete' : { 'node': 0, 'way':0, 'relation':0, 'relation_tags':{}},
