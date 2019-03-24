@@ -21,7 +21,8 @@ def check(cset, meta, info):
             col = colours.get_colour(cset['user'])
         else:
             col = colours.get_colour('anonymous')
-        info = {'state': '-', 'misc':{'state': '', 'timestamp': ts, 'timestamp_type_txt': '', 'user_colour': col},
+        info = {'state': '-', 'misc':{'state': '', 'timestamp': ts, 'timestamp_type_txt': '',
+                                      'misc': {'user_colour': col}},
                 'summary': {'create' : { 'node': 0, 'way':0, 'relation':0, 'relation_tags':{}},
                             'modify' : { 'node': 0, 'way':0, 'relation':0, 'relation_tags':{}},
                             'delete' : { 'node': 0, 'way':0, 'relation':0, 'relation_tags':{}},
