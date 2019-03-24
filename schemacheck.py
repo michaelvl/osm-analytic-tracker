@@ -11,7 +11,11 @@ def check(cset, meta, info):
     if not info or 'summary' not in info:
         logger.error('Invalid info for cid {}: {}'.format(cid, cset))
         # Dummy data
-        info = {'state': '-', 'misc':{'state': '', 'timestamp': datetime.datetime.now(), 'timestamp_type_txt': ''},
+        if cset and 'updated' in cset:
+            ts = cset['updated']
+        else:
+            ts = datetime.datetime.now()
+        info = {'state': '-', 'misc':{'state': '', 'timestamp': ts, 'timestamp_type_txt': ''},
                 'summary': {'create' : { 'node': 0, 'way':0, 'relation':0, 'relation_tags':{}},
                             'modify' : { 'node': 0, 'way':0, 'relation':0, 'relation_tags':{}},
                             'delete' : { 'node': 0, 'way':0, 'relation':0, 'relation_tags':{}},
