@@ -174,6 +174,8 @@ class testDB(object):
         if 'chgset_get_meta' in self.sigint_on:
             os.kill(os.getpid(), signal.SIGINT)
         c = self.find_cset(cid)
+        if not c or not 'meta' in c:
+            return None
         return loads(c['meta'])
 
     def chgset_set_info(self, cid, info):
@@ -182,6 +184,12 @@ class testDB(object):
 
     def chgset_get_info(self, cid):
         c = self.find_cset(cid)
+        if not c or not 'info' in c:
+            if not c:
+                logger.warn('Cset {} not found'.format(cid))
+            else:
+                logger.warn('Cset {} has no info, keys: {}'.format(cid, c.keys()))
+            return None
         return loads(c['info'])
 
     def show_brief(self, args, db, reltime=True):
