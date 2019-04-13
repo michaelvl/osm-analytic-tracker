@@ -17,10 +17,9 @@ def check(cset, meta, info):
         else:
             ts = datetime.datetime.now()
         colours = ColourScheme.ColourScheme(seed=0)
-        if 'user' in meta:
-            col = colours.get_colour(meta['user'])
-        else:
-            col = colours.get_colour('anonymous')
+        if 'user' not in meta:
+            meta['user'] = '*unknown*'
+        col = colours.get_colour(meta['user'])
         info = {'state': '-', 'misc':{'state': '', 'timestamp': ts, 'timestamp_type_txt': '',
                                       'user_colour': col},
                 'summary': {'create' : { 'node': 0, 'way':0, 'relation':0, 'relation_tags':{}},
