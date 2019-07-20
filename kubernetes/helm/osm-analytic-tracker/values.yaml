@@ -69,6 +69,20 @@ osmtracker:
   dashboardConfigMap:
     enabled: false
 
+ingress:
+  enabled: false
+  annotations: {}
+    # kubernetes.io/ingress.class: contour
+    # kubernetes.io/tls-acme: "true"
+  labels: {}
+  path: /
+  hosts:
+    - chart-example.local
+  tls: []
+  #  - secretName: osmtracker-tls
+  #    hosts:
+  #      - chart-example.local
+
 # supporting services
 
 amqp:
