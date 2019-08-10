@@ -1,0 +1,28 @@
+# For use with Helmsman
+# Assumes a local helm repo with a osmtracker chart
+
+helmRepos:
+  local:      "http://127.0.0.1:8879"
+
+namespaces:
+  osmtracker:
+
+apps:
+  osmtracker:
+    chart: local/osm-analytic-tracker
+    version: 0.4.0
+    enabled: true
+    namespace: osmtracker
+    #valuesFiles:
+    # - values-osmtracker-ingress.yaml
+    set:
+      osmtracker.image.tag: git-323d08f
+      osmtracker.region: "/osm-regions/denmark.poly"
+      #osmtracker.region: "/osm-regions/netherlands.poly"
+      osmtracker.dashboardConfigMap.enabled: true
+      osmtracker.networkpolicy.enabled: true
+      filter.replicas: 1
+      analyser.replicas: 2
+      osmtracker.debug: false
+      db.persistence.enabled: true
+      #frontend.dev_notes: "Notes ..."

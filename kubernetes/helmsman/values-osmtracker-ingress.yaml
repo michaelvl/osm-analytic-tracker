@@ -1,0 +1,15 @@
+ingress:
+  enabled: true
+  annotations:
+    ingress.kubernetes.io/force-ssl-redirect: "true"
+    kubernetes.io/ingress.class: "external"
+    kubernetes.io/tls-acme: "true"
+    certmanager.k8s.io/cluster-issuer: "letsencrypt-staging"
+  labels: {}
+  path: /
+  hosts:
+    - osm.example.com
+  tls:
+    - secretName: osmtracker-tls
+      hosts:
+        - osm.example.com
