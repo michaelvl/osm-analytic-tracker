@@ -9,7 +9,8 @@ metadata:
 spec:
   policyTypes:
   - Ingress
-  podSelector: {}
+  podSelector:
+    matchLabels: {}
 ---
 kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
@@ -23,7 +24,9 @@ spec:
   - Ingress
   podSelector:
     matchLabels:
-      app: {{ .Release.Name }}-db
+      app: db
+      # These do not work due to subcharts not getting labels from osmtracker
+      #app: {{ .Release.Name }}-db
       #component: database
   ingress:
   - from:
