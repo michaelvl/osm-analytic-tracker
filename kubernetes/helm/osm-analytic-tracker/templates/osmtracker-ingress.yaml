@@ -1,7 +1,7 @@
 {{- if .Values.ingress.enabled -}}
 {{- $ingressPath := .Values.ingress.path -}}
 {{- $svcPort := .Values.frontend.service.externalPort -}}
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   name: osmtracker
