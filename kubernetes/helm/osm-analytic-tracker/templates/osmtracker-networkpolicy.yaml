@@ -24,10 +24,9 @@ spec:
   - Ingress
   podSelector:
     matchLabels:
+      release: {{ .Release.Name | quote }}
+      # This comes from the subchart alias
       app: db
-      # These do not work due to subcharts not getting labels from osmtracker
-      #app: {{ .Release.Name }}-db
-      #component: database
   ingress:
   - from:
     - podSelector:
@@ -69,8 +68,9 @@ spec:
   - Ingress
   podSelector:
     matchLabels:
-      app: {{ .Release.Name }}-amqp
-      #component: amqp
+      release: {{ .Release.Name | quote }}
+      # This comes from the subchart alias
+      app: amqp
   ingress:
   - from:
     ports:
