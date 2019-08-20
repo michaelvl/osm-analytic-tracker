@@ -10,7 +10,7 @@ namespaces:
 apps:
   osmtracker:
     chart: local/osm-analytic-tracker
-    version: 0.4.2
+    version: 0.4.3
     enabled: true
     namespace: osmtracker
     valuesFiles:
