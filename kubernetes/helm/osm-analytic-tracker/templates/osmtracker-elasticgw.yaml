@@ -19,7 +19,8 @@ spec:
 {{ include "osmtracker.labels.standard" . | indent 8}}
         component: elasticsearch-gw
       annotations:
-        checksum/config: {{ include (print $.Chart.Name "/templates/osmtracker-secrets.yaml") . | sha256sum }}
+        checksum/secrets: {{ include (print $.Chart.Name "/templates/osmtracker-secrets.yaml") . | sha256sum }}
+        checksum/config: {{ include (print $.Chart.Name "/templates/osmtracker-config.yaml") . | sha256sum }}
     spec:
       containers:
       - name: elasticsearch-gw
