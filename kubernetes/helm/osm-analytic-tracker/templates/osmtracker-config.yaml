@@ -53,7 +53,7 @@ data:
       path: dynamic
     path: '/html'
     tracker:
-      cset_processing_time_max_s: 1200
+      cset_processing_time_max_s: 12000
       history: 60 minutes ago
       horizon_hours: 24
       horizon_type: sliding
