@@ -36,11 +36,11 @@ spec:
         livenessProbe:
           httpGet:
             path: /
-            port: {{ .Values.frontend.service.internalPort }}
+            port: {{ .Values.frontend.service.externalPort }}
         readinessProbe:
           httpGet:
             path: /
-            port: {{ .Values.frontend.service.internalPort }}
+            port: {{ .Values.frontend.service.externalPort }}
         env:
         - name: OSMTRACKER_REGION
           value: "{{ .Values.osmtracker.region }}"
