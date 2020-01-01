@@ -368,4 +368,3 @@ https://download.geofabrik.de/africa/zambia.poly
 https://download.geofabrik.de/africa/burundi.poly
 https://download.geofabrik.de/africa.poly
 https://download.geofabrik.de/south-america.poly
-https://download.geofabrik.de/russia.poly
