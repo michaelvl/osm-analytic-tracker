@@ -254,8 +254,6 @@ https://download.geofabrik.de/europe/france/limousin.poly
 https://download.geofabrik.de/europe/france/picardie.poly
 https://download.geofabrik.de/europe/france/auvergne.poly
 https://download.geofabrik.de/europe/france/nord-pas-de-calais.poly
-https://download.geofabrik.de/europe/alps.poly
-https://download.geofabrik.de/europe/british-isles.poly
 https://download.geofabrik.de/europe/ireland-and-northern-ireland.poly
 https://download.geofabrik.de/europe/luxembourg.poly
 https://download.geofabrik.de/europe/malta.poly
