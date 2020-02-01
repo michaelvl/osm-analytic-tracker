@@ -47,6 +47,13 @@ frontend:
     type: NodePort
     externalPort: 30000
     internalPort: 80
+  resources:
+    limits:
+      cpu: 250m
+      memory: 1Gi
+    requests:
+      cpu: 50m
+      memory: 512Mi
   dev_notes: ""
 
 # shared between multiple osm-analytic-tracker pods

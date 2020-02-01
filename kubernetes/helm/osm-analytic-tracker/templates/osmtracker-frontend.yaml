@@ -36,11 +36,11 @@ spec:
         livenessProbe:
           httpGet:
             path: /
-            port: {{ .Values.frontend.service.externalPort }}
+            port: 8000
         readinessProbe:
           httpGet:
             path: /
-            port: {{ .Values.frontend.service.externalPort }}
+            port: 8000
         env:
         - name: OSMTRACKER_REGION
           value: "{{ .Values.osmtracker.region }}"
@@ -56,6 +56,8 @@ spec:
             secretKeyRef:
               name: osmtracker-secrets
               key: dbuser_ro_pass
+        resources:
+{{ toYaml .Values.frontend.resources | indent 10 }}
         lifecycle:
           postStart:
            exec:
@@ -73,6 +75,16 @@ spec:
         imagePullPolicy: {{ .Values.web.image.pullPolicy }}
         ports:
         - containerPort: 80
+        resources:
+{{ toYaml .Values.frontend.resources | indent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
         volumeMounts:
         - mountPath: /usr/share/nginx/html
           name: html-volume
