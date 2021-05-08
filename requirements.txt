@@ -9,7 +9,7 @@ flask==1.0.2
 flask-restful==0.3.6
 connexion==1.5.3
 elasticsearch==6.3.1
-eventlet==0.24.1
+eventlet==0.31.0
 kombu==4.2.1
 avro==1.8.2
 python-dateutil==2.7.5
